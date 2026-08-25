@@ -27,8 +27,10 @@ class LoteService
     }
 
     /**
-     * Crea y guarda un nuevo lote en la base de datos generando automáticamente su código
-     * y calculando la equivalencia en kilos según el factor de conversión del producto.
+     * Crea y guarda un nuevo lote en la base de datos aplicando los cálculos automáticos de planta:
+     * - total_millares = cantidad_empaques * millares_presentacion
+     * - peso_total_kg = gramaje * total_millares
+     * - scrap_porcentaje = (scrap_kg / peso_total_kg) * 100
      */
     public function crearLote(array $data): Lote
     {
@@ -44,13 +46,31 @@ class LoteService
 
         $codigoLote = $this->generarCodigoLote($prefijoLinea, $maquina->codigo, $fechaProduccion);
 
-        $cantidadUnidades = $data['cantidad_producida_unidades'] ?? null;
-        $pesoTotalKg = $data['peso_total_kg'] ?? null;
+        // Cantidad producida en número de empaques (ej. 10 sacos, 20 cajas, 2 jumbos)
+        $cantidadEmpaques = $data['cantidad_empaques'] ?? $data['cantidad_producida'] ?? null;
+        
+        // Millares por empaque del producto (ej. 1.5 para saco, 0.55 para caja, 15 para jumbo)
+        $millaresPresentacion = (float) ($producto->millares_presentacion ?? 1.0);
+        
+        // Gramaje unitario de la preforma en gramos (ej. 28.00 g)
+        $gramaje = (float) ($producto->gramaje ?? ($producto->factor_conversion_kg ? $producto->factor_conversion_kg * 1000 : 0));
 
-        // Calcular peso_total_kg automáticamente si no viene dado y existe el factor de conversión
-        if ($pesoTotalKg === null && $cantidadUnidades !== null && $producto->factor_conversion_kg) {
-            $pesoTotalKg = round($cantidadUnidades * $producto->factor_conversion_kg, 2);
-        }
+        // 1. total_millares = cantidad_empaques * millares_presentacion
+        $totalMillares = $cantidadEmpaques !== null ? round($cantidadEmpaques * $millaresPresentacion, 4) : ($data['total_millares'] ?? null);
+
+        // Unidades totales individuales
+        $cantidadUnidades = $totalMillares !== null ? (int) round($totalMillares * 1000) : ($data['cantidad_producida_unidades'] ?? null);
+
+        // 2. total_kg = gramaje * total_millares (ej: 28g * 15 millares = 420 kg)
+        $pesoTotalKg = ($gramaje > 0 && $totalMillares !== null)
+            ? round($gramaje * $totalMillares, 2)
+            : ($data['peso_total_kg'] ?? null);
+
+        // 3. scrap_porcentaje = (scrap_kg / total_kg) * 100
+        $scrapKg = (float) ($data['scrap_kg'] ?? 0.0);
+        $scrapPorcentaje = ($pesoTotalKg > 0)
+            ? round(($scrapKg / $pesoTotalKg) * 100, 2)
+            : 0.00;
 
         return Lote::create([
             'codigo_lote' => $codigoLote,
@@ -59,8 +79,12 @@ class LoteService
             'resina' => $data['resina'] ?? null,
             'fecha_produccion' => $fechaProduccion->toDateString(),
             'estado_lote' => $data['estado_lote'] ?? 'en_proceso',
+            'cantidad_empaques' => $cantidadEmpaques,
             'cantidad_producida_unidades' => $cantidadUnidades,
+            'total_millares' => $totalMillares,
             'peso_total_kg' => $pesoTotalKg,
+            'scrap_kg' => $scrapKg,
+            'scrap_porcentaje' => $scrapPorcentaje,
         ]);
     }
 }

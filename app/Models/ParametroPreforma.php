@@ -16,6 +16,7 @@ class ParametroPreforma extends Model
         'producto_id',
         'numero_cavidades',
         'peso_nominal',
+        'gramaje',
         'peso_min',
         'peso_max',
         'esp_pared_min',
@@ -26,6 +27,14 @@ class ParametroPreforma extends Model
         'altura_max',
         'activo',
     ];
+
+    /**
+     * Accesor para exponer gramaje si se llama peso_nominal o viceversa
+     */
+    public function getGramajeAttribute(): ?float
+    {
+        return $this->attributes['gramaje'] ?? $this->attributes['peso_nominal'] ?? null;
+    }
 
     public function producto(): BelongsTo
     {

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Grupo Fénix - Sistema de Calidad</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -21,9 +22,13 @@
 
                 <!-- Enlaces del Menú -->
                 <nav class="mt-6 px-4 space-y-2">
-                    <a href="#" class="flex items-center px-4 py-3 text-white bg-fenix rounded-xl shadow-lg transition-all">
+                    <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('dashboard') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                         Dashboard
+                    </a>
+                    <a href="{{ route('productos.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('productos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Productos
                     </a>
                     <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-800 rounded-xl transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -48,15 +53,15 @@
             <!-- Barra Superior -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
                 <div class="text-sm text-gray-500">
-                    Pages / <span class="text-gray-800 font-semibold">Dashboard</span>
+                    Sistema / <span class="text-gray-800 font-semibold">{{ $headerTitle ?? 'Calidad' }}</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <input type="text" placeholder="Buscar..." class="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-fenix">
-                    <span class="font-medium text-gray-700 text-sm">Hola, Cristhian</span>
+                    <span class="font-medium text-gray-700 text-sm">Hola, {{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span>
                 </div>
             </header>
 
-            <!-- Contenido Dinámico (Dashboard Cards & Widgets) -->
+            <!-- Contenido Dinámico -->
             <main class="flex-1 p-8">
                 @yield('content')
             </main>
