@@ -27,7 +27,8 @@ class LoteService
     }
 
     /**
-     * Crea y guarda un nuevo lote en la base de datos generando automáticamente su código.
+     * Crea y guarda un nuevo lote en la base de datos generando automáticamente su código
+     * y calculando la equivalencia en kilos según el factor de conversión del producto.
      */
     public function crearLote(array $data): Lote
     {
@@ -43,6 +44,14 @@ class LoteService
 
         $codigoLote = $this->generarCodigoLote($prefijoLinea, $maquina->codigo, $fechaProduccion);
 
+        $cantidadUnidades = $data['cantidad_producida_unidades'] ?? null;
+        $pesoTotalKg = $data['peso_total_kg'] ?? null;
+
+        // Calcular peso_total_kg automáticamente si no viene dado y existe el factor de conversión
+        if ($pesoTotalKg === null && $cantidadUnidades !== null && $producto->factor_conversion_kg) {
+            $pesoTotalKg = round($cantidadUnidades * $producto->factor_conversion_kg, 2);
+        }
+
         return Lote::create([
             'codigo_lote' => $codigoLote,
             'producto_id' => $producto->id,
@@ -50,6 +59,8 @@ class LoteService
             'resina' => $data['resina'] ?? null,
             'fecha_produccion' => $fechaProduccion->toDateString(),
             'estado_lote' => $data['estado_lote'] ?? 'en_proceso',
+            'cantidad_producida_unidades' => $cantidadUnidades,
+            'peso_total_kg' => $pesoTotalKg,
         ]);
     }
 }

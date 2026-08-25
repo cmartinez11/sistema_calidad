@@ -13,6 +13,10 @@ class Producto extends Model
     protected $fillable = [
         'codigo',
         'nombre',
+        'unidad_peso',
+        'unidad_dimension',
+        'unidad_produccion',
+        'factor_conversion_kg',
         'activo',
     ];
 

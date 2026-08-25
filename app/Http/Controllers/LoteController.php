@@ -30,6 +30,8 @@ class LoteController extends Controller
             'resina' => 'nullable|string|max:100',
             'fecha_produccion' => 'required|date',
             'estado_lote' => 'nullable|in:en_proceso,liberado,observado_pnc',
+            'cantidad_producida_unidades' => 'nullable|integer|min:0',
+            'peso_total_kg' => 'nullable|numeric|min:0',
         ]);
 
         $lote = $this->loteService->crearLote($validated);

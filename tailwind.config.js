@@ -14,6 +14,13 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                fenix: {
+                    DEFAULT: '#30732B',
+                    dark: '#235420',
+                    light: '#439E3D',
+                }
+            },
         },
     },
 

@@ -18,6 +18,8 @@ class Lote extends Model
         'resina',
         'fecha_produccion',
         'estado_lote',
+        'cantidad_producida_unidades',
+        'peso_total_kg',
     ];
 
     public function producto(): BelongsTo
