@@ -12,7 +12,7 @@
             <!-- CENTRO: Bienvenida corporativa -->
             <div class="relative z-10 my-auto max-w-lg">
                 <h1 class="text-4xl font-extrabold tracking-tight mb-4 text-white">
-                    ¡Bienvenido, Plásticos Fénix! 👋
+                    ¡Bienvenido al sistema de Control de Calidad! 👋
                 </h1>
                 <p class="text-emerald-200 text-base leading-relaxed">
                     Controla las inspecciones de calidad, gramajes y lotes de planta con máxima precisión. Automatiza tus procesos y mantén el estándar industrial al día.
