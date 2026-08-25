@@ -6,23 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // La tabla roles ya se crea en su propia migración, aquí solo agregamos la columna a users
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username', 50)->unique()->after('name');
+            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('username');
+            $table->dropForeign(['role_id']);
+            $table->dropColumn('role_id');
         });
     }
 };
