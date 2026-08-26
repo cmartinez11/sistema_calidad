@@ -5,21 +5,35 @@
     createModalOpen: {{ $errors->any() && !old('_method') ? 'true' : 'false' }},
     editModalOpen: {{ $errors->any() && old('_method') === 'PUT' ? 'true' : 'false' }},
     deleteModalOpen: false,
+    importModalOpen: false,
+    paramModalOpen: false,
     editProduct: {
         id: '{{ old('id') }}',
         codigo: '{{ old('codigo') }}',
         nombre: '{{ old('nombre') }}',
-        presentacion: '{{ old('presentacion', 'Caja') }}',
-        millares_presentacion: '{{ old('millares_presentacion', '1.0000') }}',
-        gramaje: '{{ old('gramaje') }}',
-        unidad_peso: '{{ old('unidad_peso', 'GRAMOS') }}',
-        unidad_dimension: '{{ old('unidad_dimension', 'MILIMETROS') }}',
-        unidad_produccion: '{{ old('unidad_produccion', 'UNIDADES') }}',
-        factor_conversion_kg: '{{ old('factor_conversion_kg') }}',
+        tipo_producto: '{{ old('tipo_producto', 'PREFORMA') }}',
+        unidad_medida: '{{ old('unidad_medida', 'UNIDADES') }}',
+        peso_unitario: '{{ old('peso_unitario') }}',
         activo: {{ old('activo') ? 'true' : 'false' }}
     },
+    paramProduct: {
+        id: '',
+        codigo: '',
+        nombre: '',
+        numero_cavidades: 0,
+        peso_nominal: '',
+        peso_min: '',
+        peso_max: '',
+        esp_pared_min: '',
+        esp_pared_max: '',
+        esp_fondo_min: '',
+        esp_fondo_max: '',
+        altura_min: '',
+        altura_max: ''
+    },
     editUrl: '',
-    deleteUrl: ''
+    deleteUrl: '',
+    paramUrl: ''
 }" class="space-y-6">
 
     <!-- ALERTAS FLASH DE ÉXITO Y ERROR -->
@@ -46,17 +60,24 @@
     <!-- TARJETA SUPERIOR CABECERA -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Catálogo de Productos y Preformas</h2>
-            <p class="text-xs text-gray-400 mt-1">Gestión de empaques, gramaje, millares de presentación y conversión de peso en planta</p>
+            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Catálogo General de Productos</h2>
+            <p class="text-xs text-gray-400 mt-1">Gestión genérica y flexible para líneas de Preforma, Termoformado y Laminados</p>
         </div>
 
         <div class="flex items-center space-x-3">
             <!-- Botón Búsqueda -->
             <form method="GET" action="{{ route('productos.index') }}" class="relative">
-                <input type="text" name="search" value="{{ $search }}" placeholder="Buscar por código, nombre..." 
+                <input type="text" name="search" value="{{ $search }}" placeholder="Buscar por código, nombre, tipo..." 
                        class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix w-64 transition-all">
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </form>
+
+            <!-- Botón Subir Masivo -->
+            <button @click="importModalOpen = true" 
+                    class="border-2 border-fenix text-fenix hover:bg-fenix hover:text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <span>Subir Masivo</span>
+            </button>
 
             <!-- Botón Nuevo Producto -->
             <button @click="createModalOpen = true" 
@@ -75,9 +96,9 @@
                     <tr>
                         <th class="px-6 py-4">Código</th>
                         <th class="px-6 py-4">Nombre del Producto</th>
-                        <th class="px-6 py-4">Presentación & Millares</th>
-                        <th class="px-6 py-4 text-center">Gramaje (g)</th>
-                        <th class="px-6 py-4">Unidades (Peso / Dim. / Prod.)</th>
+                        <th class="px-6 py-4 text-center">Tipo de Producto</th>
+                        <th class="px-6 py-4 text-center">Unidad de Medida</th>
+                        <th class="px-6 py-4 text-center">Peso Unitario</th>
                         <th class="px-6 py-4 text-center">Estado</th>
                         <th class="px-6 py-4 text-right">Acciones</th>
                     </tr>
@@ -97,43 +118,39 @@
                                 {{ $producto->nombre }}
                             </td>
 
-                            <!-- Presentación & Millares por Empaque -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center space-x-2">
-                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg flex items-center space-x-1">
-                                        @if($producto->presentacion === 'Saco') 🛍️ @elseif($producto->presentacion === 'Jumbo') 🐘 @elseif($producto->presentacion === 'Bolsa') 💼 @else 📦 @endif
-                                        <span>{{ $producto->presentacion ?? 'Caja' }}</span>
+                            <!-- Tipo de Producto -->
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                @if($producto->tipo_producto === 'TERMO')
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
+                                        <span>📦</span> <span>TERMOFORMADO</span>
                                     </span>
-                                    <span class="text-xs text-gray-500 font-mono">
-                                        ({{ number_format($producto->millares_presentacion ?? 1.0, 4) }} millar/empaque)
+                                @elseif($producto->tipo_producto === 'LAMINADO')
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
+                                        <span>📜</span> <span>LAMINADOS</span>
                                     </span>
-                                </div>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
+                                        <span>🍼</span> <span>PREFORMA</span>
+                                    </span>
+                                @endif
                             </td>
 
-                            <!-- Gramaje -->
+                            <!-- Unidad de Medida -->
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <span class="bg-gray-100 text-gray-700 border border-gray-200 text-xs px-2.5 py-1 rounded-lg font-mono font-medium">
+                                    {{ $producto->unidad_medida ?? 'UNIDADES' }}
+                                </span>
+                            </td>
+
+                            <!-- Peso Unitario -->
                             <td class="px-6 py-4 text-center whitespace-nowrap font-mono font-bold text-fenix-dark">
-                                @if($producto->gramaje)
+                                @if($producto->peso_unitario)
                                     <span class="bg-green-50 text-fenix px-2.5 py-1 rounded-lg text-xs border border-green-200">
-                                        {{ number_format($producto->gramaje, 2) }} g
+                                        {{ number_format($producto->peso_unitario, 4) }}
                                     </span>
                                 @else
                                     <span class="text-gray-400 font-normal text-xs">-</span>
                                 @endif
-                            </td>
-
-                            <!-- Unidades de Medida -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-wrap gap-1.5">
-                                    <span class="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2 py-0.5 rounded-md font-medium">
-                                        ⚖️ {{ $producto->unidad_peso ?? 'GRAMOS' }}
-                                    </span>
-                                    <span class="bg-purple-50 text-purple-700 border border-purple-200 text-xs px-2 py-0.5 rounded-md font-medium">
-                                        📏 {{ $producto->unidad_dimension ?? 'MILIMETROS' }}
-                                    </span>
-                                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2 py-0.5 rounded-md font-medium">
-                                        📦 {{ $producto->unidad_produccion ?? 'UNIDADES' }}
-                                    </span>
-                                </div>
                             </td>
 
                             <!-- Estado -->
@@ -150,26 +167,52 @@
                             </td>
 
                             <!-- Acciones -->
-                            <td class="px-6 py-4 text-right whitespace-nowrap space-x-2">
+                            <td class="px-6 py-4 text-right whitespace-nowrap space-x-1">
+                                <!-- Botón Parámetros Técnicos (Preforma) -->
+                                @if(($producto->tipo_producto ?? 'PREFORMA') === 'PREFORMA')
+                                    <button @click="
+                                                paramProduct = {
+                                                    id: {{ $producto->id }},
+                                                    codigo: '{{ e($producto->codigo) }}',
+                                                    nombre: '{{ e($producto->nombre) }}',
+                                                    numero_cavidades: '{{ $producto->parametroPreforma->numero_cavidades ?? 0 }}',
+                                                    peso_nominal: '{{ $producto->parametroPreforma->peso_nominal ?? $producto->peso_unitario ?? '' }}',
+                                                    peso_min: '{{ $producto->parametroPreforma->peso_min ?? '' }}',
+                                                    peso_max: '{{ $producto->parametroPreforma->peso_max ?? '' }}',
+                                                    esp_pared_min: '{{ $producto->parametroPreforma->esp_pared_min ?? '' }}',
+                                                    esp_pared_max: '{{ $producto->parametroPreforma->esp_pared_max ?? '' }}',
+                                                    esp_fondo_min: '{{ $producto->parametroPreforma->esp_fondo_min ?? '' }}',
+                                                    esp_fondo_max: '{{ $producto->parametroPreforma->esp_fondo_max ?? '' }}',
+                                                    altura_min: '{{ $producto->parametroPreforma->altura_min ?? '' }}',
+                                                    altura_max: '{{ $producto->parametroPreforma->altura_max ?? '' }}'
+                                                };
+                                                paramUrl = '{{ route('productos.parametros.store', $producto->id) }}';
+                                                paramModalOpen = true;
+                                            " 
+                                            class="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors inline-flex items-center"
+                                            title="Parámetros Técnicos de Preforma">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </button>
+                                @endif
+
                                 <!-- Botón Editar -->
                                 <button @click="
                                             editProduct = {
                                                 id: {{ $producto->id }},
                                                 codigo: '{{ e($producto->codigo) }}',
                                                 nombre: '{{ e($producto->nombre) }}',
-                                                presentacion: '{{ e($producto->presentacion ?? 'Caja') }}',
-                                                millares_presentacion: '{{ $producto->millares_presentacion ?? '1.0000' }}',
-                                                gramaje: '{{ $producto->gramaje }}',
-                                                unidad_peso: '{{ e($producto->unidad_peso ?? 'GRAMOS') }}',
-                                                unidad_dimension: '{{ e($producto->unidad_dimension ?? 'MILIMETROS') }}',
-                                                unidad_produccion: '{{ e($producto->unidad_produccion ?? 'UNIDADES') }}',
-                                                factor_conversion_kg: '{{ $producto->factor_conversion_kg }}',
+                                                tipo_producto: '{{ e($producto->tipo_producto ?? 'PREFORMA') }}',
+                                                unidad_medida: '{{ e($producto->unidad_medida ?? 'UNIDADES') }}',
+                                                peso_unitario: '{{ $producto->peso_unitario }}',
                                                 activo: {{ $producto->activo ? 'true' : 'false' }}
                                             };
                                             editUrl = '{{ route('productos.update', $producto->id) }}';
                                             editModalOpen = true;
                                         " 
-                                        class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                        class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
                                         title="Editar Producto">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
@@ -179,7 +222,7 @@
                                             deleteUrl = '{{ route('productos.destroy', $producto->id) }}';
                                             deleteModalOpen = true;
                                         " 
-                                        class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                        class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center"
                                         title="Eliminar Producto">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
@@ -219,9 +262,9 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="createModalOpen = false">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="createModalOpen = false">
             <div class="bg-fenix text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-bold">Crear Nuevo Producto / Preforma</h3>
+                <h3 class="text-lg font-bold">Crear Nuevo Producto</h3>
                 <button @click="createModalOpen = false" class="text-white/80 hover:text-white text-2xl font-bold">&times;</button>
             </div>
 
@@ -237,101 +280,52 @@
                         @error('codigo') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Nombre -->
+                    <!-- Tipo de Producto (Obligatorio) -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nombre del Producto *</label>
-                        <input type="text" name="nombre" value="{{ old('nombre') }}" placeholder="Ej. Preforma PET 500ml 28g" required
-                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix">
-                        @error('nombre') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tipo de Producto *</label>
+                        <select name="tipo_producto" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-medium">
+                            <option value="PREFORMA" {{ old('tipo_producto') == 'PREFORMA' ? 'selected' : '' }}>🍼 PREFORMA</option>
+                            <option value="TERMO" {{ old('tipo_producto') == 'TERMO' ? 'selected' : '' }}>📦 TERMOFORMADO</option>
+                            <option value="LAMINADO" {{ old('tipo_producto') == 'LAMINADO' ? 'selected' : '' }}>📜 LAMINADOS</option>
+                        </select>
+                        @error('tipo_producto') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
-                <!-- SECCIÓN PRESENTACIÓN Y GRAMAJE -->
-                <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-3">
-                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center space-x-1">
-                        <span>📦</span>
-                        <span>Configuración de Empaque y Gramaje Planta</span>
-                    </h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Presentación -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Presentación *</label>
-                            <select name="presentacion" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
-                                <option value="Caja" {{ old('presentacion') == 'Caja' ? 'selected' : '' }}>📦 Caja</option>
-                                <option value="Saco" {{ old('presentacion') == 'Saco' ? 'selected' : '' }}>🛍️ Saco</option>
-                                <option value="Jumbo" {{ old('presentacion') == 'Jumbo' ? 'selected' : '' }}>🐘 Jumbo</option>
-                                <option value="Bolsa" {{ old('presentacion') == 'Bolsa' ? 'selected' : '' }}>💼 Bolsa</option>
-                            </select>
-                        </div>
-
-                        <!-- Millares por Presentación -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Millares por Empaque *</label>
-                            <input type="number" step="0.0001" name="millares_presentacion" value="{{ old('millares_presentacion', '1.0000') }}" placeholder="Ej. 1.5000" required
-                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
-                            <span class="text-[11px] text-gray-500">Ej: 1.5 para sacos, 0.55 cajas</span>
-                        </div>
-
-                        <!-- Gramaje (g) -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Gramaje Unitario (g) *</label>
-                            <input type="number" step="0.01" name="gramaje" value="{{ old('gramaje') }}" placeholder="Ej. 28.00" required
-                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-bold text-fenix-dark">
-                            <span class="text-[11px] text-gray-500">Peso en gramos por preforma</span>
-                        </div>
-                    </div>
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nombre del Producto *</label>
+                    <input type="text" name="nombre" value="{{ old('nombre') }}" placeholder="Ej. Preforma PET 500ml 28g" required
+                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix">
+                    @error('nombre') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- SECCIÓN UNIDADES DE MEDIDA SECUNDARIAS -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                    <h4 class="text-xs font-bold text-fenix uppercase tracking-wider">Unidades de Tolerancia y Laboratorio</h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Unidad Peso -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Peso</label>
-                            <select name="unidad_peso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="GRAMOS" {{ old('unidad_peso') == 'GRAMOS' ? 'selected' : '' }}>GRAMOS (g)</option>
-                                <option value="KILOGRAMOS" {{ old('unidad_peso') == 'KILOGRAMOS' ? 'selected' : '' }}>KILOGRAMOS (kg)</option>
-                                <option value="ONZAS" {{ old('unidad_peso') == 'ONZAS' ? 'selected' : '' }}>ONZAS (oz)</option>
-                            </select>
-                        </div>
-
-                        <!-- Unidad Dimension -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Dimensión</label>
-                            <select name="unidad_dimension" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="MILIMETROS" {{ old('unidad_dimension') == 'MILIMETROS' ? 'selected' : '' }}>MILÍMETROS (mm)</option>
-                                <option value="CENTIMETROS" {{ old('unidad_dimension') == 'CENTIMETROS' ? 'selected' : '' }}>CENTÍMETROS (cm)</option>
-                                <option value="PULGADAS" {{ old('unidad_dimension') == 'PULGADAS' ? 'selected' : '' }}>PULGADAS (in)</option>
-                            </select>
-                        </div>
-
-                        <!-- Unidad Producción -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Producción</label>
-                            <select name="unidad_produccion" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="UNIDADES" {{ old('unidad_produccion') == 'UNIDADES' ? 'selected' : '' }}>UNIDADES (u)</option>
-                                <option value="MILLARES" {{ old('unidad_produccion') == 'MILLARES' ? 'selected' : '' }}>MILLARES (mil)</option>
-                                <option value="CAJAS" {{ old('unidad_produccion') == 'CAJAS' ? 'selected' : '' }}>CAJAS</option>
-                                <option value="BOLSAS" {{ old('unidad_produccion') == 'BOLSAS' ? 'selected' : '' }}>BOLSAS</option>
-                                <option value="JUMBO" {{ old('unidad_produccion') == 'JUMBO' ? 'selected' : '' }}>JUMBO</option>
-                                <option value="SACOS" {{ old('unidad_produccion') == 'SACOS' ? 'selected' : '' }}>SACOS</option>
-                            </select>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Unidad de Medida -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Unidad de Medida *</label>
+                        <select name="unidad_medida" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                            <option value="UNIDADES" {{ old('unidad_medida') == 'UNIDADES' ? 'selected' : '' }}>UNIDADES (u)</option>
+                            <option value="CAJAS" {{ old('unidad_medida') == 'CAJAS' ? 'selected' : '' }}>CAJAS</option>
+                            <option value="SACOS" {{ old('unidad_medida') == 'SACOS' ? 'selected' : '' }}>SACOS</option>
+                            <option value="KILOS" {{ old('unidad_medida') == 'KILOS' ? 'selected' : '' }}>KILOGRAMOS (kg)</option>
+                            <option value="MILLARES" {{ old('unidad_medida') == 'MILLARES' ? 'selected' : '' }}>MILLARES (mil)</option>
+                            <option value="BOBINAS" {{ old('unidad_medida') == 'BOBINAS' ? 'selected' : '' }}>BOBINAS</option>
+                        </select>
+                        @error('unidad_medida') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Factor Conversion kg opcional -->
+                    <!-- Peso Unitario -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Factor de Conversión a kg (opcional, calculado si se omite)</label>
-                        <input type="number" step="0.0001" name="factor_conversion_kg" value="{{ old('factor_conversion_kg') }}" placeholder="Auto-calculado: (gramaje/1000) * millares"
-                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Peso Unitario (Opcional)</label>
+                        <input type="number" step="0.0001" name="peso_unitario" value="{{ old('peso_unitario') }}" placeholder="Ej. 28.00"
+                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-mono">
+                        <span class="text-[11px] text-gray-400">Peso en gramos o kg según línea</span>
                     </div>
                 </div>
 
                 <!-- Activo Checkbox -->
-                <div class="flex items-center space-x-2 pt-1">
+                <div class="flex items-center space-x-2 pt-2">
                     <input type="checkbox" name="activo" id="create_activo" value="1" {{ old('activo', '1') ? 'checked' : '' }}
                            class="w-4 h-4 text-fenix rounded border-gray-300 focus:ring-fenix">
                     <label for="create_activo" class="text-sm font-medium text-gray-700">Producto Habilitado / Activo</label>
@@ -358,9 +352,9 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="editModalOpen = false">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="editModalOpen = false">
             <div class="bg-gray-900 text-white px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-bold">Editar Producto / Preforma</h3>
+                <h3 class="text-lg font-bold">Editar Producto</h3>
                 <button @click="editModalOpen = false" class="text-white/80 hover:text-white text-2xl font-bold">&times;</button>
             </div>
 
@@ -377,98 +371,48 @@
                                class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix">
                     </div>
 
-                    <!-- Nombre -->
+                    <!-- Tipo de Producto -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nombre del Producto *</label>
-                        <input type="text" name="nombre" x-model="editProduct.nombre" required
-                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix">
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tipo de Producto *</label>
+                        <select name="tipo_producto" x-model="editProduct.tipo_producto" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-medium">
+                            <option value="PREFORMA">🍼 PREFORMA</option>
+                            <option value="TERMO">📦 TERMOFORMADO</option>
+                            <option value="LAMINADO">📜 LAMINADOS</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- SECCIÓN PRESENTACIÓN Y GRAMAJE EDITAR -->
-                <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-3">
-                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center space-x-1">
-                        <span>📦</span>
-                        <span>Configuración de Empaque y Gramaje Planta</span>
-                    </h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Presentación -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Presentación *</label>
-                            <select name="presentacion" x-model="editProduct.presentacion" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
-                                <option value="Caja">📦 Caja</option>
-                                <option value="Saco">🛍️ Saco</option>
-                                <option value="Jumbo">🐘 Jumbo</option>
-                                <option value="Bolsa">💼 Bolsa</option>
-                            </select>
-                        </div>
-
-                        <!-- Millares por Presentación -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Millares por Empaque *</label>
-                            <input type="number" step="0.0001" name="millares_presentacion" x-model="editProduct.millares_presentacion" required
-                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
-                        </div>
-
-                        <!-- Gramaje (g) -->
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Gramaje Unitario (g) *</label>
-                            <input type="number" step="0.01" name="gramaje" x-model="editProduct.gramaje" required
-                                   class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-bold text-fenix-dark">
-                        </div>
-                    </div>
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Nombre del Producto *</label>
+                    <input type="text" name="nombre" x-model="editProduct.nombre" required
+                           class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix">
                 </div>
 
-                <!-- SECCIÓN UNIDADES DE MEDIDA EDITAR -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                    <h4 class="text-xs font-bold text-fenix uppercase tracking-wider">Unidades de Tolerancia y Laboratorio</h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <!-- Unidad Peso -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Peso</label>
-                            <select name="unidad_peso" x-model="editProduct.unidad_peso" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="GRAMOS">GRAMOS (g)</option>
-                                <option value="KILOGRAMOS">KILOGRAMOS (kg)</option>
-                                <option value="ONZAS">ONZAS (oz)</option>
-                            </select>
-                        </div>
-
-                        <!-- Unidad Dimension -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Dimensión</label>
-                            <select name="unidad_dimension" x-model="editProduct.unidad_dimension" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="MILIMETROS">MILÍMETROS (mm)</option>
-                                <option value="CENTIMETROS">CENTÍMETROS (cm)</option>
-                                <option value="PULGADAS">PULGADAS (in)</option>
-                            </select>
-                        </div>
-
-                        <!-- Unidad Producción -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Unidad Producción</label>
-                            <select name="unidad_produccion" x-model="editProduct.unidad_produccion" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix">
-                                <option value="UNIDADES">UNIDADES (u)</option>
-                                <option value="MILLARES">MILLARES (mil)</option>
-                                <option value="CAJAS">CAJAS</option>
-                                <option value="BOLSAS">BOLSAS</option>
-                                <option value="JUMBO">JUMBO</option>
-                                <option value="SACOS">SACOS</option>
-                            </select>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Unidad de Medida -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Unidad de Medida *</label>
+                        <select name="unidad_medida" x-model="editProduct.unidad_medida" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                            <option value="UNIDADES">UNIDADES (u)</option>
+                            <option value="CAJAS">CAJAS</option>
+                            <option value="SACOS">SACOS</option>
+                            <option value="KILOS">KILOGRAMOS (kg)</option>
+                            <option value="MILLARES">MILLARES (mil)</option>
+                            <option value="BOBINAS">BOBINAS</option>
+                        </select>
                     </div>
 
-                    <!-- Factor Conversion kg -->
+                    <!-- Peso Unitario -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Factor de Conversión a Kilogramos (kg)</label>
-                        <input type="number" step="0.0001" name="factor_conversion_kg" x-model="editProduct.factor_conversion_kg" placeholder="Ej. 0.0280"
-                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Peso Unitario (Opcional)</label>
+                        <input type="number" step="0.0001" name="peso_unitario" x-model="editProduct.peso_unitario" placeholder="Ej. 28.00"
+                               class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-mono">
                     </div>
                 </div>
 
                 <!-- Activo Checkbox -->
-                <div class="flex items-center space-x-2 pt-1">
+                <div class="flex items-center space-x-2 pt-2">
                     <input type="checkbox" name="activo" id="edit_activo" value="1" :checked="editProduct.activo"
                            class="w-4 h-4 text-fenix rounded border-gray-300 focus:ring-fenix">
                     <label for="edit_activo" class="text-sm font-medium text-gray-700">Producto Habilitado / Activo</label>
@@ -479,6 +423,143 @@
                             class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
                     <button type="submit" 
                             class="px-5 py-2 bg-fenix hover:bg-fenix-dark text-white rounded-xl text-sm font-semibold shadow-md">Actualizar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL PARÁMETROS TÉCNICOS DE PREFORMA -->
+    <div x-show="paramModalOpen" x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="paramModalOpen = false">
+            <div class="bg-emerald-800 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-6 h-6 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <div>
+                        <h3 class="text-lg font-bold">Parámetros Técnicos de Preforma</h3>
+                        <p class="text-xs text-emerald-200 font-mono" x-text="paramProduct.codigo + ' - ' + paramProduct.nombre"></p>
+                    </div>
+                </div>
+                <button @click="paramModalOpen = false" class="text-white/80 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+
+            <form :action="paramUrl" method="POST" class="p-6 space-y-4">
+                @csrf
+                
+                <!-- SECCIÓN 1: CAVIDADES Y TOLERANCIAS DE PESO -->
+                <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 space-y-3">
+                    <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center space-x-1.5">
+                        <span>⚖️</span>
+                        <span>Cavidades y Tolerancias de Peso (Gramos)</span>
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <!-- Cavidades -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">N° Cavidades *</label>
+                            <input type="number" name="numero_cavidades" x-model="paramProduct.numero_cavidades" required placeholder="Ej. 48"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-bold">
+                        </div>
+
+                        <!-- Peso Nominal -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Nominal (g) *</label>
+                            <input type="number" step="0.01" name="peso_nominal" x-model="paramProduct.peso_nominal" required placeholder="Ej. 28.00"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-bold text-emerald-800">
+                        </div>
+
+                        <!-- Peso Min -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Mínimo (g) *</label>
+                            <input type="number" step="0.01" name="peso_min" x-model="paramProduct.peso_min" required placeholder="Ej. 27.50"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-mono">
+                        </div>
+
+                        <!-- Peso Max -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Máximo (g) *</label>
+                            <input type="number" step="0.01" name="peso_max" x-model="paramProduct.peso_max" required placeholder="Ej. 28.50"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: ESPESORES Y ALTURA -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Espesor de Pared (mm) -->
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center space-x-1">
+                            <span>📐</span> <span>Espesor Pared (mm)</span>
+                        </h4>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Espesor Pared Mín.</label>
+                                <input type="number" step="0.01" name="esp_pared_min" x-model="paramProduct.esp_pared_min" placeholder="Ej. 2.10"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Espesor Pared Máx.</label>
+                                <input type="number" step="0.01" name="esp_pared_max" x-model="paramProduct.esp_pared_max" placeholder="Ej. 2.40"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Espesor de Fondo (mm) -->
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center space-x-1">
+                            <span>🎯</span> <span>Espesor Fondo (mm)</span>
+                        </h4>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Espesor Fondo Mín.</label>
+                                <input type="number" step="0.01" name="esp_fondo_min" x-model="paramProduct.esp_fondo_min" placeholder="Ej. 1.80"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Espesor Fondo Máx.</label>
+                                <input type="number" step="0.01" name="esp_fondo_max" x-model="paramProduct.esp_fondo_max" placeholder="Ej. 2.20"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Altura Total (mm) -->
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center space-x-1">
+                            <span>📏</span> <span>Altura Total (mm)</span>
+                        </h4>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Altura Mínima</label>
+                                <input type="number" step="0.01" name="altura_min" x-model="paramProduct.altura_min" placeholder="Ej. 110.00"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Altura Máxima</label>
+                                <input type="number" step="0.01" name="altura_max" x-model="paramProduct.altura_max" placeholder="Ej. 112.50"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" @click="paramModalOpen = false" 
+                            class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" 
+                            class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-semibold shadow-md flex items-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Guardar Parámetros</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -512,6 +593,67 @@
                             class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-md">Sí, Eliminar</button>
                 </form>
             </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL IMPORTACIÓN / SUBIDA MASIVA DE PRODUCTOS -->
+    <div x-show="importModalOpen" x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 overflow-y-auto"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-100 my-8" @click.away="importModalOpen = false">
+            <div class="bg-fenix text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <h3 class="text-lg font-bold">Subida Masiva de Productos</h3>
+                </div>
+                <button @click="importModalOpen = false" class="text-white/80 hover:text-white text-2xl font-bold">&times;</button>
+            </div>
+
+            <form action="{{ route('productos.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-5">
+                @csrf
+                
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-xs text-emerald-900 space-y-2">
+                    <div class="flex items-center justify-between font-semibold">
+                        <span class="flex items-center space-x-1.5">
+                            <span>📄</span>
+                            <span>Plantilla de Ejemplo</span>
+                        </span>
+                        <a href="{{ route('productos.plantilla') }}" class="inline-flex items-center space-x-1 text-fenix hover:text-fenix-dark font-bold underline transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>Descargar Plantilla CSV</span>
+                        </a>
+                    </div>
+                    <p class="text-[11px] text-emerald-700 leading-relaxed">
+                        Descarga la plantilla de ejemplo para asegurar que tu archivo contenga las columnas requeridas: <code class="font-mono bg-white/70 px-1 py-0.5 rounded border border-emerald-200">codigo</code>, <code class="font-mono bg-white/70 px-1 py-0.5 rounded border border-emerald-200">nombre</code>, <code class="font-mono bg-white/70 px-1 py-0.5 rounded border border-emerald-200">tipo_producto</code>, <code class="font-mono bg-white/70 px-1 py-0.5 rounded border border-emerald-200">unidad_medida</code>, <code class="font-mono bg-white/70 px-1 py-0.5 rounded border border-emerald-200">peso_unitario</code>.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Seleccionar Archivo (Excel / CSV) *</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-fenix transition-colors bg-gray-50/50">
+                        <input type="file" name="archivo" accept=".xlsx,.xls,.csv,.txt" required
+                               class="w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-fenix file:text-white hover:file:bg-fenix-dark cursor-pointer">
+                        <p class="text-[11px] text-gray-400 mt-2">Formatos permitidos: .xlsx, .xls, .csv (Máx. 10 MB)</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-3 border-t border-gray-100">
+                    <button type="button" @click="importModalOpen = false" 
+                            class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" 
+                            class="px-5 py-2 bg-fenix hover:bg-fenix-dark text-white rounded-xl text-sm font-semibold shadow-md flex items-center space-x-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span>Importar Productos</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

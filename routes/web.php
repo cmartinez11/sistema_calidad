@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\ParametroPreformaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::get('/dashboard', function () {
@@ -17,7 +18,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Rutas para Gestión de Productos
+    // Rutas para Gestión de Productos y Parámetros
+    Route::get('productos/plantilla', [ProductoController::class, 'downloadPlantilla'])->name('productos.plantilla');
+    Route::post('productos/importar', [ProductoController::class, 'import'])->name('productos.import');
+    Route::post('productos/{producto}/parametros', [ParametroPreformaController::class, 'storeOrUpdate'])->name('productos.parametros.store');
     Route::resource('productos', ProductoController::class)->except(['create', 'edit']);
 });
 

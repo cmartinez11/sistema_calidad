@@ -10,7 +10,7 @@ class ParametroPreforma extends Model
 {
     use HasFactory;
 
-    protected $table = 'parametros_preformas';
+    protected $table = 'parametros_preforma';
 
     protected $fillable = [
         'producto_id',

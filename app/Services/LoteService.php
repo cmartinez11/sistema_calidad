@@ -47,23 +47,21 @@ class LoteService
         $codigoLote = $this->generarCodigoLote($prefijoLinea, $maquina->codigo, $fechaProduccion);
 
         // Cantidad producida en número de empaques (ej. 10 sacos, 20 cajas, 2 jumbos)
+        // Cantidad producida en número de empaques o unidades
         $cantidadEmpaques = $data['cantidad_empaques'] ?? $data['cantidad_producida'] ?? null;
         
-        // Millares por empaque del producto (ej. 1.5 para saco, 0.55 para caja, 15 para jumbo)
-        $millaresPresentacion = (float) ($producto->millares_presentacion ?? 1.0);
-        
-        // Gramaje unitario de la preforma en gramos (ej. 28.00 g)
-        $gramaje = (float) ($producto->gramaje ?? ($producto->factor_conversion_kg ? $producto->factor_conversion_kg * 1000 : 0));
+        // Peso unitario del producto (ej. 28.00 g)
+        $pesoUnitario = (float) ($producto->peso_unitario ?? 0.0);
 
-        // 1. total_millares = cantidad_empaques * millares_presentacion
-        $totalMillares = $cantidadEmpaques !== null ? round($cantidadEmpaques * $millaresPresentacion, 4) : ($data['total_millares'] ?? null);
+        // 1. total_millares
+        $totalMillares = $cantidadEmpaques !== null ? round($cantidadEmpaques * 1.0, 4) : ($data['total_millares'] ?? null);
 
         // Unidades totales individuales
         $cantidadUnidades = $totalMillares !== null ? (int) round($totalMillares * 1000) : ($data['cantidad_producida_unidades'] ?? null);
 
-        // 2. total_kg = gramaje * total_millares (ej: 28g * 15 millares = 420 kg)
-        $pesoTotalKg = ($gramaje > 0 && $totalMillares !== null)
-            ? round($gramaje * $totalMillares, 2)
+        // 2. total_kg = peso_unitario * total_millares
+        $pesoTotalKg = ($pesoUnitario > 0 && $totalMillares !== null)
+            ? round($pesoUnitario * $totalMillares, 2)
             : ($data['peso_total_kg'] ?? null);
 
         // 3. scrap_porcentaje = (scrap_kg / total_kg) * 100

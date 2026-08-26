@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Producto extends Model
 {
@@ -13,22 +14,28 @@ class Producto extends Model
     protected $fillable = [
         'codigo',
         'nombre',
-        'presentacion',
-        'millares_presentacion',
-        'gramaje',
-        'unidad_peso',
-        'unidad_dimension',
-        'unidad_produccion',
-        'factor_conversion_kg',
+        'tipo_producto',
+        'unidad_medida',
+        'peso_unitario',
         'activo',
     ];
 
     /**
-     * Accesor de compatibilidad para peso_nominal -> gramaje
+     * Accesores de compatibilidad legacy
      */
     public function getPesoNominalAttribute(): ?float
     {
-        return $this->gramaje ? (float) $this->gramaje : null;
+        return $this->peso_unitario ? (float) $this->peso_unitario : null;
+    }
+
+    public function getGramajeAttribute(): ?float
+    {
+        return $this->peso_unitario ? (float) $this->peso_unitario : null;
+    }
+
+    public function parametroPreforma(): HasOne
+    {
+        return $this->hasOne(ParametroPreforma::class);
     }
 
     public function parametros(): HasMany
