@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\InspeccionCavidadController;
 use App\Http\Controllers\MaquinaController;
 use App\Http\Controllers\OperarioController;
 use App\Http\Controllers\ParametroPreformaController;
@@ -28,6 +29,7 @@ Route::middleware('auth')->group(function () {
     // Rutas para Gestión de Productos y Parámetros
     Route::get('productos/plantilla', [ProductoController::class, 'downloadPlantilla'])->name('productos.plantilla');
     Route::post('productos/importar', [ProductoController::class, 'import'])->name('productos.import');
+    Route::get('productos/{producto}/parametros-json', [ProductoController::class, 'getParametrosJson'])->name('productos.parametros-json');
     Route::post('productos/{producto}/parametros', [ParametroPreformaController::class, 'storeOrUpdate'])->name('productos.parametros.store');
     Route::resource('productos', ProductoController::class)->except(['create', 'edit']);
 
@@ -36,6 +38,13 @@ Route::middleware('auth')->group(function () {
 
     // Rutas para Gestión de Operarios y Encargados
     Route::resource('operarios', OperarioController::class)->except(['create', 'edit']);
+
+    // Rutas para Inspección Cavidad por Cavidad
+    Route::get('inspecciones-cavidades', [InspeccionCavidadController::class, 'index'])->name('inspecciones-cavidades.index');
+    Route::get('inspecciones-cavidades/crear', [InspeccionCavidadController::class, 'create'])->name('inspecciones-cavidades.create');
+    Route::post('inspecciones-cavidades', [InspeccionCavidadController::class, 'store'])->name('inspecciones-cavidades.store');
+    Route::get('inspecciones-cavidades/{codigo}', [InspeccionCavidadController::class, 'show'])->name('inspecciones-cavidades.show');
+    Route::get('inspecciones-cavidades/{codigo}/pdf', [InspeccionCavidadController::class, 'exportPdf'])->name('inspecciones-cavidades.pdf');
 });
 
 require __DIR__.'/auth.php';

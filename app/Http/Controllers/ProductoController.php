@@ -265,4 +265,32 @@ class ProductoController extends Controller
 
         return redirect()->route('productos.index')->with('success', $msg);
     }
+
+    /**
+     * Devuelve en formato JSON los parámetros técnicos (cavidades, tolerancias de peso) del producto.
+     */
+    public function getParametrosJson(Producto $producto)
+    {
+        $producto->load('parametroPreforma');
+        $param = $producto->parametroPreforma;
+
+        return response()->json([
+            'producto_id' => $producto->id,
+            'codigo' => $producto->codigo,
+            'nombre' => $producto->nombre,
+            'tipo_producto' => $producto->tipo_producto,
+            'unidad_medida' => $producto->unidad_medida,
+            'peso_unitario' => (float)($producto->peso_unitario ?? 0),
+            'numero_cavidades' => (int)($param->numero_cavidades ?? 1),
+            'peso_nominal' => (float)($param->peso_nominal ?? $producto->peso_unitario ?? 0),
+            'peso_min' => (float)($param->peso_min ?? 0),
+            'peso_max' => (float)($param->peso_max ?? 0),
+            'esp_pared_min' => (float)($param->esp_pared_min ?? 0),
+            'esp_pared_max' => (float)($param->esp_pared_max ?? 0),
+            'esp_fondo_min' => (float)($param->esp_fondo_min ?? 0),
+            'esp_fondo_max' => (float)($param->esp_fondo_max ?? 0),
+            'altura_min' => (float)($param->altura_min ?? 0),
+            'altura_max' => (float)($param->altura_max ?? 0),
+        ]);
+    }
 }
