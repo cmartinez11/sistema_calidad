@@ -146,7 +146,7 @@
                             <td class="px-6 py-4 text-center whitespace-nowrap font-mono font-bold text-fenix-dark">
                                 @if($producto->peso_unitario)
                                     <span class="bg-green-50 text-fenix px-2.5 py-1 rounded-lg text-xs border border-green-200">
-                                        {{ number_format($producto->peso_unitario, 4) }}
+                                        {{ number_format($producto->peso_unitario, 1) }}
                                     </span>
                                 @else
                                     <span class="text-gray-400 font-normal text-xs">-</span>

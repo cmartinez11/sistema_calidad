@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\InspeccionCavidad;
 use App\Models\Maquina;
 use App\Models\Operario;
@@ -146,6 +147,14 @@ class InspeccionCavidadController extends Controller
                     'motivo_scrap' => $motivo,
                 ]);
             }
+
+            // Registrar movimiento de auditoría en activity_logs
+            ActivityLog::create([
+                'user_id' => $userId,
+                'accion' => 'CREAR_INSPECCION_CAVIDADES',
+                'descripcion' => "Se registró la auditoría de cavidades con código {$codigoInspeccion} para el producto ID {$producto->id} ({$producto->codigo} - {$producto->nombre})",
+                'ip_address' => $request->ip(),
+            ]);
 
             DB::commit();
 
