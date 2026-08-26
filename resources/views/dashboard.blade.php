@@ -4,8 +4,7 @@
 <div class="space-y-8">
 
     <!-- TARJETAS SUPERIORES FLOTANTES -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">     
         <!-- Tarjeta 1 -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
             <div class="absolute -top-3 -right-3 w-16 h-16 bg-fenix/10 rounded-full"></div>

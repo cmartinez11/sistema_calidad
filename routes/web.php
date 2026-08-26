@@ -4,13 +4,18 @@ use App\Http\Controllers\ParametroPreformaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Carbon\Carbon;
 
 Route::get('/', function () {
     return view('auth.login');
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $serverTime = Carbon::now('America/Lima');
+    return view('dashboard',[
+        'serverTime' => $serverTime->toIso8601String(),
+        'formattedDate' => $serverTime->translatedFormat('l, d F Y'),
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

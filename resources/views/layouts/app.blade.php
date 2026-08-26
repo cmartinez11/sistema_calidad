@@ -52,8 +52,19 @@
             
             <!-- Barra Superior -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
-                <div class="text-sm text-gray-500">
-                    Sistema / <span class="text-gray-800 font-semibold">{{ $headerTitle ?? 'Calidad' }}</span>
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500 capitalize">{{ $formattedDate }}</p>
+                    </div>
+                    
+                    <!-- Reloj Oficial del Servidor -->
+                    <div class="mt-2 md:mt-0 flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                        <svg class="w-5 h-5 text-[#30732B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-xs text-gray-400 uppercase font-semibold">Hora Exacta:</span>
+                        <span id="server-clock" class="text-lg font-mono font-bold text-gray-700">{{ $formattedDate ?? '--:--:--' }}</span>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     <input type="text" placeholder="Buscar..." class="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-fenix">
@@ -69,5 +80,22 @@
         </div>
     </div>
 
+    <script>
+        // Sincronizado de forma segura con la hora del servidor
+        let serverTime = new Date("{{ $serverTime }}");
+
+        function updateServerClock() {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+
+            let hours = String(serverTime.getHours()).padStart(2, '0');
+            let minutes = String(serverTime.getMinutes()).padStart(2, '0');
+            let seconds = String(serverTime.getSeconds()).padStart(2, '0');
+
+            document.getElementById('server-clock').innerText = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateServerClock, 1000);
+        updateServerClock();
+    </script>
 </body>
 </html>
