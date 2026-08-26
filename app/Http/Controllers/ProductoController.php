@@ -6,6 +6,7 @@ use App\Models\Producto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ProductoController extends Controller
 {
@@ -145,125 +146,158 @@ class ProductoController extends Controller
     }
 
     /**
-     * Procesa la importación masiva de productos mediante archivo Excel o CSV.
+     * Procesa la importación masiva de productos mediante archivo Excel (.xlsx, .xls) o CSV (.csv, .txt).
      */
     public function import(Request $request): RedirectResponse
     {
-        $request->validate([
-            'archivo' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240',
-        ], [
-            'archivo.required' => 'Debes seleccionar un archivo para importar.',
-            'archivo.mimes' => 'El archivo debe ser de formato CSV (.csv) o Excel (.xlsx, .xls).',
-            'archivo.max' => 'El tamaño máximo permitido para el archivo es 10 MB.',
-        ]);
+        try {
+            $request->validate([
+                'archivo' => 'required|file|max:10240',
+            ], [
+                'archivo.required' => 'Debes seleccionar un archivo para importar.',
+                'archivo.max' => 'El tamaño máximo permitido es 10 MB.',
+            ]);
 
-        $file = $request->file('archivo');
-        $path = $file->getRealPath();
+            $file = $request->file('archivo');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $path = $file->getRealPath();
+            $rows = [];
 
-        $rows = [];
+            if (in_array($extension, ['xlsx', 'xls'])) {
+                try {
+                    $spreadsheet = IOFactory::load($path);
+                    $worksheet = $spreadsheet->getActiveSheet();
+                    $spreadsheetRows = $worksheet->toArray(null, true, true, false);
 
-        if (($handle = fopen($path, 'r')) !== false) {
-            $bom = fread($handle, 3);
-            if ($bom !== "\xEF\xBB\xBF") {
-                rewind($handle);
-            }
+                    foreach ($spreadsheetRows as $r) {
+                        $cleanRow = array_map(fn($v) => trim((string)$v), $r);
+                        if (array_filter($cleanRow)) {
+                            $rows[] = $cleanRow;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    return redirect()->route('productos.index')
+                        ->with('error', 'Error al leer el archivo Excel (.xlsx / .xls): ' . $e->getMessage());
+                }
+            } else {
+                $content = file_get_contents($path);
+                $content = str_replace("\xEF\xBB\xBF", '', $content); // Quitar BOM
+                
+                $lines = preg_split("/\r\n|\n|\r/", $content);
+                $lines = array_filter(array_map('trim', $lines));
 
-            $firstLine = fgets($handle);
-            $delimiter = (substr_count((string)$firstLine, ';') > substr_count((string)$firstLine, ',')) ? ';' : ',';
-            rewind($handle);
-            if ($bom === "\xEF\xBB\xBF") {
-                fseek($handle, 3);
-            }
+                if (!empty($lines)) {
+                    $firstLine = reset($lines);
+                    $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
 
-            while (($data = fgetcsv($handle, 2048, $delimiter)) !== false) {
-                $cleanRow = array_map(fn($v) => trim((string)$v), $data);
-                if (array_filter($cleanRow)) {
-                    $rows[] = $cleanRow;
+                    foreach ($lines as $line) {
+                        if (empty($line)) continue;
+                        $data = str_getcsv($line, $delimiter);
+                        $cleanRow = array_map(fn($val) => trim(str_replace(['"', "'"], '', (string)$val)), $data);
+                        if (array_filter($cleanRow)) {
+                            $rows[] = $cleanRow;
+                        }
+                    }
                 }
             }
-            fclose($handle);
-        }
 
-        if (empty($rows)) {
-            return redirect()->route('productos.index')
-                ->with('error', 'El archivo proporcionado está vacío o no tiene contenido válido.');
-        }
-
-        $headerRow = array_map(fn($col) => strtolower(trim(preg_replace('/[^a-zA-Z0-9_]/', '', $col))), array_shift($rows));
-
-        $colMap = [
-            'codigo' => array_search('codigo', $headerRow),
-            'nombre' => array_search('nombre', $headerRow),
-            'tipo_producto' => array_search('tipo_producto', $headerRow) !== false 
-                ? array_search('tipo_producto', $headerRow) 
-                : array_search('tipo', $headerRow),
-            'unidad_medida' => array_search('unidad_medida', $headerRow) !== false 
-                ? array_search('unidad_medida', $headerRow) 
-                : array_search('unidad', $headerRow),
-            'peso_unitario' => array_search('peso_unitario', $headerRow) !== false 
-                ? array_search('peso_unitario', $headerRow) 
-                : array_search('peso', $headerRow),
-        ];
-
-        if ($colMap['codigo'] === false || $colMap['nombre'] === false) {
-            return redirect()->route('productos.index')
-                ->with('error', 'El archivo no contiene las columnas requeridas ("codigo" y "nombre"). Descarga la plantilla de ejemplo para guiarte.');
-        }
-
-        $importedCount = 0;
-        $updatedCount = 0;
-
-        foreach ($rows as $row) {
-            $codigo = isset($row[$colMap['codigo']]) ? trim($row[$colMap['codigo']]) : null;
-            $nombre = isset($row[$colMap['nombre']]) ? trim($row[$colMap['nombre']]) : null;
-
-            if (empty($codigo) || empty($nombre)) {
-                continue;
+            if (empty($rows)) {
+                return redirect()->route('productos.index')
+                    ->with('error', 'El archivo proporcionado está vacío o no contiene filas válidas.');
             }
 
-            $tipoRaw = $colMap['tipo_producto'] !== false && isset($row[$colMap['tipo_producto']]) ? strtoupper(trim($row[$colMap['tipo_producto']])) : 'PREFORMA';
-            $validTipos = ['PREFORMA', 'TERMO', 'LAMINADO'];
-            $tipoProducto = in_array($tipoRaw, $validTipos) ? $tipoRaw : 'PREFORMA';
+            // Función auxiliar para normalizar textos de cabecera
+            $normalize = function ($str) {
+                $str = mb_strtolower(trim((string)$str));
+                $search = ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', '"', "'"];
+                $replace = ['a', 'e', 'i', 'o', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'n', '', ''];
+                return str_replace($search, $replace, $str);
+            };
 
-            $unidadMedida = $colMap['unidad_medida'] !== false && !empty($row[$colMap['unidad_medida']]) ? strtoupper(trim($row[$colMap['unidad_medida']])) : 'UNIDADES';
+            // Limpiar cabeceras aplicando normalización
+            $rawHeader = array_shift($rows);
+            $headerRow = array_map(fn($col) => $normalize(preg_replace('/[^a-zA-Z0-9_áéíóúÁÉÍÓÚñÑ]/', '', $col)), $rawHeader);
 
-            $pesoVal = $colMap['peso_unitario'] !== false && isset($row[$colMap['peso_unitario']]) && $row[$colMap['peso_unitario']] !== '' ? (float) str_replace(',', '.', $row[$colMap['peso_unitario']]) : null;
-            $pesoUnitario = ($pesoVal !== null && $pesoVal >= 0) ? $pesoVal : null;
+            // Búsqueda flexible de columnas clave
+            $findCol = function(array $aliases) use ($headerRow) {
+                foreach ($aliases as $alias) {
+                    $index = array_search($alias, $headerRow);
+                    if ($index !== false) return $index;
+                }
+                return false;
+            };
 
-            $producto = Producto::where('codigo', $codigo)->first();
+            $colCode = $findCol(['codigo', 'cod']);
+            $colName = $findCol(['nombre', 'descripcion', 'producto']);
+            $colType = $findCol(['tipo_producto', 'tipo']);
+            $colUnit = $findCol(['unidad_medida', 'unidad', 'medida']);
+            $colPeso = $findCol(['peso_unitario', 'peso', 'gramaje']);
 
-            if ($producto) {
-                $producto->update([
-                    'nombre' => $nombre,
-                    'tipo_producto' => $tipoProducto,
-                    'unidad_medida' => $unidadMedida,
-                    'peso_unitario' => $pesoUnitario,
-                    'activo' => true,
-                ]);
-                $updatedCount++;
-            } else {
-                Producto::create([
-                    'codigo' => $codigo,
-                    'nombre' => $nombre,
-                    'tipo_producto' => $tipoProducto,
-                    'unidad_medida' => $unidadMedida,
-                    'peso_unitario' => $pesoUnitario,
-                    'activo' => true,
-                ]);
-                $importedCount++;
+            if ($colCode === false || $colName === false) {
+                return redirect()->route('productos.index')
+                    ->with('error', 'El archivo no contiene las columnas requeridas ("codigo" y "nombre"). Revisa la plantilla.');
             }
-        }
 
-        $totalProcesados = $importedCount + $updatedCount;
+            $importedCount = 0;
+            $updatedCount = 0;
 
-        if ($totalProcesados === 0) {
+            foreach ($rows as $row) {
+                $codigo = isset($row[$colCode]) ? trim($row[$colCode]) : null;
+                
+                // Limpieza y conversión blindada a UTF-8 para evitar errores en PostgreSQL
+                $nombreRaw = isset($row[$colName]) ? trim($row[$colName]) : null;
+                $nombre = $nombreRaw ? mb_convert_encoding($nombreRaw, 'UTF-8', 'UTF-8, ISO-8859-1, WINDOWS-1252') : null;
+
+                if (empty($codigo) || empty($nombre)) {
+                    continue;
+                }
+
+                $tipoRaw = ($colType !== false && isset($row[$colType])) ? strtoupper(trim($row[$colType])) : 'PREFORMA';
+                $validTipos = ['PREFORMA', 'TERMO', 'LAMINADO'];
+                $tipoProducto = in_array($tipoRaw, $validTipos) ? $tipoRaw : 'PREFORMA';
+
+                $unidadRaw = ($colUnit !== false && !empty($row[$colUnit])) ? trim($row[$colUnit]) : 'UNIDADES';
+                $unidadMedida = mb_convert_encoding(strtoupper($unidadRaw), 'UTF-8', 'UTF-8, ISO-8859-1, WINDOWS-1252');
+
+                $pesoVal = null;
+                if ($colPeso !== false && isset($row[$colPeso]) && $row[$colPeso] !== '') {
+                    $pesoVal = (float) str_replace(',', '.', $row[$colPeso]);
+                }
+                $pesoUnitario = ($pesoVal !== null && $pesoVal >= 0) ? $pesoVal : null;
+
+                $producto = Producto::updateOrCreate(
+                    ['codigo' => $codigo],
+                    [
+                        'nombre' => $nombre,
+                        'tipo_producto' => $tipoProducto,
+                        'unidad_medida' => $unidadMedida,
+                        'peso_unitario' => $pesoUnitario,
+                        'activo' => true,
+                    ]
+                );
+
+                if ($producto->wasRecentlyCreated) {
+                    $importedCount++;
+                } else {
+                    $updatedCount++;
+                }
+            }
+
+            $totalProcesados = $importedCount + $updatedCount;
+
+            if ($totalProcesados === 0) {
+                return redirect()->route('productos.index')
+                    ->with('error', 'No se pudieron procesar filas válidas del archivo.');
+            }
+
+            $msg = "Importación completada exitosamente: {$importedCount} productos nuevos registrados y {$updatedCount} actualizados.";
+
+            return redirect()->route('productos.index')->with('success', $msg);
+
+        } catch (\Exception $e) {
             return redirect()->route('productos.index')
-                ->with('error', 'No se pudieron procesar filas válidas del archivo.');
+                ->with('error', 'Ocurrió un error inesperado al procesar el archivo: ' . $e->getMessage());
         }
-
-        $msg = "Importación completada exitosamente: {$importedCount} productos nuevos registrados y {$updatedCount} actualizados.";
-
-        return redirect()->route('productos.index')->with('success', $msg);
     }
 
     /**
