@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Operario;
 
 class InspeccionCalidad extends Model
 {
@@ -18,6 +19,7 @@ class InspeccionCalidad extends Model
         'maquina_id',
         'user_id',
         'turno_id',
+        'operario_id',
         'peso_min',
         'peso_max',
         'esp_pared_min',
@@ -60,5 +62,10 @@ class InspeccionCalidad extends Model
     public function alertas(): HasMany
     {
         return $this->hasMany(AlertaCalidad::class, 'inspeccion_id');
+    }
+
+    public function operario()
+    {
+        return $this->belongsTo(Operario::class, 'operario_id');
     }
 }

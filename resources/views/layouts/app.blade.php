@@ -30,6 +30,14 @@
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                         Productos
                     </a>
+                    <a href="{{ route('maquinas.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('maquinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Máquinas (Inyectoras)
+                    </a>
+                    <a href="{{ route('operarios.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('operarios.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        Operarios / Encargados
+                    </a>
                     <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-800 rounded-xl transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         Lotes y Calidad
@@ -49,12 +57,11 @@
 
         <!-- CONTENIDO PRINCIPAL -->
         <div class="flex-1 flex flex-col overflow-y-auto">
-            
             <!-- Barra Superior -->
             <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
                 <div class="flex flex-col md:flex-row justify-between items-center">
                     <div>
-                        <p class="text-sm text-gray-500 capitalize">{{ $formattedDate }}</p>
+                        <p class="text-sm text-gray-500 capitalize">{{ $formattedDate ?? '' }}</p>
                     </div>
                     
                     <!-- Reloj Oficial del Servidor -->
@@ -67,8 +74,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <input type="text" placeholder="Buscar..." class="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-fenix">
-                    <span class="font-medium text-gray-700 text-sm">Hola, {{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span>
+                    <span class="font-medium text-gray-700 text-sm">Hola, <span class="font-bold text-fenix">{{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span>
                 </div>
             </header>
 
@@ -82,7 +88,7 @@
 
     <script>
         // Sincronizado de forma segura con la hora del servidor
-        let serverTime = new Date("{{ $serverTime }}");
+        let serverTime = new Date("{{ $serverTime ?? now()->toIso8601String() }}");
 
         function updateServerClock() {
             serverTime.setSeconds(serverTime.getSeconds() + 1);

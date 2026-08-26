@@ -122,15 +122,15 @@
                             <td class="px-6 py-4 text-center whitespace-nowrap">
                                 @if($producto->tipo_producto === 'TERMO')
                                     <span class="px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
-                                        <span>📦</span> <span>TERMOFORMADO</span>
+                                        <span>TERMOFORMADO</span>
                                     </span>
                                 @elseif($producto->tipo_producto === 'LAMINADO')
                                     <span class="px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
-                                        <span>📜</span> <span>LAMINADOS</span>
+                                        <span>LAMINADOS</span>
                                     </span>
                                 @else
                                     <span class="px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-full inline-flex items-center space-x-1">
-                                        <span>🍼</span> <span>PREFORMA</span>
+                                        <span>PREFORMA</span>
                                     </span>
                                 @endif
                             </td>
@@ -232,7 +232,6 @@
                         <tr>
                             <td colspan="7" class="text-center py-12 text-gray-400">
                                 <div class="flex flex-col items-center justify-center space-y-2">
-                                    <span class="text-4xl">📦</span>
                                     <p class="text-base font-medium text-gray-500">No se encontraron productos registrados</p>
                                     <p class="text-xs text-gray-400">Haz clic en "Nuevo Producto" para agregar el primero.</p>
                                 </div>
@@ -306,11 +305,11 @@
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Unidad de Medida *</label>
                         <select name="unidad_medida" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
                             <option value="UNIDADES" {{ old('unidad_medida') == 'UNIDADES' ? 'selected' : '' }}>UNIDADES (u)</option>
+                            <option value="MILLARES" {{ old('unidad_medida') == 'MILLARES' ? 'selected' : '' }}>MILLARES (mil)</option>
                             <option value="CAJAS" {{ old('unidad_medida') == 'CAJAS' ? 'selected' : '' }}>CAJAS</option>
                             <option value="SACOS" {{ old('unidad_medida') == 'SACOS' ? 'selected' : '' }}>SACOS</option>
                             <option value="KILOS" {{ old('unidad_medida') == 'KILOS' ? 'selected' : '' }}>KILOGRAMOS (kg)</option>
-                            <option value="MILLARES" {{ old('unidad_medida') == 'MILLARES' ? 'selected' : '' }}>MILLARES (mil)</option>
-                            <option value="BOBINAS" {{ old('unidad_medida') == 'BOBINAS' ? 'selected' : '' }}>BOBINAS</option>
+                            <option value="JUMBOS" {{ old('unidad_medida') == 'JUMBOS' ? 'selected' : '' }}>JUMBOS</option>
                         </select>
                         @error('unidad_medida') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
@@ -375,9 +374,9 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tipo de Producto *</label>
                         <select name="tipo_producto" x-model="editProduct.tipo_producto" required class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix font-medium">
-                            <option value="PREFORMA">🍼 PREFORMA</option>
-                            <option value="TERMO">📦 TERMOFORMADO</option>
-                            <option value="LAMINADO">📜 LAMINADOS</option>
+                            <option value="PREFORMA">PREFORMA</option>
+                            <option value="TERMO">TERMOFORMADO</option>
+                            <option value="LAMINADO">LAMINADOS</option>
                         </select>
                     </div>
                 </div>
@@ -399,7 +398,7 @@
                             <option value="SACOS">SACOS</option>
                             <option value="KILOS">KILOGRAMOS (kg)</option>
                             <option value="MILLARES">MILLARES (mil)</option>
-                            <option value="BOBINAS">BOBINAS</option>
+                            <option value="JUMBOS">JUMBOS</option>
                         </select>
                     </div>
 
@@ -457,7 +456,6 @@
                 <!-- SECCIÓN 1: CAVIDADES Y TOLERANCIAS DE PESO -->
                 <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 space-y-3">
                     <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center space-x-1.5">
-                        <span>⚖️</span>
                         <span>Cavidades y Tolerancias de Peso (Gramos)</span>
                     </h4>
                     
@@ -471,7 +469,7 @@
 
                         <!-- Peso Nominal -->
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Nominal (g) *</label>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Unitario(g) *</label>
                             <input type="number" step="0.01" name="peso_nominal" x-model="paramProduct.peso_nominal" required placeholder="Ej. 28.00"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-bold text-emerald-800">
                         </div>
@@ -622,7 +620,6 @@
                 <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-xs text-emerald-900 space-y-2">
                     <div class="flex items-center justify-between font-semibold">
                         <span class="flex items-center space-x-1.5">
-                            <span>📄</span>
                             <span>Plantilla de Ejemplo</span>
                         </span>
                         <a href="{{ route('productos.plantilla') }}" class="inline-flex items-center space-x-1 text-fenix hover:text-fenix-dark font-bold underline transition-colors">

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\MaquinaController;
+use App\Http\Controllers\OperarioController;
 use App\Http\Controllers\ParametroPreformaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
@@ -28,6 +30,12 @@ Route::middleware('auth')->group(function () {
     Route::post('productos/importar', [ProductoController::class, 'import'])->name('productos.import');
     Route::post('productos/{producto}/parametros', [ParametroPreformaController::class, 'storeOrUpdate'])->name('productos.parametros.store');
     Route::resource('productos', ProductoController::class)->except(['create', 'edit']);
+
+    // Rutas para Gestión de Máquinas e Inyectoras
+    Route::resource('maquinas', MaquinaController::class)->except(['create', 'edit']);
+
+    // Rutas para Gestión de Operarios y Encargados
+    Route::resource('operarios', OperarioController::class)->except(['create', 'edit']);
 });
 
 require __DIR__.'/auth.php';
