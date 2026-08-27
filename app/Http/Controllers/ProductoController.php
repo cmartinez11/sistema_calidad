@@ -26,7 +26,7 @@ class ProductoController extends Controller
                     ->orWhere('unidad_medida', 'ILIKE', "%{$search}%");
             })
             ->orderBy('id', 'desc')
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString();
 
         return view('productos.index', compact('productos', 'search'));
