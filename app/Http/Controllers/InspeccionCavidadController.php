@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Models\Molde;
 
 class InspeccionCavidadController extends Controller
 {
@@ -67,6 +68,8 @@ class InspeccionCavidadController extends Controller
             ->orderBy('codigo', 'asc')
             ->get();
 
+        $moldes = Molde::where('activo', true)->orderBy('codigo', 'asc')->get();
+
         $operarios = Operario::where('activo', true)
             ->orderBy('nombre', 'asc')
             ->get();
@@ -80,7 +83,8 @@ class InspeccionCavidadController extends Controller
             'maquinas',
             'operarios',
             'turnos',
-            'selectedProductoId'
+            'selectedProductoId',
+            'moldes'
         ));
     }
 

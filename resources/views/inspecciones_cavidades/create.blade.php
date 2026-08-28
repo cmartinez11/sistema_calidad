@@ -2,6 +2,7 @@
 
 @section('content')
 <div x-data="{
+    moldeId:'',
     selectedProductoId: '{{ old('producto_id', $selectedProductoId ?? '') }}',
     maquinaId: '{{ old('maquina_id', '') }}',
     operarioId: '{{ old('operario_id', '') }}',
@@ -60,6 +61,25 @@
         } finally {
             this.loading = false;
         }
+    },
+
+    actualizarCavidadesMolde() {
+        let select = document.getElementById('molde_id');
+        let option = select.options[select.selectedIndex];
+        let cavidadesCount = parseInt(option.getAttribute('data-cavidades')) || 0;
+        
+        this.numeroCavidades = cavidadesCount;
+
+        let newCavidades = [];
+        for (let i = 1; i <= this.numeroCavidades; i++) {
+            newCavidades.push({
+                cavidad_numero: i,
+                peso_medido: '',
+                estado: 'CONFORME',
+                motivo_scrap: ''
+            });
+        }
+        this.cavidades = newCavidades;
     },
 
     evaluarCavidad(cavidad) {
@@ -145,18 +165,68 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Selector de Producto (Obligatorio) -->
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Producto a Inspeccionar *</label>
-                    <select name="producto_id" x-model="selectedProductoId" @change="cargarParametros()" required
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix bg-gray-50/50">
-                        <option value="">-- Seleccionar Producto --</option>
+                <!-- Selector de Producto Buscable con Alpine.js -->
+                <div class="md:col-span-2" x-data="{
+                    open: false,
+                    search: '',
+                    productosList: [
                         @foreach($productos as $prod)
-                            <option value="{{ $prod->id }}">
-                                {{ $prod->codigo }} - {{ $prod->nombre }} 
-                                ({{ $prod->parametroPreforma->numero_cavidades ?? 1 }} Cavidades)
-                            </option>
+                            {
+                                id: '{{ $prod->id }}',
+                                text: '{{ $prod->codigo }} - {{ $prod->nombre }} ({{ $prod->parametroPreforma->numero_cavidades ?? 1 }} Cavidades)',
+                                searchKey: '{{ strtolower($prod->codigo . ' ' . $prod->nombre . ' ' . ($prod->parametroPreforma->numero_cavidades ?? 1)) }}'
+                            },
                         @endforeach
-                    </select>
+                    ],
+                    get filteredProductos() {
+                        if (this.search === '') return this.productosList;
+                        return this.productosList.filter(p => p.searchKey.includes(this.search.toLowerCase()));
+                    },
+                    selectedText: '{{ $selectedProductoId ? $productos->firstWhere('id', $selectedProductoId)?->codigo . ' - ' . $productos->firstWhere('id', $selectedProductoId)?->nombre : '-- Seleccionar Producto --' }}',
+                    selectProduct(prod) {
+                        this.selectedProductoId = prod.id;
+                        this.selectedText = prod.text;
+                        this.open = false;
+                        this.search = '';
+                        this.cargarParametros();
+                    }
+                }" @click.away="open = false">
+                    
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Producto a Inspeccionar *</label>
+                    
+                    <!-- Input oculto para enviar el ID correctamente en el formulario POST -->
+                    <input type="hidden" name="producto_id" x-model="selectedProductoId" required>
+
+                    <div class="relative">
+                        <!-- Barra de selección visual -->
+                        <div @click="open = !open" 
+                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold bg-gray-50/50 cursor-pointer flex items-center justify-between focus:ring-1 focus:ring-fenix">
+                            <span x-text="selectedText" class="truncate text-gray-800"></span>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+
+                        <!-- Desplegable con buscador interno -->
+                        <div x-show="open" x-cloak class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-hidden flex flex-col">
+                            <!-- Input de búsqueda en vivo -->
+                            <div class="p-2 border-b border-gray-100 bg-gray-50">
+                                <input type="text" x-model="search" placeholder="Escribe para buscar código, nombre o cavidades..." 
+                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix font-medium">
+                            </div>
+
+                            <!-- Listado filtrado -->
+                            <div class="overflow-y-auto max-h-48 divide-y divide-gray-50">
+                                <template x-for="prod in filteredProductos" :key="prod.id">
+                                    <div @click="selectProduct(prod)" 
+                                        class="px-3.5 py-2 text-xs text-gray-700 hover:bg-fenix/10 hover:text-fenix cursor-pointer transition-colors font-medium"
+                                        x-text="prod.text">
+                                    </div>
+                                </template>
+                                <div x-show="filteredProductos.length === 0" class="p-3 text-center text-xs text-gray-400">
+                                    No se encontraron productos coincidentes
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Selector de Inyectora / Máquina -->
@@ -167,6 +237,19 @@
                         <option value="">-- Opcional --</option>
                         @foreach($maquinas as $maq)
                             <option value="{{ $maq->id }}">{{ $maq->codigo }} - {{ $maq->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Molde *</label>
+                    <select name="molde_id" id="molde_id" x-model="moldeId" @change="actualizarCavidadesMolde()" required
+                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                        <option value="">-- Seleccionar Molde --</option>
+                        @foreach($moldes as $molde)
+                            <option value="{{ $molde->id }}" data-cavidades="{{ $molde->numero_cavidades }}">
+                                {{ $molde->codigo }} - {{ $molde->nombre }} ({{ $molde->numero_cavidades }} Cavidades)
+                            </option>
                         @endforeach
                     </select>
                 </div>

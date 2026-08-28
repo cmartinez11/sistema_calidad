@@ -49,4 +49,9 @@ class InspeccionCavidad extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function molde()
+    {
+        return $this->belongsTo(Molde::class, 'molde_id');
+    }
 }
