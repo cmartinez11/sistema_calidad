@@ -394,7 +394,6 @@
                                                    :name="'cavidades[' + index + '][peso_medido]'" 
                                                    x-model="cav.peso_medido" 
                                                    @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 23.10"
                                                    required
                                                    :class="cav.estado === 'FUERA_DE_RANGO' ? 'border-red-400 bg-red-100/50 text-red-900 font-bold' : 'border-gray-300 text-gray-900 font-bold'"
                                                    class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono transition-all">
@@ -406,7 +405,6 @@
                                                    :name="'cavidades[' + index + '][espesor_pared]'" 
                                                    x-model="cav.espesor_pared" 
                                                    @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 2.50"
                                                    class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
@@ -416,7 +414,6 @@
                                                    :name="'cavidades[' + index + '][espesor_fondo]'" 
                                                    x-model="cav.espesor_fondo" 
                                                    @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 3.10"
                                                    class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
@@ -426,7 +423,6 @@
                                                    :name="'cavidades[' + index + '][altura]'" 
                                                    x-model="cav.altura" 
                                                    @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 150.0"
                                                    class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
