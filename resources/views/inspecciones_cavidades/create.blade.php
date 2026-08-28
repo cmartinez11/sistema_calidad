@@ -12,9 +12,16 @@
     productoNombre: '',
     productoCodigo: '',
     numeroCavidades: 0,
+    
     pesoNominal: 0,
     pesoMin: 0,
     pesoMax: 0,
+    espesorParedMin: 0,
+    espesorParedMax: 0,
+    espesorFondoMin: 0,
+    espesorFondoMax: 0,
+    alturaMin: 0,
+    alturaMax: 0,
     
     cavidades: [],
 
@@ -40,9 +47,19 @@
             this.productoCodigo = data.codigo || '';
             this.productoNombre = data.nombre || '';
             this.numeroCavidades = data.numero_cavidades || 1;
+            
             this.pesoNominal = parseFloat(data.peso_nominal || 0);
             this.pesoMin = parseFloat(data.peso_min || 0);
             this.pesoMax = parseFloat(data.peso_max || 0);
+
+            this.espesorParedMin = parseFloat(data.espesor_pared_min || 0);
+            this.espesorParedMax = parseFloat(data.espesor_pared_max || 0);
+
+            this.espesorFondoMin = parseFloat(data.espesor_fondo_min || 0);
+            this.espesorFondoMax = parseFloat(data.espesor_fondo_max || 0);
+
+            this.alturaMin = parseFloat(data.altura_min || 0);
+            this.alturaMax = parseFloat(data.altura_max || 0);
 
             // Generar grilla de cavidades del 1 al N
             let newCavidades = [];
@@ -50,6 +67,9 @@
                 newCavidades.push({
                     cavidad_numero: i,
                     peso_medido: '',
+                    espesor_pared: '',
+                    espesor_fondo: '',
+                    altura: '',
                     estado: 'CONFORME',
                     motivo_scrap: ''
                 });
@@ -75,6 +95,9 @@
             newCavidades.push({
                 cavidad_numero: i,
                 peso_medido: '',
+                espesor_pared: '',
+                espesor_fondo: '',
+                altura: '',
                 estado: 'CONFORME',
                 motivo_scrap: ''
             });
@@ -82,24 +105,33 @@
         this.cavidades = newCavidades;
     },
 
-    evaluarCavidad(cavidad) {
-        let peso = parseFloat(cavidad.peso_medido);
+    evaluarCavidad(cav) {
+        let peso = parseFloat(cav.peso_medido);
+        let pared = parseFloat(cav.espesor_pared);
+        let fondo = parseFloat(cav.espesor_fondo);
+        let alt = parseFloat(cav.altura);
         
-        if (isNaN(peso) || cavidad.peso_medido === '') {
-            cavidad.estado = 'CONFORME';
-            cavidad.motivo_scrap = '';
+        let vacio = (isNaN(peso) || cav.peso_medido === '') && 
+                    (isNaN(pared) || cav.espesor_pared === '') && 
+                    (isNaN(fondo) || cav.espesor_fondo === '') && 
+                    (isNaN(alt) || cav.altura === '');
+
+        if (vacio) {
+            cav.estado = 'CONFORME';
+            cav.motivo_scrap = '';
             return;
         }
 
-        if (this.pesoMin > 0 && this.pesoMax > 0) {
-            if (peso >= this.pesoMin && peso <= this.pesoMax) {
-                cavidad.estado = 'CONFORME';
-                cavidad.motivo_scrap = '';
-            } else {
-                cavidad.estado = 'FUERA_DE_RANGO';
-            }
+        let fueraPeso = (this.pesoMin > 0 && this.pesoMax > 0 && !isNaN(peso) && cav.peso_medido !== '' && (peso < this.pesoMin || peso > this.pesoMax));
+        let fueraPared = (this.espesorParedMin > 0 && this.espesorParedMax > 0 && !isNaN(pared) && cav.espesor_pared !== '' && (pared < this.espesorParedMin || pared > this.espesorParedMax));
+        let fueraFondo = (this.espesorFondoMin > 0 && this.espesorFondoMax > 0 && !isNaN(fondo) && cav.espesor_fondo !== '' && (fondo < this.espesorFondoMin || fondo > this.espesorFondoMax));
+        let fueraAltura = (this.alturaMin > 0 && this.alturaMax > 0 && !isNaN(alt) && cav.altura !== '' && (alt < this.alturaMin || alt > this.alturaMax));
+
+        if (fueraPeso || fueraPared || fueraFondo || fueraAltura) {
+            cav.estado = 'FUERA_DE_RANGO';
         } else {
-            cavidad.estado = 'CONFORME';
+            cav.estado = 'CONFORME';
+            cav.motivo_scrap = '';
         }
     },
 
@@ -162,9 +194,14 @@
 
             <input type="hidden" name="peso_min" :value="pesoMin">
             <input type="hidden" name="peso_max" :value="pesoMax">
+            <input type="hidden" name="espesor_pared_min" :value="espesorParedMin">
+            <input type="hidden" name="espesor_pared_max" :value="espesorParedMax">
+            <input type="hidden" name="espesor_fondo_min" :value="espesorFondoMin">
+            <input type="hidden" name="espesor_fondo_max" :value="espesorFondoMax">
+            <input type="hidden" name="altura_min" :value="alturaMin">
+            <input type="hidden" name="altura_max" :value="alturaMax">
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Selector de Producto (Obligatorio) -->
                 <!-- Selector de Producto Buscable con Alpine.js -->
                 <div class="md:col-span-2" x-data="{
                     open: false,
@@ -194,31 +231,26 @@
                     
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Producto a Inspeccionar *</label>
                     
-                    <!-- Input oculto para enviar el ID correctamente en el formulario POST -->
                     <input type="hidden" name="producto_id" x-model="selectedProductoId" required>
 
                     <div class="relative">
-                        <!-- Barra de selección visual -->
                         <div @click="open = !open" 
-                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold bg-gray-50/50 cursor-pointer flex items-center justify-between focus:ring-1 focus:ring-fenix">
+                             class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold bg-gray-50/50 cursor-pointer flex items-center justify-between focus:ring-1 focus:ring-fenix">
                             <span x-text="selectedText" class="truncate text-gray-800"></span>
                             <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
 
-                        <!-- Desplegable con buscador interno -->
                         <div x-show="open" x-cloak class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-hidden flex flex-col">
-                            <!-- Input de búsqueda en vivo -->
                             <div class="p-2 border-b border-gray-100 bg-gray-50">
                                 <input type="text" x-model="search" placeholder="Escribe para buscar código, nombre o cavidades..." 
-                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix font-medium">
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix font-medium">
                             </div>
 
-                            <!-- Listado filtrado -->
                             <div class="overflow-y-auto max-h-48 divide-y divide-gray-50">
                                 <template x-for="prod in filteredProductos" :key="prod.id">
                                     <div @click="selectProduct(prod)" 
-                                        class="px-3.5 py-2 text-xs text-gray-700 hover:bg-fenix/10 hover:text-fenix cursor-pointer transition-colors font-medium"
-                                        x-text="prod.text">
+                                         class="px-3.5 py-2 text-xs text-gray-700 hover:bg-fenix/10 hover:text-fenix cursor-pointer transition-colors font-medium"
+                                         x-text="prod.text">
                                     </div>
                                 </template>
                                 <div x-show="filteredProductos.length === 0" class="p-3 text-center text-xs text-gray-400">
@@ -280,11 +312,21 @@
                     </select>
                 </div>
 
-                <!-- Resumen de Parámetros de Producto -->
+                <!-- Resumen de Parámetros Ajustado (Solo min/max para espesores y altura, nominal para peso) -->
                 <div class="md:col-span-2 bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
                     <div>
-                        <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">Tolerancias de Peso</span>
-                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="pesoMin > 0 ? (pesoMin + 'g - ' + pesoMax + 'g (Nominal: ' + pesoNominal + 'g)') : 'Sin límites definidos'"></span>
+                        <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">PARAMETROS DEL PRODUCTO - <strong class="text-red-900 font-bold" x-text="productoNombre"></strong></span>
+                        <strong class="text-xs font-mono font-bold text-emerald-900">Peso: </strong>
+                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="pesoMin > 0 ? (pesoMin + 'g - ' + pesoMax + 'g (Nominal: ' + pesoNominal + 'g)') : 'Sin límites definidos'"></span><br>
+
+                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Pared: </strong>
+                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorParedMin > 0 ? (espesorParedMin + 'mm - ' + espesorParedMax + 'mm') : 'Sin límites definidos'"></span><br>
+
+                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Fondo: </strong>
+                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorFondoMin > 0 ? (espesorFondoMin + 'mm - ' + espesorFondoMax + 'mm') : 'Sin límites definidos'"></span><br>
+
+                        <strong class="text-xs font-mono font-bold text-emerald-900">Altura: </strong>
+                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="alturaMin > 0 ? (alturaMin + 'mm - ' + alturaMax + 'mm') : 'Sin límites definidos'"></span>
                     </div>
                     <div class="text-right">
                         <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">Molde</span>
@@ -327,11 +369,13 @@
                         <table class="w-full text-left text-xs">
                             <thead class="bg-gray-100 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-4 py-3 text-center w-24">N° Cavidad</th>
-                                    <th class="px-4 py-3 w-48">Peso Real (Gramos) *</th>
-                                    <th class="px-4 py-3 text-center w-36">Rango Permitido</th>
-                                    <th class="px-4 py-3 text-center w-36">Estado</th>
-                                    <th class="px-4 py-3">Motivo de Scrap / Defecto (Si no cumple)</th>
+                                    <th class="px-3 py-3 text-center w-20">N° Cavidad</th>
+                                    <th class="px-3 py-3 w-32">Peso (g) *</th>
+                                    <th class="px-3 py-3 w-32">Esp. Pared (mm)</th>
+                                    <th class="px-3 py-3 w-32">Esp. Fondo (mm)</th>
+                                    <th class="px-3 py-3 w-32">Altura (mm)</th>
+                                    <th class="px-3 py-3 text-center w-32">Estado</th>
+                                    <th class="px-3 py-3">Motivo de Scrap / Defecto</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -339,71 +383,90 @@
                                     <tr :class="cav.estado === 'FUERA_DE_RANGO' ? 'bg-red-50/90 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80'" class="transition-colors">
                                         
                                         <!-- N° Cavidad -->
-                                        <td class="px-4 py-3 text-center font-bold font-mono text-gray-800">
+                                        <td class="px-3 py-3 text-center font-bold font-mono text-gray-800">
                                             <input type="hidden" :name="'cavidades[' + index + '][cavidad_numero]'" :value="cav.cavidad_numero">
-                                            <span class="bg-gray-200/80 px-2.5 py-1 rounded-lg border border-gray-300" x-text="'Cavidad ' + String(cav.cavidad_numero).padStart(2, '0')"></span>
+                                            <span class="bg-gray-200/80 px-2 py-1 rounded-lg border border-gray-300" x-text="'C-' + String(cav.cavidad_numero).padStart(2, '0')"></span>
                                         </td>
 
                                         <!-- Peso Real -->
-                                        <td class="px-4 py-3">
+                                        <td class="px-3 py-3">
                                             <input type="number" step="0.01" 
                                                    :name="'cavidades[' + index + '][peso_medido]'" 
                                                    x-model="cav.peso_medido" 
                                                    @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 28.10"
+                                                   placeholder="Ej. 23.10"
                                                    required
-                                                   :class="cav.estado === 'FUERA_DE_RANGO' ? 'border-red-400 focus:border-red-600 focus:ring-red-500 font-bold text-red-900 bg-red-100/50' : 'border-gray-300 focus:border-fenix focus:ring-fenix font-bold text-gray-900'"
-                                                   class="w-full px-3 py-1.5 border rounded-xl text-xs font-mono transition-all">
+                                                   :class="cav.estado === 'FUERA_DE_RANGO' ? 'border-red-400 bg-red-100/50 text-red-900 font-bold' : 'border-gray-300 text-gray-900 font-bold'"
+                                                   class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono transition-all">
                                         </td>
 
-                                        <!-- Rango Permitido -->
-                                        <td class="px-4 py-3 text-center font-mono font-medium text-gray-500">
-                                            <span x-text="pesoMin > 0 ? (pesoMin + ' - ' + pesoMax + ' g') : 'Global'"></span>
+                                        <!-- Espesor de Pared -->
+                                        <td class="px-3 py-3">
+                                            <input type="number" step="0.001" 
+                                                   :name="'cavidades[' + index + '][espesor_pared]'" 
+                                                   x-model="cav.espesor_pared" 
+                                                   @input="evaluarCavidad(cav)"
+                                                   placeholder="Ej. 2.50"
+                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                        </td>
+
+                                        <!-- Espesor de Fondo -->
+                                        <td class="px-3 py-3">
+                                            <input type="number" step="0.001" 
+                                                   :name="'cavidades[' + index + '][espesor_fondo]'" 
+                                                   x-model="cav.espesor_fondo" 
+                                                   @input="evaluarCavidad(cav)"
+                                                   placeholder="Ej. 3.10"
+                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                        </td>
+
+                                        <!-- Altura -->
+                                        <td class="px-3 py-3">
+                                            <input type="number" step="0.01" 
+                                                   :name="'cavidades[' + index + '][altura]'" 
+                                                   x-model="cav.altura" 
+                                                   @input="evaluarCavidad(cav)"
+                                                   placeholder="Ej. 150.0"
+                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
                                         <!-- Estado -->
-                                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                                        <td class="px-3 py-3 text-center whitespace-nowrap">
                                             <input type="hidden" :name="'cavidades[' + index + '][estado]'" :value="cav.estado">
                                             <template x-if="cav.estado === 'CONFORME'">
-                                                <span class="px-2.5 py-1 bg-green-100 text-green-700 text-[11px] font-bold rounded-full border border-green-200 inline-flex items-center space-x-1">
+                                                <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200 inline-flex items-center space-x-1">
                                                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                                                     <span>Conforme</span>
                                                 </span>
                                             </template>
                                             <template x-if="cav.estado === 'FUERA_DE_RANGO'">
-                                                <span class="px-2.5 py-1 bg-red-100 text-red-700 text-[11px] font-bold rounded-full border border-red-200 inline-flex items-center space-x-1 animate-pulse">
+                                                <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200 inline-flex items-center space-x-1 animate-pulse">
                                                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                                    <span>Fuera de Rango</span>
+                                                    <span>Fuera Rango</span>
                                                 </span>
                                             </template>
                                         </td>
 
-                                        <!-- Motivo de Scrap (Combobox oculto si cumple) -->
-                                        <td class="px-4 py-3">
+                                        <!-- Motivo de Scrap -->
+                                        <td class="px-3 py-3">
                                             <div x-show="cav.estado === 'FUERA_DE_RANGO'" x-cloak class="transition-all duration-200">
                                                 <select :name="'cavidades[' + index + '][motivo_scrap]'" 
                                                         x-model="cav.motivo_scrap"
                                                         :required="cav.estado === 'FUERA_DE_RANGO'"
-                                                        class="w-full px-3 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600">
-                                                    <option value="">-- Seleccionar Motivo de Defecto * --</option>
+                                                        class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 focus:outline-none focus:border-red-600">
+                                                    <option value="">-- Seleccionar Defecto * --</option>
                                                     <option value="Puntos negros">Puntos negros</option>
                                                     <option value="Quemados">Quemados</option>
                                                     <option value="Crudos">Crudos</option>
                                                     <option value="Flash">Flash</option>
                                                     <option value="Rebaba">Rebaba</option>
-                                                    <option value="Delaminado">Delaminado</option>
-                                                    <option value="Contaminado">Contaminado</option>
-                                                    <option value="Rayaduras">Rayaduras</option>
-                                                    <option value="Short shot">Short shot (Incompleto)</option>
-                                                    <option value="Variación de color">Variación de color</option>
-                                                    <option value="Deformado">Deformado</option>
-                                                    <option value="Manchas">Manchas</option>
-                                                    <option value="Burbujas / Porosidad">Burbujas / Porosidad</option>
+                                                    <option value="Variación de espesor">Variación de espesor</option>
+                                                    <option value="Fuera de peso / altura">Fuera de peso / altura</option>
                                                     <option value="Otro">Otro defecto</option>
                                                 </select>
                                             </div>
                                             <div x-show="cav.estado !== 'FUERA_DE_RANGO'" class="text-gray-400 font-normal italic text-[11px]">
-                                                Sin scrap (Cumple especificaciones)
+                                                Sin scrap
                                             </div>
                                         </td>
 

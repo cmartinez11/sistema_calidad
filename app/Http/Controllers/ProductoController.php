@@ -309,22 +309,20 @@ class ProductoController extends Controller
         $param = $producto->parametroPreforma;
 
         return response()->json([
-            'producto_id' => $producto->id,
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
-            'tipo_producto' => $producto->tipo_producto,
-            'unidad_medida' => $producto->unidad_medida,
-            'peso_unitario' => (float)($producto->peso_unitario ?? 0),
-            'numero_cavidades' => (int)($param->numero_cavidades ?? 1),
-            'peso_nominal' => (float)($param->peso_nominal ?? $producto->peso_unitario ?? 0),
-            'peso_min' => (float)($param->peso_min ?? 0),
-            'peso_max' => (float)($param->peso_max ?? 0),
-            'esp_pared_min' => (float)($param->esp_pared_min ?? 0),
-            'esp_pared_max' => (float)($param->esp_pared_max ?? 0),
-            'esp_fondo_min' => (float)($param->esp_fondo_min ?? 0),
-            'esp_fondo_max' => (float)($param->esp_fondo_max ?? 0),
-            'altura_min' => (float)($param->altura_min ?? 0),
-            'altura_max' => (float)($param->altura_max ?? 0),
+            'numero_cavidades' => $param->numero_cavidades ?? 1,
+            'peso_nominal' => $param->peso_nominal ?? 0,
+            'peso_min' => $param->peso_min ?? 0,
+            'peso_max' => $param->peso_max ?? 0,
+            
+            // Usando los nombres exactos que muestra tu base de datos pgAdmin
+            'espesor_pared_min' => $param->esp_pared_min ?? 0,
+            'espesor_pared_max' => $param->esp_pared_max ?? 0,
+            'espesor_fondo_min' => $param->esp_fondo_min ?? 0,
+            'espesor_fondo_max' => $param->esp_fondo_max ?? 0,
+            'altura_min' => $param->altura_min ?? 0,
+            'altura_max' => $param->altura_max ?? 0,
         ]);
     }
 }
