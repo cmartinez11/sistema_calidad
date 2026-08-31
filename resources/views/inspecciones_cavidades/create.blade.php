@@ -7,6 +7,7 @@
     maquinaId: '{{ old('maquina_id', '') }}',
     operarioId: '{{ old('operario_id', '') }}',
     turnoId: '{{ old('turno_id', '') }}',
+    resinaId: '{{ old('resina_id', '') }}',
     
     loading: false,
     productoNombre: '',
@@ -71,7 +72,8 @@
                     tiene_defecto: false,
                     es_pasable: false,
                     estado: 'CONFORME',
-                    motivo_scrap: ''
+                    motivo_scrap: '',
+                    observaciones: ''
                 });
             }
             this.cavidades = newCavidades;
@@ -101,7 +103,8 @@
                 tiene_defecto: false,
                 es_pasable: false,
                 estado: 'CONFORME',
-                motivo_scrap: ''
+                motivo_scrap: '',
+                observaciones: ''
             });
         }
         this.cavidades = newCavidades;
@@ -222,9 +225,10 @@
             <input type="hidden" name="altura_min" :value="alturaMin">
             <input type="hidden" name="altura_max" :value="alturaMax">
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- FILA 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Selector de Producto Buscable con Alpine.js -->
-                <div class="md:col-span-2" x-data="{
+                <div x-data="{
                     open: false,
                     search: '',
                     productosList: [
@@ -251,7 +255,6 @@
                 }" @click.away="open = false">
                     
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Producto a Inspeccionar *</label>
-                    
                     <input type="hidden" name="producto_id" x-model="selectedProductoId" required>
 
                     <div class="relative">
@@ -294,6 +297,7 @@
                     </select>
                 </div>
 
+                <!-- Selector de Molde -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Molde *</label>
                     <select name="molde_id" id="molde_id" x-model="moldeId" @change="actualizarCavidadesMolde()" required
@@ -306,7 +310,10 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
 
+            <!-- FILA 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Selector de Resina -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Resina</label>
@@ -330,10 +337,8 @@
                         @endforeach
                     </select>
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Turno -->
+                <!-- Turno de Trabajo -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Turno de Trabajo</label>
                     <select name="turno_id" x-model="turnoId"
@@ -344,27 +349,27 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
 
-                <!-- Resumen de Parámetros -->
-                <div class="md:col-span-2 bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
-                    <div>
-                        <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">PARAMETROS DEL PRODUCTO - <strong class="text-red-900 font-bold" x-text="productoNombre"></strong></span>
-                        <strong class="text-xs font-mono font-bold text-emerald-900">Peso: </strong>
-                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="pesoMin > 0 ? (pesoMin + 'g - ' + pesoMax + 'g (Nominal: ' + pesoNominal + 'g)') : 'Sin límites definidos'"></span><br>
+            <!-- FILA 3: Resumen de Parámetros (Ancho completo) -->
+            <div class="bg-emerald-50/70 border border-emerald-200 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">PARAMETROS DEL PRODUCTO - <strong class="text-red-900 font-bold" x-text="productoNombre"></strong></span>
+                    <strong class="text-xs font-mono font-bold text-emerald-900">Peso: </strong>
+                    <span class="text-xs font-mono font-bold text-emerald-900" x-text="pesoMin > 0 ? (pesoMin + 'g - ' + pesoMax + 'g (Nominal: ' + pesoNominal + 'g)') : 'Sin límites definidos'"></span><br>
 
-                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de pared: </strong>
-                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorParedMin > 0 ? (espesorParedMin + 'mm - ' + espesorParedMax + 'mm') : 'Sin límites definidos'"></span><br>
+                    <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de pared: </strong>
+                    <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorParedMin > 0 ? (espesorParedMin + 'mm - ' + espesorParedMax + 'mm') : 'Sin límites definidos'"></span><br>
 
-                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Fondo: </strong>
-                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorFondoMin > 0 ? (espesorFondoMin + 'mm - ' + espesorFondoMax + 'mm') : 'Sin límites definidos'"></span><br>
+                    <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Fondo: </strong>
+                    <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorFondoMin > 0 ? (espesorFondoMin + 'mm - ' + espesorFondoMax + 'mm') : 'Sin límites definidos'"></span><br>
 
-                        <strong class="text-xs font-mono font-bold text-emerald-900">Altura: </strong>
-                        <span class="text-xs font-mono font-bold text-emerald-900" x-text="alturaMin > 0 ? (alturaMin + 'mm - ' + alturaMax + 'mm') : 'Sin límites definidos'"></span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">Molde</span>
-                        <span class="text-xs font-bold text-emerald-900 font-mono" x-text="numeroCavidades + ' Cavidades'"></span>
-                    </div>
+                    <strong class="text-xs font-mono font-bold text-emerald-900">Altura: </strong>
+                    <span class="text-xs font-mono font-bold text-emerald-900" x-text="alturaMin > 0 ? (alturaMin + 'mm - ' + alturaMax + 'mm') : 'Sin límites definidos'"></span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">Molde</span>
+                    <span class="text-xs font-bold text-emerald-900 font-mono" x-text="numeroCavidades + ' Cavidades'"></span>
                 </div>
             </div>
 
@@ -518,13 +523,14 @@
                                                     </label>
                                                 </template>
                                             </div>
-                                        </td>                                        
+                                        </td>
+                                        
                                         <!-- Motivo de Scrap -->
                                         <td class="px-3 py-3">
                                             <div x-show="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'" x-cloak class="transition-all duration-200">
                                                 <select :name="'cavidades[' + index + '][motivo_scrap]'" 
                                                         x-model="cav.motivo_scrap"
-                                                        :required="cav.estado === 'FUera_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'"
+                                                        :required="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'"
                                                         class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 focus:outline-none focus:border-red-600">
                                                     <option value="">-- Seleccionar Defecto * --</option>
                                                     <option value="Puntos negros">Puntos negros</option>
@@ -545,10 +551,10 @@
                                         <!-- Observaciones -->
                                         <td class="px-3 py-3">
                                             <input type="text" 
-                                                :name="'cavidades[' + index + '][observaciones]'" 
-                                                x-model="cav.observaciones" 
-                                                placeholder="Comentario opcional..."
-                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs bg-gray-50/50 focus:outline-none focus:border-fenix">
+                                                   :name="'cavidades[' + index + '][observaciones]'" 
+                                                   x-model="cav.observaciones" 
+                                                   placeholder="Comentario opcional..."
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs bg-gray-50/50 focus:outline-none focus:border-fenix">
                                         </td>
                                     </tr>
                                 </template>

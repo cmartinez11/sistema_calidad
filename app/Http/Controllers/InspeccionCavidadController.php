@@ -79,7 +79,7 @@ class InspeccionCavidadController extends Controller
 
         $resinas = Resina::where('activo', true)->orderBy('codigo', 'asc')->get();
 
-        $selectedProductoId = $request->get('producto_id');
+        $selectedProductoId = null;
 
         return view('inspecciones_cavidades.create', compact(
             'productos',
