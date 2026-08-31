@@ -69,6 +69,7 @@
                     espesor_fondo: '',
                     altura: '',
                     tiene_defecto: false,
+                    es_pasable: false,
                     estado: 'CONFORME',
                     motivo_scrap: ''
                 });
@@ -98,6 +99,7 @@
                 espesor_fondo: '',
                 altura: '',
                 tiene_defecto: false,
+                es_pasable: false,
                 estado: 'CONFORME',
                 motivo_scrap: ''
             });
@@ -106,12 +108,17 @@
     },
 
     evaluarCavidad(cav) {
-        // Si el usuario marcó explícitamente el check de defecto manual
         if (cav.tiene_defecto) {
-            cav.estado = 'OBSERVADO';
+            if (cav.es_pasable) {
+                cav.estado = 'PASABLE';
+            } else {
+                cav.estado = 'OBSERVADO';
+            }
             return;
-        }
-
+        } else {
+            cav.es_pasable = false;
+        } 
+        
         let peso = parseFloat(cav.peso_medido);
         let pared = parseFloat(cav.espesor_pared);
         let fondo = parseFloat(cav.espesor_fondo);
@@ -146,7 +153,7 @@
     },
 
     get fueraDeRangoCount() {
-        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO' || c.estado === 'OBSERVADO').length;
+        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO' || c.estado === 'OBSERVADO' || c.estado === 'PASABLE').length;
     },
 
     get promedioPeso() {
@@ -381,13 +388,14 @@
                                     <th class="px-3 py-3 w-28">Esp. Fondo</th>
                                     <th class="px-3 py-3 w-28">Altura</th>
                                     <th class="px-3 py-3 text-center w-28" title="Marcar si presenta falla visual o defecto a pesar de estar en rango">¿Tiene Defecto?</th>
-                                    <th class="px-3 py-3 text-center w-32">Estado</th>
-                                    <th class="px-3 py-3">Motivo de Scrap / Defecto</th>
+                                    <th class="px-3 py-3 text-center w-36">Estado</th>
+                                    <th class="px-3 py-3 w-44">Motivo de Scrap / Defecto</th>
+                                    <th class="px-3 py-3 w-56">Observaciones</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <template x-for="(cav, index) in cavidades" :key="cav.cavidad_numero">
-                                    <tr :class="(cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO') ? 'bg-red-50/90 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80'" class="transition-colors">
+                                    <tr :class="(cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO') ? 'bg-red-50/90 border-l-4 border-l-red-500' : (cav.estado === 'PASABLE' ? 'bg-amber-50/90 border-l-4 border-l-amber-500' : 'hover:bg-gray-50/80')" class="transition-colors">
                                         
                                         <!-- N° Cavidad -->
                                         <td class="px-3 py-3 text-center font-bold font-mono text-gray-800">
@@ -444,38 +452,57 @@
                                                    class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer">
                                         </td>
 
-                                        <!-- Estado -->
+                                        <!-- Estado y Check ¿Es Pasable? Unificados -->
                                         <td class="px-3 py-3 text-center whitespace-nowrap">
                                             <input type="hidden" :name="'cavidades[' + index + '][estado]'" :value="cav.estado">
                                             
-                                            <template x-if="cav.estado === 'CONFORME'">
-                                                <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200 inline-flex items-center space-x-1">
-                                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                                                    <span>Conforme</span>
-                                                </span>
-                                            </template>
-                                            
-                                            <template x-if="cav.estado === 'FUERA_DE_RANGO'">
-                                                <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200 inline-flex items-center space-x-1 animate-pulse">
-                                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                                    <span>Fuera Rango</span>
-                                                </span>
-                                            </template>
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <template x-if="cav.estado === 'CONFORME'">
+                                                    <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200 inline-flex items-center space-x-1">
+                                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                        <span>Conforme</span>
+                                                    </span>
+                                                </template>
+                                                
+                                                <template x-if="cav.estado === 'FUERA_DE_RANGO'">
+                                                    <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200 inline-flex items-center space-x-1 animate-pulse">
+                                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                                        <span>Fuera Rango</span>
+                                                    </span>
+                                                </template>
 
-                                            <template x-if="cav.estado === 'OBSERVADO'">
-                                                <span class="px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full inline-flex items-center space-x-1 shadow-sm">
-                                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
-                                                    <span>Observado</span>
-                                                </span>
-                                            </template>
-                                        </td>
+                                                <template x-if="cav.estado === 'OBSERVADO'">
+                                                    <span class="px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full inline-flex items-center space-x-1 shadow-sm">
+                                                        <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                                        <span>Observado</span>
+                                                    </span>
+                                                </template>
 
+                                                <template x-if="cav.estado === 'PASABLE'">
+                                                    <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full inline-flex items-center space-x-1 shadow-sm">
+                                                        <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                                        <span>Pasable</span>
+                                                    </span>
+                                                </template>
+
+                                                <!-- Checkbox ¿Es Pasable? al lado -->
+                                                <template x-if="cav.tiene_defecto">
+                                                    <label class="inline-flex items-center space-x-1 cursor-pointer bg-amber-50 px-2 py-0.5 rounded border border-amber-200" title="¿Es Pasable?">
+                                                        <input type="checkbox" 
+                                                               x-model="cav.es_pasable" 
+                                                               @change="evaluarCavidad(cav)"
+                                                               class="w-4 h-4 text-amber-600 border-amber-300 rounded focus:ring-amber-500">
+                                                        <span class="text-[10px] font-bold text-amber-800">¿Pasable?</span>
+                                                    </label>
+                                                </template>
+                                            </div>
+                                        </td>                                        
                                         <!-- Motivo de Scrap -->
                                         <td class="px-3 py-3">
-                                            <div x-show="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO'" x-cloak class="transition-all duration-200">
+                                            <div x-show="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'" x-cloak class="transition-all duration-200">
                                                 <select :name="'cavidades[' + index + '][motivo_scrap]'" 
                                                         x-model="cav.motivo_scrap"
-                                                        :required="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO'"
+                                                        :required="cav.estado === 'FUera_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'"
                                                         class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 focus:outline-none focus:border-red-600">
                                                     <option value="">-- Seleccionar Defecto * --</option>
                                                     <option value="Puntos negros">Puntos negros</option>
@@ -488,11 +515,19 @@
                                                     <option value="Otro">Otro defecto</option>
                                                 </select>
                                             </div>
-                                            <div x-show="cav.estado !== 'FUERA_DE_RANGO' && cav.estado !== 'OBSERVADO'" class="text-gray-400 font-normal italic text-[11px]">
+                                            <div x-show="cav.estado !== 'FUERA_DE_RANGO' && cav.estado !== 'OBSERVADO' && cav.estado !== 'PASABLE'" class="text-gray-400 font-normal italic text-[11px]">
                                                 Sin scrap
                                             </div>
                                         </td>
 
+                                        <!-- Observaciones -->
+                                        <td class="px-3 py-3">
+                                            <input type="text" 
+                                                :name="'cavidades[' + index + '][observaciones]'" 
+                                                x-model="cav.observaciones" 
+                                                placeholder="Comentario opcional..."
+                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs bg-gray-50/50 focus:outline-none focus:border-fenix">
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>

@@ -44,7 +44,7 @@ class InspeccionCavidadController extends Controller
                 'user_id',
                 DB::raw('MIN(created_at) as created_at'),
                 DB::raw('COUNT(*) as total_cavidades'),
-                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO') THEN 1 END) as fuera_de_rango_count")
+                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE') THEN 1 END) as fuera_de_rango_count")
             )
             ->groupBy('codigo_inspeccion', 'producto_id', 'maquina_id', 'operario_id', 'turno_id', 'user_id')
             ->orderBy(DB::raw('MIN(created_at)'), 'desc')
@@ -96,13 +96,15 @@ class InspeccionCavidadController extends Controller
         $validated = $request->validate([
             'producto_id' => 'required|exists:productos,id',
             'maquina_id' => 'nullable|exists:maquinas,id',
+            'molde_id' => 'nullable|exists:moldes,id',
             'operario_id' => 'nullable|exists:operarios,id',
             'turno_id' => 'nullable|exists:turnos,id',
             'cavidades' => 'required|array|min:1',
             'cavidades.*.cavidad_numero' => 'required|integer|min:1',
             'cavidades.*.peso_medido' => 'required|numeric|min:0',
-            'cavidades.*.estado' => 'required|string',
+            'cavidades.*.estado' => 'required|string|in:CONFORME,FUERA_DE_RANGO,OBSERVADO,PASABLE',
             'cavidades.*.motivo_scrap' => 'nullable|string|max:100',
+            'cavidades.*.observaciones' => 'nullable|string|max:255',
         ], [
             'producto_id.required' => 'Debes seleccionar un producto válido.',
             'cavidades.required' => 'Debes registrar al menos una cavidad.',
@@ -133,12 +135,12 @@ class InspeccionCavidadController extends Controller
             foreach ($validated['cavidades'] as $cavData) {
                 $estadoClean = strtoupper(str_replace(' ', '_', $cavData['estado']));
                 
-                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO'])) {
+                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE'])) {
                     $defectosCount++;
                 }
 
-                // Capturar el motivo de scrap si el estado es fuera de rango u observado
-                $motivo = in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO']) 
+                // Capturar el motivo de scrap si el estado amerita observación
+                $motivo = in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE']) 
                     ? ($cavData['motivo_scrap'] ?? 'Sin especificar') 
                     : null;
 
@@ -146,6 +148,7 @@ class InspeccionCavidadController extends Controller
                     'codigo_inspeccion' => $codigoInspeccion,
                     'producto_id' => $producto->id,
                     'maquina_id' => $validated['maquina_id'] ?? null,
+                    'molde_id' => $validated['molde_id'] ?? null,
                     'operario_id' => $validated['operario_id'] ?? null,
                     'turno_id' => $validated['turno_id'] ?? null,
                     'user_id' => $userId,
@@ -153,6 +156,7 @@ class InspeccionCavidadController extends Controller
                     'peso_medido' => $cavData['peso_medido'],
                     'estado' => $estadoClean,
                     'motivo_scrap' => $motivo,
+                    'observaciones' => $cavData['observaciones'] ?? null,
                 ]);
             }
 
@@ -201,9 +205,10 @@ class InspeccionCavidadController extends Controller
         $param = $producto->parametroPreforma ?? null;
 
         $totalCavidades = $cavidades->count();
-        $fueraDeRangoCount = $cavidades->whereIn('estado', 'FUERA_DE_RANGO')->count();
+        $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
         $observadoCount = $cavidades->where('estado', 'OBSERVADO')->count();
-        $conformesCount = $totalCavidades - ($fueraDeRangoCount+$observadoCount);
+        $pasableCount = $cavidades->where('estado', 'PASABLE')->count();
+        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount);
         $promedioPeso = number_format($cavidades->avg('peso_medido'), 2);
 
         return view('inspecciones_cavidades.show', compact(
@@ -215,6 +220,7 @@ class InspeccionCavidadController extends Controller
             'totalCavidades',
             'fueraDeRangoCount',
             'observadoCount',
+            'pasableCount',
             'conformesCount',
             'promedioPeso'
         ));
@@ -239,8 +245,10 @@ class InspeccionCavidadController extends Controller
         $param = $producto->parametroPreforma ?? null;
 
         $totalCavidades = $cavidades->count();
-        $fueraDeRangoCount = $cavidades->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO'])->count();
-        $conformesCount = $totalCavidades - $fueraDeRangoCount;
+        $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
+        $observadoCount = $cavidades->where('estado', 'OBSERVADO')->count();
+        $pasableCount = $cavidades->where('estado', 'PASABLE')->count();
+        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount);
         $promedioPeso = number_format($cavidades->avg('peso_medido'), 2);
         $porcentajeConforme = number_format(($conformesCount / max($totalCavidades, 1)) * 100, 1);
 
@@ -252,6 +260,8 @@ class InspeccionCavidadController extends Controller
             'param',
             'totalCavidades',
             'fueraDeRangoCount',
+            'observadoCount',
+            'pasableCount',
             'conformesCount',
             'promedioPeso',
             'porcentajeConforme'
