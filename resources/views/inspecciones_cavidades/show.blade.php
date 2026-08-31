@@ -105,6 +105,11 @@
                 <span class="text-[11px] text-red-700 font-semibold uppercase block">Fuera de Rango</span>
                 <span class="text-lg font-mono font-bold text-red-800">{{ $fueraDeRangoCount }}</span>
                 <span class="text-[10px] text-red-600 block mt-0.5">Defectos detectados</span>
+            </div> 
+            <div class="bg-orange-50 p-3.5 rounded-xl border border-orange-200">
+                <span class="text-[11px] text-orange-700 font-semibold uppercase block">Observados</span>
+                <span class="text-lg font-mono font-bold text-orange-800">{{ $observadoCount }}</span>
+                <span class="text-[10px] text-orange-600 block mt-0.5">Observaciones detectadas</span>
             </div>
 
             <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200">
@@ -146,6 +151,10 @@
                                         <span class="px-2.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
                                             🟢 Conforme
                                         </span>
+                                    @elseif($cav->estado === 'OBSERVADO')
+                                        <span class="px-2.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full border border-orange-200">
+                                            🟠 Observado
+                                        </span>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">
                                             🔴 Fuera de Rango
@@ -155,6 +164,10 @@
                                 <td class="px-4 py-2">
                                     @if($cav->estado === 'FUERA_DE_RANGO')
                                         <span class="font-bold text-red-700 bg-red-100/70 px-2.5 py-0.5 rounded-md border border-red-200 inline-block">
+                                            {{ $cav->motivo_scrap ?? 'Sin especificar' }}
+                                        </span>
+                                    @elseif($cav->estado === 'OBSERVADO')
+                                        <span class="font-bold text-orange-700 bg-orange-100/70 px-2.5 py-0.5 rounded-md border border-orange-200 inline-block">
                                             {{ $cav->motivo_scrap ?? 'Sin especificar' }}
                                         </span>
                                     @else

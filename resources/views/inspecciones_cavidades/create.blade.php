@@ -16,11 +16,11 @@
     pesoNominal: 0,
     pesoMin: 0,
     pesoMax: 0,
-    espesorParedMin: 0,
+    espesorParedMin: 0, 
     espesorParedMax: 0,
-    espesorFondoMin: 0,
+    espesorFondoMin: 0, 
     espesorFondoMax: 0,
-    alturaMin: 0,
+    alturaMin: 0, 
     alturaMax: 0,
     
     cavidades: [],
@@ -47,7 +47,6 @@
             this.productoCodigo = data.codigo || '';
             this.productoNombre = data.nombre || '';
             this.numeroCavidades = data.numero_cavidades || 1;
-            
             this.pesoNominal = parseFloat(data.peso_nominal || 0);
             this.pesoMin = parseFloat(data.peso_min || 0);
             this.pesoMax = parseFloat(data.peso_max || 0);
@@ -61,7 +60,6 @@
             this.alturaMin = parseFloat(data.altura_min || 0);
             this.alturaMax = parseFloat(data.altura_max || 0);
 
-            // Generar grilla de cavidades del 1 al N
             let newCavidades = [];
             for (let i = 1; i <= this.numeroCavidades; i++) {
                 newCavidades.push({
@@ -70,6 +68,7 @@
                     espesor_pared: '',
                     espesor_fondo: '',
                     altura: '',
+                    tiene_defecto: false,
                     estado: 'CONFORME',
                     motivo_scrap: ''
                 });
@@ -98,6 +97,7 @@
                 espesor_pared: '',
                 espesor_fondo: '',
                 altura: '',
+                tiene_defecto: false,
                 estado: 'CONFORME',
                 motivo_scrap: ''
             });
@@ -106,6 +106,12 @@
     },
 
     evaluarCavidad(cav) {
+        // Si el usuario marcó explícitamente el check de defecto manual
+        if (cav.tiene_defecto) {
+            cav.estado = 'OBSERVADO';
+            return;
+        }
+
         let peso = parseFloat(cav.peso_medido);
         let pared = parseFloat(cav.espesor_pared);
         let fondo = parseFloat(cav.espesor_fondo);
@@ -140,7 +146,7 @@
     },
 
     get fueraDeRangoCount() {
-        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO').length;
+        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO' || c.estado === 'OBSERVADO').length;
     },
 
     get promedioPeso() {
@@ -312,14 +318,14 @@
                     </select>
                 </div>
 
-                <!-- Resumen de Parámetros Ajustado (Solo min/max para espesores y altura, nominal para peso) -->
+                <!-- Resumen de Parámetros -->
                 <div class="md:col-span-2 bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
                     <div>
                         <span class="text-[11px] text-emerald-800 font-bold uppercase tracking-wider block">PARAMETROS DEL PRODUCTO - <strong class="text-red-900 font-bold" x-text="productoNombre"></strong></span>
                         <strong class="text-xs font-mono font-bold text-emerald-900">Peso: </strong>
                         <span class="text-xs font-mono font-bold text-emerald-900" x-text="pesoMin > 0 ? (pesoMin + 'g - ' + pesoMax + 'g (Nominal: ' + pesoNominal + 'g)') : 'Sin límites definidos'"></span><br>
 
-                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Pared: </strong>
+                        <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de pared: </strong>
                         <span class="text-xs font-mono font-bold text-emerald-900" x-text="espesorParedMin > 0 ? (espesorParedMin + 'mm - ' + espesorParedMax + 'mm') : 'Sin límites definidos'"></span><br>
 
                         <strong class="text-xs font-mono font-bold text-emerald-900">Espesor de Fondo: </strong>
@@ -343,7 +349,7 @@
                     <div class="flex items-center space-x-4 text-xs font-medium text-gray-500">
                         <span>Total Cavidades: <strong class="text-gray-800 font-mono" x-text="numeroCavidades"></strong></span>
                         <span class="text-green-600 font-bold">🟢 Conformes: <span x-text="conformesCount"></span></span>
-                        <span class="text-red-600 font-bold">🔴 Fuera de Rango: <span x-text="fueraDeRangoCount"></span></span>
+                        <span class="text-red-600 font-bold">🔴 Fuera de Rango / Observados: <span x-text="fueraDeRangoCount"></span></span>
                         <span>Promedio: <strong class="text-fenix font-mono" x-text="promedioPeso + ' g'"></strong></span>
                     </div>
                 </div>
@@ -370,17 +376,18 @@
                             <thead class="bg-gray-100 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
                                 <tr>
                                     <th class="px-3 py-3 text-center w-20">N° Cavidad</th>
-                                    <th class="px-3 py-3 w-32">Peso (g) *</th>
-                                    <th class="px-3 py-3 w-32">Esp. Pared (mm)</th>
-                                    <th class="px-3 py-3 w-32">Esp. Fondo (mm)</th>
-                                    <th class="px-3 py-3 w-32">Altura (mm)</th>
+                                    <th class="px-3 py-3 w-28">Peso (g) *</th>
+                                    <th class="px-3 py-3 w-28">Esp. Pared</th>
+                                    <th class="px-3 py-3 w-28">Esp. Fondo</th>
+                                    <th class="px-3 py-3 w-28">Altura</th>
+                                    <th class="px-3 py-3 text-center w-28" title="Marcar si presenta falla visual o defecto a pesar de estar en rango">¿Tiene Defecto?</th>
                                     <th class="px-3 py-3 text-center w-32">Estado</th>
                                     <th class="px-3 py-3">Motivo de Scrap / Defecto</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <template x-for="(cav, index) in cavidades" :key="cav.cavidad_numero">
-                                    <tr :class="cav.estado === 'FUERA_DE_RANGO' ? 'bg-red-50/90 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80'" class="transition-colors">
+                                    <tr :class="(cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO') ? 'bg-red-50/90 border-l-4 border-l-red-500' : 'hover:bg-gray-50/80'" class="transition-colors">
                                         
                                         <!-- N° Cavidad -->
                                         <td class="px-3 py-3 text-center font-bold font-mono text-gray-800">
@@ -394,9 +401,9 @@
                                                    :name="'cavidades[' + index + '][peso_medido]'" 
                                                    x-model="cav.peso_medido" 
                                                    @input="evaluarCavidad(cav)"
+                                                   placeholder="Ej. 23.10"
                                                    required
-                                                   :class="cav.estado === 'FUERA_DE_RANGO' ? 'border-red-400 bg-red-100/50 text-red-900 font-bold' : 'border-gray-300 text-gray-900 font-bold'"
-                                                   class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono transition-all">
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900">
                                         </td>
 
                                         <!-- Espesor de Pared -->
@@ -405,7 +412,8 @@
                                                    :name="'cavidades[' + index + '][espesor_pared]'" 
                                                    x-model="cav.espesor_pared" 
                                                    @input="evaluarCavidad(cav)"
-                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   placeholder="Ej. 2.50"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
                                         <!-- Espesor de Fondo -->
@@ -414,7 +422,8 @@
                                                    :name="'cavidades[' + index + '][espesor_fondo]'" 
                                                    x-model="cav.espesor_fondo" 
                                                    @input="evaluarCavidad(cav)"
-                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   placeholder="Ej. 3.10"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
                                         </td>
 
                                         <!-- Altura -->
@@ -423,32 +432,50 @@
                                                    :name="'cavidades[' + index + '][altura]'" 
                                                    x-model="cav.altura" 
                                                    @input="evaluarCavidad(cav)"
-                                                   class="w-full px-2.5 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   placeholder="Ej. 150.0"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                        </td>
+
+                                        <!-- Checkbox TIENE DEFECTO? -->
+                                        <td class="px-3 py-3 text-center">
+                                            <input type="checkbox" 
+                                                   x-model="cav.tiene_defecto" 
+                                                   @change="evaluarCavidad(cav)"
+                                                   class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer">
                                         </td>
 
                                         <!-- Estado -->
                                         <td class="px-3 py-3 text-center whitespace-nowrap">
                                             <input type="hidden" :name="'cavidades[' + index + '][estado]'" :value="cav.estado">
+                                            
                                             <template x-if="cav.estado === 'CONFORME'">
                                                 <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200 inline-flex items-center space-x-1">
                                                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                                                     <span>Conforme</span>
                                                 </span>
                                             </template>
+                                            
                                             <template x-if="cav.estado === 'FUERA_DE_RANGO'">
                                                 <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200 inline-flex items-center space-x-1 animate-pulse">
                                                     <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                                                     <span>Fuera Rango</span>
                                                 </span>
                                             </template>
+
+                                            <template x-if="cav.estado === 'OBSERVADO'">
+                                                <span class="px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full inline-flex items-center space-x-1 shadow-sm">
+                                                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                                    <span>Observado</span>
+                                                </span>
+                                            </template>
                                         </td>
 
                                         <!-- Motivo de Scrap -->
                                         <td class="px-3 py-3">
-                                            <div x-show="cav.estado === 'FUERA_DE_RANGO'" x-cloak class="transition-all duration-200">
+                                            <div x-show="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO'" x-cloak class="transition-all duration-200">
                                                 <select :name="'cavidades[' + index + '][motivo_scrap]'" 
                                                         x-model="cav.motivo_scrap"
-                                                        :required="cav.estado === 'FUERA_DE_RANGO'"
+                                                        :required="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO'"
                                                         class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 focus:outline-none focus:border-red-600">
                                                     <option value="">-- Seleccionar Defecto * --</option>
                                                     <option value="Puntos negros">Puntos negros</option>
@@ -457,11 +484,11 @@
                                                     <option value="Flash">Flash</option>
                                                     <option value="Rebaba">Rebaba</option>
                                                     <option value="Variación de espesor">Variación de espesor</option>
-                                                    <option value="Fuera de peso / altura">Fuera de peso / altura</option>
+                                                    <option value="Defecto visual / superficial">Defecto visual / superficial</option>
                                                     <option value="Otro">Otro defecto</option>
                                                 </select>
                                             </div>
-                                            <div x-show="cav.estado !== 'FUERA_DE_RANGO'" class="text-gray-400 font-normal italic text-[11px]">
+                                            <div x-show="cav.estado !== 'FUERA_DE_RANGO' && cav.estado !== 'OBSERVADO'" class="text-gray-400 font-normal italic text-[11px]">
                                                 Sin scrap
                                             </div>
                                         </td>
