@@ -6,6 +6,9 @@ use App\Http\Controllers\OperarioController;
 use App\Http\Controllers\ParametroPreformaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\ResinaController;
+use App\Http\Controllers\MoldeController;
 use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
 
@@ -45,6 +48,17 @@ Route::middleware('auth')->group(function () {
     Route::post('inspecciones-cavidades', [InspeccionCavidadController::class, 'store'])->name('inspecciones-cavidades.store');
     Route::get('inspecciones-cavidades/{codigo}', [InspeccionCavidadController::class, 'show'])->name('inspecciones-cavidades.show');
     Route::get('inspecciones-cavidades/{codigo}/pdf', [InspeccionCavidadController::class, 'exportPdf'])->name('inspecciones-cavidades.pdf');
+
+    Route::get('maquinas/create', [MaquinaController::class, 'create'])->name('maquinas.create');
+    Route::get('moldes/create', [MoldeController::class, 'create'])->name('moldes.create');
+    Route::get('resinas/create', [ResinaController::class, 'create'])->name('resinas.create');
+    Route::get('operarios/create', [OperarioController::class, 'create'])->name('operarios.create');
+
+    // 2. Los recursos con restricción numérica estricta para el ID
+    Route::resource('maquinas', MaquinaController::class)->whereNumber('maquina');
+    Route::resource('moldes', MoldeController::class)->whereNumber('molde');
+    Route::resource('resinas', ResinaController::class)->whereNumber('resina');
+    Route::resource('operarios', OperarioController::class)->whereNumber('operario');
 });
 
 require __DIR__.'/auth.php';

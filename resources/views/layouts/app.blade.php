@@ -32,19 +32,23 @@
                     </a>
                     <a href="{{ route('maquinas.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('maquinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        Máquinas (Inyectoras)
+                        Máquinas
+                    </a>
+                    <a href="{{ route('moldes.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('moldes.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Moldes
+                    </a>
+                    <a href="{{ route('resinas.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('resinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.605 15.12a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        Resinas
                     </a>
                     <a href="{{ route('operarios.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('operarios.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        Operarios / Encargados
+                        Operarios
                     </a>
                     <a href="{{ route('inspecciones-cavidades.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-cavidades.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        Inspección por Cavidades
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-800 rounded-xl transition-all">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        Parámetros Preforma
+                        Auditorías
                     </a>
                 </nav>
             </div>
@@ -58,28 +62,33 @@
         <!-- CONTENIDO PRINCIPAL -->
         <div class="flex-1 flex flex-col overflow-y-auto">
             <!-- Barra Superior -->
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8 z-10">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div>
-                        <p class="text-sm text-gray-500 capitalize">{{ $formattedDate ?? '' }}</p>
-                    </div>
+            <header class="bg-white shadow-sm h-16 shrink-0 flex items-center justify-between px-8 z-10">
+                <!-- Fecha y Hora unificadas (Sin duplicados) -->
+                <div class="flex items-center space-x-4 bg-gray-50 px-4 py-1.5 rounded-xl border border-gray-100">
+                    <!-- Fecha actual en PHP -->
+                    <span class="text-xs font-bold text-gray-600">
+                        {{ ucfirst(\Carbon\Carbon::now()->locale('es')->isoFormat('dddd, D MMMM YYYY')) }}
+                    </span>
                     
-                    <!-- Reloj Oficial del Servidor -->
-                    <div class="mt-2 md:mt-0 flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-                        <svg class="w-5 h-5 text-[#30732B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="h-4 w-px bg-gray-200"></div>
+
+                    <!-- Hora exacta -->
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 text-fenix" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <span class="text-xs text-gray-400 uppercase font-semibold">Hora Exacta:</span>
-                        <span id="server-clock" class="text-lg font-mono font-bold text-gray-700">{{ $formattedDate ?? '--:--:--' }}</span>
+                        <span class="text-xs font-bold text-gray-700">HORA EXACTA: <span id="reloj"></span></span>
                     </div>
                 </div>
+
+                <!-- Bienvenida al Usuario -->
                 <div class="flex items-center space-x-4">
-                    <span class="font-medium text-gray-700 text-sm">Hola, <span class="font-bold text-fenix">{{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span>
+                    <span class="font-medium text-gray-700 text-sm">Hola, <span class="font-bold text-fenix">{{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span></span>
                 </div>
             </header>
 
             <!-- Contenido Dinámico -->
-            <main class="flex-1 p-8">
+            <main class="flex-1 p-6 md:p-8">
                 @yield('content')
             </main>
 
@@ -97,7 +106,10 @@
             let minutes = String(serverTime.getMinutes()).padStart(2, '0');
             let seconds = String(serverTime.getSeconds()).padStart(2, '0');
 
-            document.getElementById('server-clock').innerText = `${hours}:${minutes}:${seconds}`;
+            const clockEl = document.getElementById('reloj') || document.getElementById('server-clock');
+            if (clockEl) {
+                clockEl.innerText = `${hours}:${minutes}:${seconds}`;
+            }
         }
 
         setInterval(updateServerClock, 1000);

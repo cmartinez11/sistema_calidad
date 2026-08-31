@@ -88,4 +88,8 @@ class OperarioController extends Controller
                 ->with('error', 'No se puede eliminar el operario porque está asociado a registros de producción o inspecciones.');
         }
     }
+
+    public function create(){
+        return view('operarios.create');
+    }
 }

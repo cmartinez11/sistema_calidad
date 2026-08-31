@@ -89,4 +89,12 @@ class MaquinaController extends Controller
                 ->with('error', 'No se puede eliminar la máquina porque está asociada a lotes, inspecciones o alertas.');
         }
     }
+
+    public function show(Maquina $maquina){
+        return redirect()->route('catalogos.index');
+    }
+
+    public function create(){
+        return view('maquinas.create');
+    }
 }
