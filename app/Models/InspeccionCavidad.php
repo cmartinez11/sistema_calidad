@@ -54,4 +54,9 @@ class InspeccionCavidad extends Model
     {
         return $this->belongsTo(Molde::class, 'molde_id');
     }
+
+    public function resina(): BelongsTo
+    {
+        return $this->belongsTo(Resina::class, 'resina_id');
+    }
 }

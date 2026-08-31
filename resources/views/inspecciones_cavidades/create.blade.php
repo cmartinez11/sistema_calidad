@@ -153,7 +153,15 @@
     },
 
     get fueraDeRangoCount() {
-        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO' || c.estado === 'OBSERVADO' || c.estado === 'PASABLE').length;
+        return this.cavidades.filter(c => c.estado === 'FUERA_DE_RANGO').length;
+    },
+
+    get observadoCount(){
+        return this.cavidades.filter(c => c.estado === 'OBSERVADO').length;
+    },
+
+    get pasablesCount(){
+        return this.cavidades.filter(c => c.estado === 'PASABLE').length;
     },
 
     get promedioPeso() {
@@ -299,6 +307,18 @@
                     </select>
                 </div>
 
+                <!-- Selector de Resina -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Resina</label>
+                    <select name="resina_id" x-model="resinaId"
+                            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-fenix">
+                        <option value="">-- Opcional --</option>
+                        @foreach($resinas as $res)
+                            <option value="{{ $res->id }}">{{ $res->codigo }} - {{ $res->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <!-- Selector de Operario / Encargado -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Operario / Encargado</label>
@@ -356,7 +376,9 @@
                     <div class="flex items-center space-x-4 text-xs font-medium text-gray-500">
                         <span>Total Cavidades: <strong class="text-gray-800 font-mono" x-text="numeroCavidades"></strong></span>
                         <span class="text-green-600 font-bold">🟢 Conformes: <span x-text="conformesCount"></span></span>
-                        <span class="text-red-600 font-bold">🔴 Fuera de Rango / Observados: <span x-text="fueraDeRangoCount"></span></span>
+                        <span class="text-red-600 font-bold">🔴 Fuera de Rango: <span x-text="fueraDeRangoCount"></span></span>
+                        <span class="text-amber-600 font-bold">🟠 Observados: <span x-text="observadoCount"></span></span>
+                        <span class="text-yellow-600 font-bold">🟡 Pasables: <span x-text="pasablesCount"></span></span>
                         <span>Promedio: <strong class="text-fenix font-mono" x-text="promedioPeso + ' g'"></strong></span>
                     </div>
                 </div>

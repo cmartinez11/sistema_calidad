@@ -3,17 +3,6 @@
 @section('content')
 <div class="space-y-6">
 
-    <!-- ALERTAS FLASH -->
-    @if(session('success'))
-        <div class="p-4 bg-green-100 border-l-4 border-fenix text-fenix-dark rounded-r-xl shadow-sm flex items-center justify-between print:hidden">
-            <div class="flex items-center space-x-3">
-                <svg class="w-6 h-6 text-fenix" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span class="font-medium text-sm">{{ session('success') }}</span>
-            </div>
-            <button @click="$el.parentElement.remove()" class="text-gray-400 hover:text-gray-600">&times;</button>
-        </div>
-    @endif
-
     <!-- BARRA SUPERIOR DE ACCIONES (OCULTA EN IMPRESIÓN) -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         <a href="{{ route('inspecciones-cavidades.index') }}" 
@@ -79,6 +68,12 @@
                 <span class="text-gray-400 font-semibold uppercase block text-[10px]">Inyectora / Máquina</span>
                 <span class="font-bold text-gray-900">{{ $header->maquina->codigo ?? 'N/A' }} {{ $header->maquina ? '('.$header->maquina->nombre.')' : '' }}</span>
             </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Resina</span>
+                <span class="font-bold text-gray-900">{{ $header->resina->codigo ?? 'N/A' }} {{ $header->resina ? '('.$header->resina->nombre.')' : '' }}</span>
+            </div>
+            
             <div>
                 <span class="text-gray-400 font-semibold uppercase block text-[10px]">Operario / Auditor</span>
                 <span class="font-bold text-gray-900">{{ $header->operario->nombre ?? 'N/A' }}</span>
@@ -86,35 +81,42 @@
         </div>
 
         <!-- RESUMEN ESTADÍSTICO DE PESOS -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
-                <span class="text-[11px] text-gray-500 font-semibold uppercase block">Tolerancia Permitida</span>
-                <span class="text-sm font-mono font-bold text-gray-800">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <span class="text-[10px] text-gray-500 font-semibold uppercase block">Tolerancia</span>
+                <span class="text-xs font-mono font-bold text-gray-800">
                     {{ $param && $param->peso_min > 0 ? $param->peso_min.'g - '.$param->peso_max.'g' : 'Sin límites' }}
                 </span>
                 <span class="text-[10px] text-gray-400 block mt-0.5">Nominal: {{ $param->peso_nominal ?? $producto->peso_unitario ?? '-' }}g</span>
             </div>
 
-            <div class="bg-green-50 p-3.5 rounded-xl border border-green-200">
-                <span class="text-[11px] text-green-700 font-semibold uppercase block">Cavidades Conformes</span>
-                <span class="text-lg font-mono font-bold text-green-800">{{ $conformesCount }} / {{ $totalCavidades }}</span>
-                <span class="text-[10px] text-green-600 block mt-0.5">{{ number_format(($conformesCount / max($totalCavidades,1))*100, 1) }}% de cumplimiento</span>
+            <div class="bg-green-50 p-3 rounded-xl border border-green-200">
+                <span class="text-[10px] text-green-700 font-semibold uppercase block">Conformes</span>
+                <span class="text-base font-mono font-bold text-green-800">{{ $conformesCount }} / {{ $totalCavidades }}</span>
+                <span class="text-[10px] text-green-600 block mt-0.5">{{ number_format(($conformesCount / max($totalCavidades,1))*100, 1) }}% cumplimiento</span>
             </div>
 
-            <div class="bg-red-50 p-3.5 rounded-xl border border-red-200">
-                <span class="text-[11px] text-red-700 font-semibold uppercase block">Fuera de Rango</span>
-                <span class="text-lg font-mono font-bold text-red-800">{{ $fueraDeRangoCount }}</span>
+            <div class="bg-red-50 p-3 rounded-xl border border-red-200">
+                <span class="text-[10px] text-red-700 font-semibold uppercase block">Fuera de Rango</span>
+                <span class="text-base font-mono font-bold text-red-800">{{ $fueraDeRangoCount }}</span>
                 <span class="text-[10px] text-red-600 block mt-0.5">Defectos detectados</span>
             </div> 
-            <div class="bg-orange-50 p-3.5 rounded-xl border border-orange-200">
-                <span class="text-[11px] text-orange-700 font-semibold uppercase block">Observados</span>
-                <span class="text-lg font-mono font-bold text-orange-800">{{ $observadoCount }}</span>
-                <span class="text-[10px] text-orange-600 block mt-0.5">Observaciones detectadas</span>
+
+            <div class="bg-orange-50 p-3 rounded-xl border border-orange-200">
+                <span class="text-[10px] text-orange-700 font-semibold uppercase block">Observados</span>
+                <span class="text-base font-mono font-bold text-orange-800">{{ $observadoCount }}</span>
+                <span class="text-[10px] text-orange-600 block mt-0.5">Observaciones</span>
             </div>
 
-            <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200">
-                <span class="text-[11px] text-blue-700 font-semibold uppercase block">Peso Promedio</span>
-                <span class="text-lg font-mono font-bold text-blue-900">{{ $promedioPeso }} g</span>
+            <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                <span class="text-[10px] text-amber-700 font-semibold uppercase block">Pasables</span>
+                <span class="text-base font-mono font-bold text-amber-800">{{ $pasableCount ?? 0 }}</span>
+                <span class="text-[10px] text-amber-600 block mt-0.5">Aceptadas con falla</span>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                <span class="text-[10px] text-blue-700 font-semibold uppercase block">Peso Promedio</span>
+                <span class="text-base font-mono font-bold text-blue-900">{{ $promedioPeso }} g</span>
                 <span class="text-[10px] text-blue-600 block mt-0.5">Evaluación metrológica</span>
             </div>
         </div>
@@ -127,26 +129,27 @@
                 <table class="w-full text-left text-xs">
                     <thead class="bg-gray-100 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
                         <tr>
-                            <th class="px-4 py-2.5 text-center w-28">N° Cavidad</th>
-                            <th class="px-4 py-2.5 font-mono text-center w-36">Peso Medido (g)</th>
-                            <th class="px-4 py-2.5 text-center w-36">Tolerancia</th>
-                            <th class="px-4 py-2.5 text-center w-36">Estado</th>
-                            <th class="px-4 py-2.5">Motivo de Scrap / Defecto</th>
+                            <th class="px-3 py-2.5 text-center w-24">N° Cavidad</th>
+                            <th class="px-3 py-2.5 font-mono text-center w-28">Peso (g)</th>
+                            <th class="px-3 py-2.5 text-center w-32">Tolerancia</th>
+                            <th class="px-3 py-2.5 text-center w-32">Estado</th>
+                            <th class="px-3 py-2.5 w-44">Motivo de Scrap / Defecto</th>
+                            <th class="px-3 py-2.5">Observaciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach($cavidades as $cav)
-                            <tr class="{{ $cav->estado === 'FUERA_DE_RANGO' ? 'bg-red-50 font-semibold text-red-900' : 'hover:bg-gray-50/50' }}">
-                                <td class="px-4 py-2 text-center font-mono font-bold text-gray-800">
-                                    Cavidad {{ sprintf('%02d', $cav->cavidad_numero) }}
+                            <tr class="{{ $cav->estado === 'FUERA_DE_RANGO' ? 'bg-red-50 font-semibold text-red-900' : ($cav->estado === 'PASABLE' ? 'bg-amber-50/50' : 'hover:bg-gray-50/50') }}">
+                                <td class="px-3 py-2 text-center font-mono font-bold text-gray-800">
+                                    C-{{ sprintf('%02d', $cav->cavidad_numero) }}
                                 </td>
-                                <td class="px-4 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : 'text-gray-900' }}">
+                                <td class="px-3 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : 'text-gray-900' }}">
                                     {{ number_format($cav->peso_medido, 2) }} g
                                 </td>
-                                <td class="px-4 py-2 text-center font-mono text-gray-500">
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
                                     {{ $param && $param->peso_min > 0 ? $param->peso_min.' - '.$param->peso_max.' g' : '-' }}
                                 </td>
-                                <td class="px-4 py-2 text-center whitespace-nowrap">
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
                                     @if($cav->estado === 'CONFORME')
                                         <span class="px-2.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
                                             🟢 Conforme
@@ -155,24 +158,27 @@
                                         <span class="px-2.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full border border-orange-200">
                                             🟠 Observado
                                         </span>
+                                    @elseif($cav->estado === 'PASABLE')
+                                        <span class="px-2.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">
+                                            ⚠️ Pasable
+                                        </span>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">
                                             🔴 Fuera de Rango
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-2">
-                                    @if($cav->estado === 'FUERA_DE_RANGO')
-                                        <span class="font-bold text-red-700 bg-red-100/70 px-2.5 py-0.5 rounded-md border border-red-200 inline-block">
-                                            {{ $cav->motivo_scrap ?? 'Sin especificar' }}
-                                        </span>
-                                    @elseif($cav->estado === 'OBSERVADO')
-                                        <span class="font-bold text-orange-700 bg-orange-100/70 px-2.5 py-0.5 rounded-md border border-orange-200 inline-block">
-                                            {{ $cav->motivo_scrap ?? 'Sin especificar' }}
+                                <td class="px-3 py-2">
+                                    @if(in_array($cav->estado, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE']))
+                                        <span class="font-bold text-red-700 bg-red-100/70 px-2 py-0.5 rounded-md border border-red-200 inline-block text-[11px]">
+                                            {{ $cav->motivo_scrap ?? '-' }}
                                         </span>
                                     @else
                                         <span class="text-gray-400 italic text-[11px]">-</span>
                                     @endif
+                                </td>
+                                <td class="px-3 py-2 text-gray-700 text-xs">
+                                    {{ $cav->observaciones ?: '-' }}
                                 </td>
                             </tr>
                         @endforeach

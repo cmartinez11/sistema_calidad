@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use App\Models\Molde;
+use App\Models\Resina;
 
 class InspeccionCavidadController extends Controller
 {
@@ -76,6 +77,8 @@ class InspeccionCavidadController extends Controller
 
         $turnos = Turno::all();
 
+        $resinas = Resina::where('activo', true)->orderBy('codigo', 'asc')->get();
+
         $selectedProductoId = $request->get('producto_id');
 
         return view('inspecciones_cavidades.create', compact(
@@ -84,7 +87,8 @@ class InspeccionCavidadController extends Controller
             'operarios',
             'turnos',
             'selectedProductoId',
-            'moldes'
+            'moldes',
+            'resinas'
         ));
     }
 
@@ -96,9 +100,10 @@ class InspeccionCavidadController extends Controller
         $validated = $request->validate([
             'producto_id' => 'required|exists:productos,id',
             'maquina_id' => 'nullable|exists:maquinas,id',
-            'molde_id' => 'nullable|exists:moldes,id',
+            'molde_id' => 'nullable|exists:molde,id',
             'operario_id' => 'nullable|exists:operarios,id',
             'turno_id' => 'nullable|exists:turnos,id',
+            'resina_id'=> 'nullable|exists:resinas,id',
             'cavidades' => 'required|array|min:1',
             'cavidades.*.cavidad_numero' => 'required|integer|min:1',
             'cavidades.*.peso_medido' => 'required|numeric|min:0',
@@ -151,6 +156,7 @@ class InspeccionCavidadController extends Controller
                     'molde_id' => $validated['molde_id'] ?? null,
                     'operario_id' => $validated['operario_id'] ?? null,
                     'turno_id' => $validated['turno_id'] ?? null,
+                    'resina_id' => $validated['resina_id'] ?? null,
                     'user_id' => $userId,
                     'cavidad_numero' => $cavData['cavidad_numero'],
                     'peso_medido' => $cavData['peso_medido'],
@@ -191,7 +197,7 @@ class InspeccionCavidadController extends Controller
      */
     public function show(string $codigo): View
     {
-        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'turno', 'user'])
+        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'resina', 'turno', 'user'])
             ->where('codigo_inspeccion', $codigo)
             ->orderBy('cavidad_numero', 'asc')
             ->get();
