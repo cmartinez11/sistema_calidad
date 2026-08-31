@@ -206,19 +206,23 @@
     <!-- DATOS GENERALES Y DE CONTEXTO TÉCNICO -->
     <table class="meta-table">
         <tr>
-            <td>
+            <td style="width: 20%;">
                 <span class="meta-label">Código Producto</span>
                 <span class="meta-value" style="font-family: monospace;">{{ $producto->codigo }}</span>
             </td>
-            <td>
+            <td style="width: 25%;">
                 <span class="meta-label">Nombre del Producto</span>
                 <span class="meta-value">{{ $producto->nombre }}</span>
             </td>
-            <td>
+            <td style="width: 20%;">
                 <span class="meta-label">Inyectora / Máquina</span>
                 <span class="meta-value">{{ $header->maquina->codigo ?? 'N/A' }} {{ $header->maquina ? '('.$header->maquina->nombre.')' : '' }}</span>
             </td>
-            <td>
+            <td style="width: 20%;">
+                <span class="meta-label">Resina</span>
+                <span class="meta-value">{{ $resinaObj->nombre ?? ($calidadResumen->resina->nombre ?? ($resinaObj->codigo ?? ($calidadResumen->resina->codigo ?? 'N/A'))) }}</span>
+            </td>
+            <td style="width: 20%;">
                 <span class="meta-label">Operario / Auditor</span>
                 <span class="meta-value">{{ $header->operario->nombre ?? 'N/A' }}</span>
             </td>

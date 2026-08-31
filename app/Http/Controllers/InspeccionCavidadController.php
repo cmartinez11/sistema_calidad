@@ -3,19 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\InspeccionCalidad;
 use App\Models\InspeccionCavidad;
+use App\Models\Lote;
 use App\Models\Maquina;
+use App\Models\Molde;
 use App\Models\Operario;
 use App\Models\Producto;
+use App\Models\Resina;
 use App\Models\Turno;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use App\Models\Molde;
-use App\Models\Resina;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InspeccionCavidadController extends Controller
 {
@@ -93,7 +101,220 @@ class InspeccionCavidadController extends Controller
     }
 
     /**
-     * Almacena autónomamente el pesaje por cavidades generando un codigo_inspeccion único.
+     * Descarga la plantilla oficial en formato nativo de Excel (.xlsx) con columnas separadas (Columna A a G).
+     */
+    public function downloadPlantillaExcel(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Plantilla Cavidades');
+
+        // Encabezados exactos según requerimiento
+        $headers = [
+            'CAVIDAD',
+            'PESO (G)',
+            'ESP. PARED',
+            'ESP. FONDO',
+            'ALTURA',
+            'TIENE DEFECTO',
+            'OBSERVACIONES'
+        ];
+
+        // Escribir encabezados en la fila 1
+        $sheet->fromArray([$headers], null, 'A1');
+
+        // Formato de estilos de cabecera
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+                'size' => 11,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '30732B'], // Color corporativo Grupo Fénix #30732B
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+        ];
+
+        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(1)->setRowHeight(25);
+
+        // Filas de datos de ejemplo (Cavidades 1 a 16)
+        $sampleData = [];
+        for ($i = 1; $i <= 16; $i++) {
+            $sampleData[] = [
+                'C-' . str_pad($i, 2, '0', STR_PAD_LEFT),
+                28.00,
+                2.500,
+                3.100,
+                150.00,
+                0,
+                ''
+            ];
+        }
+
+        $sheet->fromArray($sampleData, null, 'A2');
+
+        // Autoajustar ancho de columnas de la A a la G
+        foreach (range('A', 'G') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $responseHeaders = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="plantilla_medicion_cavidades_fenix.xlsx"',
+            'Cache-Control' => 'max-age=0',
+        ];
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, 'plantilla_medicion_cavidades_fenix.xlsx', $responseHeaders);
+    }
+
+    /**
+     * Procesa la lectura masiva del archivo Excel (.xlsx, .xls) e inserta los datos en la grilla en el frontend.
+     */
+    public function procesarExcel(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|max:10240',
+            ], [
+                'excel_file.required' => 'Debes seleccionar un archivo Excel (.xlsx, .xls) válido.',
+                'excel_file.max' => 'El tamaño del archivo no puede superar los 10 MB.',
+            ]);
+
+            $file = $request->file('excel_file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $path = $file->getRealPath();
+            $rows = [];
+
+            if (in_array($extension, ['xlsx', 'xls'])) {
+                $spreadsheet = IOFactory::load($path);
+                $worksheet = $spreadsheet->getActiveSheet();
+                $spreadsheetRows = $worksheet->toArray(null, true, true, false);
+
+                foreach ($spreadsheetRows as $r) {
+                    $cleanRow = array_map(fn($v) => trim((string)$v), $r);
+                    if (array_filter($cleanRow)) {
+                        $rows[] = $cleanRow;
+                    }
+                }
+            } else {
+                $content = file_get_contents($path);
+                $content = str_replace("\xEF\xBB\xBF", '', $content);
+                $lines = preg_split("/\r\n|\n|\r/", $content);
+                $lines = array_filter(array_map('trim', $lines));
+
+                if (!empty($lines)) {
+                    $firstLine = reset($lines);
+                    $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+
+                    foreach ($lines as $line) {
+                        if (empty($line)) continue;
+                        $data = str_getcsv($line, $delimiter);
+                        $cleanRow = array_map(fn($val) => trim(str_replace(['"', "'"], '', (string)$val)), $data);
+                        if (array_filter($cleanRow)) {
+                            $rows[] = $cleanRow;
+                        }
+                    }
+                }
+            }
+
+            if (empty($rows)) {
+                return response()->json(['success' => false, 'message' => 'El archivo Excel no contiene filas legibles.'], 422);
+            }
+
+            // Función de normalización flexible para encabezados
+            $normalize = function ($str) {
+                $str = mb_strtolower(trim((string)$str));
+                $search = ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ', '"', "'", '(', ')', '.', ' ', '-'];
+                $replace = ['a', 'e', 'i', 'o', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'n', '', '', '', '', '', '_', '_'];
+                $str = str_replace($search, $replace, $str);
+                return preg_replace('/_+/', '_', trim($str, '_'));
+            };
+
+            $rawHeader = array_shift($rows);
+            $headerRow = array_map(fn($col) => $normalize($col), $rawHeader);
+
+            $findCol = function(array $aliases) use ($headerRow) {
+                foreach ($aliases as $alias) {
+                    $index = array_search($alias, $headerRow);
+                    if ($index !== false) return $index;
+                }
+                return false;
+            };
+
+            // Mapeo flexible de alias para cada columna A-G
+            $colCavidad = $findCol(['cavidad', 'cav', 'c', 'num_cavidad']);
+            $colPeso = $findCol(['peso_g', 'peso', 'peso_medido', 'pesog']);
+            $colPared = $findCol(['esp_pared', 'espesor_pared', 'pared']);
+            $colFondo = $findCol(['esp_fondo', 'espesor_fondo', 'fondo']);
+            $colAltura = $findCol(['altura', 'alt']);
+            $colDefecto = $findCol(['tiene_defecto', 'defecto', 'falla']);
+            $colObs = $findCol(['observaciones', 'observacion', 'comentarios']);
+
+            // Si los encabezados no se encuentran por nombre, asumir por posición fija A-G
+            if ($colCavidad === false) $colCavidad = 0;
+            if ($colPeso === false) $colPeso = 1;
+            if ($colPared === false) $colPared = 2;
+            if ($colFondo === false) $colFondo = 3;
+            if ($colAltura === false) $colAltura = 4;
+            if ($colDefecto === false) $colDefecto = 5;
+            if ($colObs === false) $colObs = 6;
+
+            $cavidadesImportadas = [];
+            $rowCounter = 1;
+
+            foreach ($rows as $row) {
+                $cavidadRaw = isset($row[$colCavidad]) ? $row[$colCavidad] : (string)$rowCounter;
+                $cavNum = (int) preg_replace('/[^0-9]/', '', $cavidadRaw);
+                if ($cavNum <= 0) {
+                    $cavNum = $rowCounter;
+                }
+
+                $pesoVal = (isset($row[$colPeso]) && $row[$colPeso] !== '') ? (float)str_replace(',', '.', $row[$colPeso]) : '';
+                $paredVal = (isset($row[$colPared]) && $row[$colPared] !== '') ? (float)str_replace(',', '.', $row[$colPared]) : '';
+                $fondoVal = (isset($row[$colFondo]) && $row[$colFondo] !== '') ? (float)str_replace(',', '.', $row[$colFondo]) : '';
+                $alturaVal = (isset($row[$colAltura]) && $row[$colAltura] !== '') ? (float)str_replace(',', '.', $row[$colAltura]) : '';
+
+                $defectoRaw = isset($row[$colDefecto]) ? trim($row[$colDefecto]) : '0';
+                $tieneDefecto = in_array(strtolower($defectoRaw), ['1', 'si', 'sí', 'true', 's']);
+
+                $obsVal = isset($row[$colObs]) ? trim($row[$colObs]) : '';
+
+                $cavidadesImportadas[] = [
+                    'cavidad_numero' => $cavNum,
+                    'peso_medido' => $pesoVal !== '' ? $pesoVal : '',
+                    'espesor_pared' => $paredVal !== '' ? $paredVal : '',
+                    'espesor_fondo' => $fondoVal !== '' ? $fondoVal : '',
+                    'altura' => $alturaVal !== '' ? $alturaVal : '',
+                    'tiene_defecto' => $tieneDefecto,
+                    'observaciones' => $obsVal,
+                ];
+
+                $rowCounter++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mediciones de Excel leídas exitosamente.',
+                'cavidades' => $cavidadesImportadas,
+                'count' => count($cavidadesImportadas)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error al procesar archivo Excel: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Almacena el pesaje por cavidades e inserta automáticamente un resumen consolidado en inspecciones_calidad.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -107,6 +328,9 @@ class InspeccionCavidadController extends Controller
             'cavidades' => 'required|array|min:1',
             'cavidades.*.cavidad_numero' => 'required|integer|min:1',
             'cavidades.*.peso_medido' => 'required|numeric|min:0',
+            'cavidades.*.espesor_pared' => 'nullable|numeric|min:0',
+            'cavidades.*.espesor_fondo' => 'nullable|numeric|min:0',
+            'cavidades.*.altura' => 'nullable|numeric|min:0',
             'cavidades.*.estado' => 'required|string|in:CONFORME,FUERA_DE_RANGO,OBSERVADO,PASABLE',
             'cavidades.*.motivo_scrap' => 'nullable|string|max:100',
             'cavidades.*.observaciones' => 'nullable|string|max:255',
@@ -123,20 +347,23 @@ class InspeccionCavidadController extends Controller
             $userId = Auth::id();
             $defectosCount = 0;
 
-            // Generar código único correlativo (ej: CAV-20260826-0001)
+            // Generar código único correlativo para la inspección (ej: CAV-20260831-0001)
             $prefix = 'CAV-' . date('Ymd') . '-';
             $latestCode = InspeccionCavidad::where('codigo_inspeccion', 'LIKE', "{$prefix}%")
                 ->max('codigo_inspeccion');
 
-            if ($latestCode) {
-                $seq = (int) substr($latestCode, -4) + 1;
-            } else {
-                $seq = 1;
-            }
-
+            $seq = $latestCode ? ((int) substr($latestCode, -4) + 1) : 1;
             $codigoInspeccion = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
-            // Guardar autónomamente cada registro de cavidad con el mismo código identificador
+            // Colecciones para calcular extremos (Min / Max)
+            $pesos = [];
+            $paredes = [];
+            $fondos = [];
+            $alturas = [];
+            $motivosScrap = [];
+            $observaciones = [];
+
+            // 1. Inserción detallada e intacta cavidad por cavidad
             foreach ($validated['cavidades'] as $cavData) {
                 $estadoClean = strtoupper(str_replace(' ', '_', $cavData['estado']));
                 
@@ -144,10 +371,31 @@ class InspeccionCavidadController extends Controller
                     $defectosCount++;
                 }
 
-                // Capturar el motivo de scrap si el estado amerita observación
                 $motivo = in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE']) 
                     ? ($cavData['motivo_scrap'] ?? 'Sin especificar') 
                     : null;
+
+                if ($motivo && !in_array($motivo, $motivosScrap)) {
+                    $motivosScrap[] = $motivo;
+                }
+
+                if (!empty($cavData['observaciones']) && !in_array($cavData['observaciones'], $observaciones)) {
+                    $observaciones[] = $cavData['observaciones'];
+                }
+
+                // Coleccionar valores numéricos para extremos
+                if (isset($cavData['peso_medido']) && is_numeric($cavData['peso_medido'])) {
+                    $pesos[] = (float)$cavData['peso_medido'];
+                }
+                if (isset($cavData['espesor_pared']) && is_numeric($cavData['espesor_pared'])) {
+                    $paredes[] = (float)$cavData['espesor_pared'];
+                }
+                if (isset($cavData['espesor_fondo']) && is_numeric($cavData['espesor_fondo'])) {
+                    $fondos[] = (float)$cavData['espesor_fondo'];
+                }
+                if (isset($cavData['altura']) && is_numeric($cavData['altura'])) {
+                    $alturas[] = (float)$cavData['altura'];
+                }
 
                 InspeccionCavidad::create([
                     'codigo_inspeccion' => $codigoInspeccion,
@@ -166,11 +414,108 @@ class InspeccionCavidadController extends Controller
                 ]);
             }
 
+            // 2. Extracción de Extremos (Mínimos y Máximos)
+            $pesoMin = count($pesos) > 0 ? min($pesos) : null;
+            $pesoMax = count($pesos) > 0 ? max($pesos) : null;
+
+            $espParedMin = count($paredes) > 0 ? min($paredes) : null;
+            $espParedMax = count($paredes) > 0 ? max($paredes) : null;
+
+            $espFondoMin = count($fondos) > 0 ? min($fondos) : null;
+            $espFondoMax = count($fondos) > 0 ? max($fondos) : null;
+
+            $alturaMin = count($alturas) > 0 ? min($alturas) : null;
+            $alturaMax = count($alturas) > 0 ? max($alturas) : null;
+
+            // 3. Generación del Código del Lote estructurado (ej: PET2636M04)
+            $now = Carbon::now('America/Lima');
+            $anio = $now->format('y'); // 2 dígitos del año (ej. '26')
+            $semana = sprintf('%02d', $now->isoWeek); // 2 dígitos de la semana del año (ej. '36')
+
+            // Prefijo del producto (Fijo 'PET' para preformas o inyección de preformas)
+            $tipoProdUpper = strtoupper(trim($producto->tipo_producto ?? ''));
+            if (empty($tipoProdUpper) || $tipoProdUpper === 'PREFORMA' || str_contains($tipoProdUpper, 'PREFORMA') || str_contains($tipoProdUpper, 'PET')) {
+                $prefijo = 'PET';
+            } elseif (strlen($tipoProdUpper) > 3) {
+                $prefijo = substr($tipoProdUpper, 0, 3);
+            } else {
+                $prefijo = $tipoProdUpper;
+            }
+
+            // Código de la Máquina seleccionada (ej. 'M04')
+            $maquinaObj = !empty($validated['maquina_id']) ? Maquina::find($validated['maquina_id']) : null;
+            $codigoMaquina = $maquinaObj ? strtoupper(trim($maquinaObj->codigo)) : 'M01';
+
+            // Código de Lote Formateado (ej: PET2636M04)
+            $codigoLote = "{$prefijo}{$anio}{$semana}{$codigoMaquina}";
+
+            $resinaObj = !empty($validated['resina_id']) ? Resina::find($validated['resina_id']) : null;
+            $resinaNombre = $resinaObj ? $resinaObj->codigo : null;
+
+            if (!empty($validated['lote_id'])) {
+                $lote = Lote::find($validated['lote_id']);
+            } else {
+                $lote = Lote::where('codigo_lote', $codigoLote)->first();
+            }
+
+            if (!$lote) {
+                $lote = Lote::create([
+                    'codigo_lote' => $codigoLote,
+                    'producto_id' => $producto->id,
+                    'maquina_id' => $maquinaObj ? $maquinaObj->id : null,
+                    'resina' => $resinaNombre,
+                    'fecha_produccion' => $now->toDateString(),
+                    'estado_lote' => 'liberado',
+                    'cantidad_empaques' => 0,
+                    'cantidad_producida_unidades' => 0,
+                    'total_millares' => 0.0000,
+                    'peso_total_kg' => 0.00,
+                    'scrap_kg' => 0.00,
+                    'scrap_porcentaje' => 0.00,
+                ]);
+            }
+
+            // 4. Inserción Consolidada en la Tabla `inspecciones_calidad`
+            $strMotivos = count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null;
+            $strObs = count($observaciones) > 0 ? implode('; ', $observaciones) : null;
+
+            InspeccionCalidad::create([
+                'codigo_inspeccion' => $codigoInspeccion,
+                'producto_id' => $producto->id,
+                'lote_id' => $lote->id,
+                'maquina_id' => $validated['maquina_id'] ?? null,
+                'molde_id' => $validated['molde_id'] ?? null,
+                'resina_id' => $validated['resina_id'] ?? null,
+                'user_id' => $userId,
+                'turno_id' => $validated['turno_id'] ?? null,
+                'operario_id' => $validated['operario_id'] ?? null,
+
+                'peso_min' => $pesoMin,
+                'peso_max' => $pesoMax,
+
+                'esp_pared_medido' => $espParedMin,
+                'esp_pared_min' => $espParedMin,
+                'esp_pared_max' => $espParedMax,
+
+                'esp_fondo_medido' => $espFondoMin,
+                'esp_fondo_min' => $espFondoMin,
+                'esp_fondo_max' => $espFondoMax,
+
+                'altura_medida' => $alturaMin,
+                'altura_min' => $alturaMin,
+                'altura_max' => $alturaMax,
+
+                'estado_evaluacion' => ($defectosCount > 0) ? 'OBSERVADO_PNC' : 'CONFORME',
+                'motivo_scrap' => $strMotivos,
+                'causa' => $strMotivos,
+                'comentarios' => $strObs,
+            ]);
+
             // Registrar movimiento de auditoría en activity_logs
             ActivityLog::create([
                 'user_id' => $userId,
                 'accion' => 'CREAR_INSPECCION_CAVIDADES',
-                'descripcion' => "Se registró la auditoría de cavidades con código {$codigoInspeccion} para el producto ID {$producto->id} ({$producto->codigo} - {$producto->nombre})",
+                'descripcion' => "Se registró la auditoría código {$codigoInspeccion} con lote {$codigoLote} para el producto {$producto->codigo}",
                 'ip_address' => $request->ip(),
             ]);
 
@@ -178,7 +523,7 @@ class InspeccionCavidadController extends Controller
 
             $totalCount = count($validated['cavidades']);
             $estadoResumen = ($defectosCount === 0) ? 'CONFORME' : "{$defectosCount} cavidades con observaciones/defectos";
-            $msg = "Auditoría de cavidades registrada exitosamente con el código {$codigoInspeccion}. Total evaluado: {$totalCount} cavidades ({$estadoResumen}).";
+            $msg = "Auditoría de cavidades y resumen de calidad registrados exitosamente (Lote: {$codigoLote}, Inspección: {$codigoInspeccion}). Total evaluado: {$totalCount} cavidades ({$estadoResumen}).";
 
             return redirect()->route('inspecciones-cavidades.show', $codigoInspeccion)
                 ->with('success', $msg);
@@ -188,7 +533,7 @@ class InspeccionCavidadController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Error al registrar el pesaje de cavidades: ' . $e->getMessage());
+                ->with('error', 'Error al registrar la inspección: ' . $e->getMessage());
         }
     }
 
@@ -197,7 +542,7 @@ class InspeccionCavidadController extends Controller
      */
     public function show(string $codigo): View
     {
-        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'resina', 'turno', 'user'])
+        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'resina', 'molde', 'turno', 'user'])
             ->where('codigo_inspeccion', $codigo)
             ->orderBy('cavidad_numero', 'asc')
             ->get();
@@ -209,6 +554,12 @@ class InspeccionCavidadController extends Controller
         $header = $cavidades->first();
         $producto = $header->producto;
         $param = $producto->parametroPreforma ?? null;
+
+        $calidadResumen = InspeccionCalidad::with(['resina', 'molde', 'maquina', 'operario', 'turno'])
+            ->where('codigo_inspeccion', $codigo)
+            ->first();
+
+        $resinaObj = $header->resina ?? ($calidadResumen->resina ?? null);
 
         $totalCavidades = $cavidades->count();
         $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
@@ -223,6 +574,8 @@ class InspeccionCavidadController extends Controller
             'header',
             'producto',
             'param',
+            'calidadResumen',
+            'resinaObj',
             'totalCavidades',
             'fueraDeRangoCount',
             'observadoCount',
@@ -237,7 +590,7 @@ class InspeccionCavidadController extends Controller
      */
     public function exportPdf(string $codigo)
     {
-        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'turno', 'user'])
+        $cavidades = InspeccionCavidad::with(['producto.parametroPreforma', 'maquina', 'operario', 'resina', 'molde', 'turno', 'user'])
             ->where('codigo_inspeccion', $codigo)
             ->orderBy('cavidad_numero', 'asc')
             ->get();
@@ -249,6 +602,12 @@ class InspeccionCavidadController extends Controller
         $header = $cavidades->first();
         $producto = $header->producto;
         $param = $producto->parametroPreforma ?? null;
+
+        $calidadResumen = InspeccionCalidad::with(['resina', 'molde', 'maquina', 'operario', 'turno'])
+            ->where('codigo_inspeccion', $codigo)
+            ->first();
+
+        $resinaObj = $header->resina ?? ($calidadResumen->resina ?? null);
 
         $totalCavidades = $cavidades->count();
         $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
@@ -264,6 +623,8 @@ class InspeccionCavidadController extends Controller
             'header',
             'producto',
             'param',
+            'calidadResumen',
+            'resinaObj',
             'totalCavidades',
             'fueraDeRangoCount',
             'observadoCount',

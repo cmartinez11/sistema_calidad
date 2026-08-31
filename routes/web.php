@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\InspeccionCalidadController;
 use App\Http\Controllers\InspeccionCavidadController;
 use App\Http\Controllers\MaquinaController;
 use App\Http\Controllers\OperarioController;
@@ -45,16 +46,22 @@ Route::middleware('auth')->group(function () {
     // Rutas para Inspección Cavidad por Cavidad
     Route::get('inspecciones-cavidades', [InspeccionCavidadController::class, 'index'])->name('inspecciones-cavidades.index');
     Route::get('inspecciones-cavidades/crear', [InspeccionCavidadController::class, 'create'])->name('inspecciones-cavidades.create');
+    Route::get('inspecciones-cavidades/plantilla-excel', [InspeccionCavidadController::class, 'downloadPlantillaExcel'])->name('inspecciones-cavidades.plantilla-excel');
+    Route::post('inspecciones-cavidades/procesar-excel', [InspeccionCavidadController::class, 'procesarExcel'])->name('inspecciones-cavidades.procesar-excel');
     Route::post('inspecciones-cavidades', [InspeccionCavidadController::class, 'store'])->name('inspecciones-cavidades.store');
     Route::get('inspecciones-cavidades/{codigo}', [InspeccionCavidadController::class, 'show'])->name('inspecciones-cavidades.show');
     Route::get('inspecciones-cavidades/{codigo}/pdf', [InspeccionCavidadController::class, 'exportPdf'])->name('inspecciones-cavidades.pdf');
+
+    // Rutas para Resumen de Inspecciones de Calidad
+    Route::get('inspecciones-calidad', [InspeccionCalidadController::class, 'index'])->name('inspecciones-calidad.index');
+    Route::get('inspecciones-calidad/{id}', [InspeccionCalidadController::class, 'show'])->name('inspecciones-calidad.show')->whereNumber('id');
 
     Route::get('maquinas/create', [MaquinaController::class, 'create'])->name('maquinas.create');
     Route::get('moldes/create', [MoldeController::class, 'create'])->name('moldes.create');
     Route::get('resinas/create', [ResinaController::class, 'create'])->name('resinas.create');
     Route::get('operarios/create', [OperarioController::class, 'create'])->name('operarios.create');
 
-    // 2. Los recursos con restricción numérica estricta para el ID
+    // Recursos con restricción numérica estricta para el ID
     Route::resource('maquinas', MaquinaController::class)->whereNumber('maquina');
     Route::resource('moldes', MoldeController::class)->whereNumber('molde');
     Route::resource('resinas', ResinaController::class)->whereNumber('resina');

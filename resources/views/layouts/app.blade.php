@@ -48,7 +48,11 @@
                     </a>
                     <a href="{{ route('inspecciones-cavidades.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-cavidades.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                        Auditorías
+                        Auditorías por Cavidad
+                    </a>
+                    <a href="{{ route('inspecciones-calidad.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-calidad.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Resumen de Calidad
                     </a>
                 </nav>
             </div>
@@ -63,16 +67,14 @@
         <div class="flex-1 flex flex-col overflow-y-auto">
             <!-- Barra Superior -->
             <header class="bg-white shadow-sm h-16 shrink-0 flex items-center justify-between px-8 z-10">
-                <!-- Fecha y Hora unificadas (Sin duplicados) -->
+                <!-- Fecha y Hora unificadas -->
                 <div class="flex items-center space-x-4 bg-gray-50 px-4 py-1.5 rounded-xl border border-gray-100">
-                    <!-- Fecha actual en PHP -->
                     <span class="text-xs font-bold text-gray-600">
                         {{ ucfirst(\Carbon\Carbon::now()->locale('es')->isoFormat('dddd, D MMMM YYYY')) }}
                     </span>
                     
                     <div class="h-4 w-px bg-gray-200"></div>
 
-                    <!-- Hora exacta -->
                     <div class="flex items-center space-x-2">
                         <svg class="w-4 h-4 text-fenix" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -96,7 +98,6 @@
     </div>
 
     <script>
-        // Sincronizado de forma segura con la hora del servidor
         let serverTime = new Date("{{ $serverTime ?? now()->toIso8601String() }}");
 
         function updateServerClock() {

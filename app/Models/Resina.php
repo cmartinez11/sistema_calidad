@@ -11,7 +11,7 @@ class Resina extends Model
     use HasFactory;
 
     protected $table = 'resinas';
-    
+
     protected $fillable = [
         'codigo',
         'nombre',

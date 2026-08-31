@@ -41,8 +41,11 @@ class LoteService
             ? Carbon::parse($data['fecha_produccion'])
             : Carbon::now();
 
-        // El prefijo de línea se toma del atributo 'prefijo' si existe, o del atributo 'codigo' del producto (ej: 'PET')
-        $prefijoLinea = $producto->prefijo ?? $producto->codigo;
+        // El prefijo de línea es 'PET' para preformas
+        $tipoUpper = strtoupper(trim($producto->tipo_producto ?? ''));
+        $prefijoLinea = (empty($tipoUpper) || $tipoUpper === 'PREFORMA' || str_contains($tipoUpper, 'PREFORMA') || str_contains($tipoUpper, 'PET'))
+            ? 'PET'
+            : ($producto->prefijo ?? substr($tipoUpper, 0, 3));
 
         $codigoLote = $this->generarCodigoLote($prefijoLinea, $maquina->codigo, $fechaProduccion);
 

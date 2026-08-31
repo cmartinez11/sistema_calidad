@@ -16,13 +16,19 @@ class InspeccionCavidad extends Model
         'codigo_inspeccion',
         'producto_id',
         'maquina_id',
+        'molde_id',
+        'resina_id',
         'operario_id',
         'turno_id',
         'user_id',
         'cavidad_numero',
         'peso_medido',
+        'espesor_pared',
+        'espesor_fondo',
+        'altura',
         'estado',
         'motivo_scrap',
+        'observaciones',
     ];
 
     public function producto(): BelongsTo
@@ -50,7 +56,7 @@ class InspeccionCavidad extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function molde()
+    public function molde(): BelongsTo
     {
         return $this->belongsTo(Molde::class, 'molde_id');
     }

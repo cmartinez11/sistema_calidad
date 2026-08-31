@@ -71,7 +71,17 @@
 
             <div>
                 <span class="text-gray-400 font-semibold uppercase block text-[10px]">Resina</span>
-                <span class="font-bold text-gray-900">{{ $header->resina->codigo ?? 'N/A' }} {{ $header->resina ? '('.$header->resina->nombre.')' : '' }}</span>
+                <span class="font-bold text-gray-900">
+                    @if(isset($resinaObj) && $resinaObj)
+                        {{ $resinaObj->nombre ?? $resinaObj->codigo }}
+                    @elseif(isset($calidadResumen) && $calidadResumen->resina)
+                        {{ $calidadResumen->resina->nombre ?? $calidadResumen->resina->codigo }}
+                    @elseif(isset($header->resina) && $header->resina)
+                        {{ $header->resina->nombre ?? $header->resina->codigo }}
+                    @else
+                        N/A
+                    @endif
+                </span>
             </div>
             
             <div>
