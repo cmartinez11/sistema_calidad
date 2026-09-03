@@ -39,7 +39,7 @@
     <!-- TARJETA SUPERIOR CABECERA -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Gestión de Máquinas e Inyectoras</h2>
+            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Gestión de Máquinas</h2>
             <p class="text-xs text-gray-400 mt-1">Control de inventario de equipos, inyectoras y estado operativo en planta</p>
         </div>
 

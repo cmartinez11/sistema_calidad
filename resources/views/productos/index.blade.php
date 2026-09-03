@@ -73,11 +73,13 @@
             </form>
 
             <!-- Botón Subir Masivo -->
-            <button @click="importModalOpen = true" 
-                    class="border-2 border-fenix text-fenix hover:bg-fenix hover:text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center space-x-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                <span>Subir Masivo</span>
-            </button>
+            @if(Auth::check() && Auth::user()->isAdmin())
+                <button @click="importModalOpen = true" 
+                        class="border-2 border-fenix text-fenix hover:bg-fenix hover:text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-all flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                    <span>Subir Masivo</span>
+                </button>
+            @endif
 
             <!-- Botón Nuevo Producto -->
             <button @click="createModalOpen = true" 

@@ -15,6 +15,7 @@ use Carbon\Carbon;
 
 use App\Http\Controllers\PncController;
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
@@ -37,6 +38,7 @@ Route::middleware('auth')->group(function () {
     // Rutas protegidas exclusivamente para Administradores
     Route::middleware('admin')->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     });
 
     // Rutas para Gestión de Productos y Parámetros
