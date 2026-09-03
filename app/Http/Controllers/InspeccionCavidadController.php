@@ -53,7 +53,8 @@ class InspeccionCavidadController extends Controller
                 'user_id',
                 DB::raw('MIN(created_at) as created_at'),
                 DB::raw('COUNT(*) as total_cavidades'),
-                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE') THEN 1 END) as fuera_de_rango_count")
+                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO') THEN 1 END) as defectos_count"),
+                DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count")
             )
             ->groupBy('codigo_inspeccion', 'producto_id', 'maquina_id', 'operario_id', 'turno_id', 'user_id')
             ->orderBy(DB::raw('MIN(created_at)'), 'desc')
@@ -346,6 +347,7 @@ class InspeccionCavidadController extends Controller
             $producto = Producto::findOrFail($validated['producto_id']);
             $userId = Auth::id();
             $defectosCount = 0;
+            $pasablesCount = 0;
 
             // Generar código único correlativo para la inspección (ej: CAV-20260831-0001)
             $prefix = 'CAV-' . date('Ymd') . '-';
@@ -372,13 +374,19 @@ class InspeccionCavidadController extends Controller
                     $estadoClean = 'ANULADO';
                 }
                 
-                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE'])) {
+                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO'])) {
                     $defectosCount++;
+                } elseif ($estadoClean === 'PASABLE') {
+                    $pasablesCount++;
                 }
 
-                $motivo = in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE']) 
-                    ? ($cavData['motivo_scrap'] ?? 'Sin especificar') 
-                    : null;
+                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO'])) {
+                    $motivo = $cavData['motivo_scrap'] ?? 'Sin especificar';
+                } elseif ($estadoClean === 'PASABLE') {
+                    $motivo = !empty($cavData['motivo_scrap']) ? $cavData['motivo_scrap'] : null;
+                } else {
+                    $motivo = null;
+                }
 
                 if ($motivo && !in_array($motivo, $motivosScrap)) {
                     $motivosScrap[] = $motivo;
@@ -496,9 +504,17 @@ class InspeccionCavidadController extends Controller
                 ]);
             }
 
-            // 4. Inserción Consolidada en la Tabla `inspecciones_calidad`
+            // 4. Inserción Consolidada en la Tabla `inspecciones_calidad` según la jerarquía oficial
             $strMotivos = count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null;
             $strObs = count($observaciones) > 0 ? implode('; ', $observaciones) : null;
+
+            if ($defectosCount > 0) {
+                $estadoEvaluacionGlobal = 'OBSERVADO';
+            } elseif ($pasablesCount > 0) {
+                $estadoEvaluacionGlobal = 'PASABLE';
+            } else {
+                $estadoEvaluacionGlobal = 'CONFORME';
+            }
 
             InspeccionCalidad::create([
                 'codigo_inspeccion' => $codigoInspeccion,
@@ -526,7 +542,7 @@ class InspeccionCavidadController extends Controller
                 'altura_min' => $alturaMin,
                 'altura_max' => $alturaMax,
 
-                'estado_evaluacion' => ($defectosCount > 0) ? 'OBSERVADO_PNC' : 'CONFORME',
+                'estado_evaluacion' => $estadoEvaluacionGlobal,
                 'motivo_scrap' => $strMotivos,
                 'causa' => $strMotivos,
                 'comentarios' => $strObs,
@@ -658,5 +674,31 @@ class InspeccionCavidadController extends Controller
         ))->setPaper('a4', 'portrait');
 
         return $pdf->stream("Reporte_Metrologico_{$codigo}.pdf");
+    }
+
+    /**
+     * Consolida y asigna el estado exclusivo de OBSERVADO a la auditoría en inspecciones_calidad.
+     */
+    public function consolidarObservado(string $codigo, Request $request): RedirectResponse
+    {
+        $inspeccionCalidad = InspeccionCalidad::where('codigo_inspeccion', $codigo)->first();
+
+        if (!$inspeccionCalidad) {
+            return back()->with('error', 'No se encontró el registro consolidado para esta auditoría.');
+        }
+
+        $inspeccionCalidad->update([
+            'estado_evaluacion' => 'OBSERVADO',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'accion' => 'CONSOLIDAR_INSPECCION_OBSERVADO',
+            'descripcion' => "Se consolidó manualmente la inspección {$codigo} con estado exclusivo OBSERVADO.",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->route('inspecciones-calidad.index')
+            ->with('success', "La auditoría {$codigo} ha sido consolidada exitosamente con el estado OBSERVADO.");
     }
 }

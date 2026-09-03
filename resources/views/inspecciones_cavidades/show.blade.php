@@ -156,7 +156,9 @@
                         <tr>
                             <th class="px-3 py-2.5 text-center w-24">N° Cavidad</th>
                             <th class="px-3 py-2.5 font-mono text-center w-28">Peso (g)</th>
-                            <th class="px-3 py-2.5 text-center w-32">Tolerancia</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Pared</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Fondo</th>
+                            <th class="px-3 py-2.5 text-center w-32">Altura</th>
                             <th class="px-3 py-2.5 text-center w-32">Estado</th>
                             <th class="px-3 py-2.5 w-44">Motivo de Scrap / Defecto</th>
                             <th class="px-3 py-2.5">Observaciones</th>
@@ -169,10 +171,16 @@
                                     C-{{ sprintf('%02d', $cav->cavidad_numero) }}
                                 </td>
                                 <td class="px-3 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : ($cav->estado === 'ANULADO' ? 'text-gray-400' : 'text-gray-900') }}">
-                                    {{ $cav->estado === 'ANULADO' ? 'N/A' : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
+                                    {{ $cav->estado === 'ANULADO' ? 0.00 : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
                                 </td>
                                 <td class="px-3 py-2 text-center font-mono text-gray-500">
-                                    {{ $param && $param->peso_min > 0 ? $param->peso_min.' - '.$param->peso_max.' g' : '-' }}
+                                    {{ $cav->espesor_pared !== null ? number_format($cav->espesor_pared, 2).' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $cav->espesor_fondo !== null ? number_format($cav->espesor_fondo, 2).' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $param && $param->altura_min > 0 ? $param->altura_min.' - '.$param->altura_max.' g' : '-' }}
                                 </td>
                                 <td class="px-3 py-2 text-center whitespace-nowrap">
                                     @if($cav->estado === 'CONFORME')
@@ -215,6 +223,63 @@
                 </table>
             </div>
         </div>
+
+        <!-- SECCIÓN DE ACCIONES CUANDO EXISTEN DEFECTOS O CAV. OBSERVADAS -->
+        @php
+            $tieneDefectos = $cavidades->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO'])->count() > 0;
+            $estadoActualCalidad = $calidadResumen->estado_evaluacion ?? null;
+        @endphp
+
+        @if($tieneDefectos)
+            <div class="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 p-6 rounded-2xl border-2 border-amber-200 shadow-sm print:hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="p-3 bg-amber-500 text-white rounded-xl shadow-md">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-bold text-gray-900">Se detectaron cavidades fuera de rango u observadas</h4>
+                            <p class="text-xs text-gray-600 mt-0.5">Selecciona el flujo deseado para consolidar el estado en el Resumen de Calidad:</p>
+                            @if($estadoActualCalidad)
+                                <div class="mt-2 inline-flex items-center space-x-2 text-xs">
+                                    <span class="text-gray-500 font-semibold">Estado actual consolidado:</span>
+                                    @if($estadoActualCalidad === 'CONFORME')
+                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-green-100 text-green-700 border border-green-200">🟢 CONFORME</span>
+                                    @elseif($estadoActualCalidad === 'PASABLE')
+                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-100 text-amber-800 border border-amber-300">⚠️ PASABLE</span>
+                                    @elseif($estadoActualCalidad === 'OBSERVADO' || $estadoActualCalidad === 'OBSERVADO_PNC')
+                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-orange-100 text-orange-800 border border-orange-300">🟠 OBSERVADO</span>
+                                    @elseif($estadoActualCalidad === 'PNC')
+                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-red-600 text-white shadow-sm">🔴 PNC</span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-gray-200 text-gray-700">{{ $estadoActualCalidad }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- BOTÓN 1: Generar Inspección -->
+                        <form action="{{ route('inspecciones-cavidades.consolidar-observado', $codigo) }}" method="POST">
+                            @csrf
+                            <button type="submit" 
+                                    class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>📋 Generar Inspección (OBSERVADO)</span>
+                            </button>
+                        </form>
+
+                        <!-- BOTÓN 2: Generar PNC -->
+                        <a href="{{ route('pnc.create', ['codigo_inspeccion' => $codigo]) }}" 
+                           class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>⚠️ Generar PNC</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- FIRMAS DE CONFORMIDAD (SOLO IMPRESIÓN) -->
         <div class="pt-12 grid grid-cols-2 gap-8 text-center text-xs text-gray-500 hidden print:grid">

@@ -134,9 +134,21 @@
                                     <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
                                         <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> CONFORME
                                     </span>
+                                @elseif($insp->estado_evaluacion === 'PASABLE')
+                                    <span class="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full border border-amber-300">
+                                        <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5"></span> PASABLE
+                                    </span>
+                                @elseif($insp->estado_evaluacion === 'OBSERVADO' || $insp->estado_evaluacion === 'OBSERVADO_PNC')
+                                    <span class="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-300" title="{{ $insp->motivo_scrap }}">
+                                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> OBSERVADO
+                                    </span>
+                                @elseif($insp->estado_evaluacion === 'PNC')
+                                    <span class="inline-flex items-center px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-sm" title="{{ $insp->motivo_scrap }}">
+                                        <span class="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span> PNC
+                                    </span>
                                 @else
-                                    <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-200" title="{{ $insp->motivo_scrap }}">
-                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span> OBSERVADO / PNC
+                                    <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full border border-gray-300">
+                                        {{ $insp->estado_evaluacion }}
                                     </span>
                                 @endif
                             </td>

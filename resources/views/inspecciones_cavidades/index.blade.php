@@ -97,13 +97,17 @@
 
                             <!-- Estado Global -->
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if($insp->fuera_de_rango_count == 0)
-                                    <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
-                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> CONFORME
+                                @if(($insp->defectos_count ?? 0) > 0)
+                                    <span class="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-300">
+                                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> OBSERVADO ({{ $insp->defectos_count }})
+                                    </span>
+                                @elseif(($insp->pasables_count ?? 0) > 0)
+                                    <span class="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full border border-amber-300">
+                                        <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5"></span> PASABLE ({{ $insp->pasables_count }})
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full border border-red-200">
-                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span> CON DEFECTOS ({{ $insp->fuera_de_rango_count }})
+                                    <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> CONFORME
                                     </span>
                                 @endif
                             </td>
