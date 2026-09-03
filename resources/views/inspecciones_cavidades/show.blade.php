@@ -231,7 +231,7 @@
         @endphp
 
         @if($tieneDefectos)
-            <div class="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 p-6 rounded-2xl border-2 border-amber-200 shadow-sm print:hidden">
+            <div x-data="{ showModalObservado: false }" class="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 p-6 rounded-2xl border-2 border-amber-200 shadow-sm print:hidden">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-start space-x-3">
                         <div class="p-3 bg-amber-500 text-white rounded-xl shadow-md">
@@ -239,7 +239,13 @@
                         </div>
                         <div>
                             <h4 class="text-base font-bold text-gray-900">Se detectaron cavidades fuera de rango u observadas</h4>
-                            <p class="text-xs text-gray-600 mt-0.5">Selecciona el flujo deseado para consolidar el estado en el Resumen de Calidad:</p>
+                            <p class="text-xs text-gray-600 mt-0.5">
+                                @if(!$estadoActualCalidad)
+                                    <span class="text-red-700 font-bold">🔒 Auditoría retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
+                                @else
+                                    Selecciona el flujo deseado para consolidar el estado en el Resumen de Calidad:
+                                @endif
+                            </p>
                             @if($estadoActualCalidad)
                                 <div class="mt-2 inline-flex items-center space-x-2 text-xs">
                                     <span class="text-gray-500 font-semibold">Estado actual consolidado:</span>
@@ -255,20 +261,24 @@
                                         <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-gray-200 text-gray-700">{{ $estadoActualCalidad }}</span>
                                     @endif
                                 </div>
+                            @else
+                                <div class="mt-2 inline-flex items-center space-x-2 text-xs">
+                                    <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-200 text-amber-900 border border-amber-300 animate-pulse">
+                                        ⏳ PENDIENTE DE CONSOLIDAR (BLOQUEO PREVENTIVO)
+                                    </span>
+                                </div>
                             @endif
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        <!-- BOTÓN 1: Generar Inspección -->
-                        <form action="{{ route('inspecciones-cavidades.consolidar-observado', $codigo) }}" method="POST">
-                            @csrf
-                            <button type="submit" 
-                                    class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <span>📋 Generar Inspección (OBSERVADO)</span>
-                            </button>
-                        </form>
+                        <!-- BOTÓN 1: Generar Inspección (Abre Modal de Justificación) -->
+                        <button type="button" 
+                                @click="showModalObservado = true"
+                                class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>📋 Generar Inspección (OBSERVADO)</span>
+                        </button>
 
                         <!-- BOTÓN 2: Generar PNC -->
                         <a href="{{ route('pnc.create', ['codigo_inspeccion' => $codigo]) }}" 
@@ -276,6 +286,76 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                             <span>⚠️ Generar PNC</span>
                         </a>
+                    </div>
+                </div>
+
+                <!-- MODAL DE JUSTIFICACIÓN PARA CONSOLIDAR COMO OBSERVADO -->
+                <div x-show="showModalObservado" 
+                     x-cloak
+                     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100"
+                         @click.away="showModalObservado = false">
+                        
+                        <!-- Encabezado Modal -->
+                        <div class="bg-gradient-to-r from-amber-600 to-orange-600 p-5 text-white flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-white/20 rounded-xl">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold">Justificación de Inspección Observada</h3>
+                                    <p class="text-[11px] text-amber-100">Selecciona obligatoriamente el motivo de pase con observación</p>
+                                </div>
+                            </div>
+                            <button type="button" @click="showModalObservado = false" class="text-white/80 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <!-- Formulario Modal -->
+                        <form action="{{ route('inspecciones-cavidades.consolidar-observado', $codigo) }}" method="POST" class="p-6 space-y-4">
+                            @csrf
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                    Motivo de Observación (Obligatorio) *
+                                </label>
+                                <select name="motivo_observacion_id" required
+                                        class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 focus:ring-amber-500 focus:border-amber-500">
+                                    <option value="">-- Seleccionar Motivo de Observación --</option>
+                                    @foreach($motivosObservacion as $mot)
+                                        <option value="{{ $mot->id }}">
+                                            {{ $mot->nombre }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                    Justificación o Detalle Adicional (Opcional)
+                                </label>
+                                <textarea name="motivo_observacion_texto" rows="3"
+                                          placeholder="Ingresa notas adicionales o instrucciones técnicas registradas por jefatura..."
+                                          class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-medium text-gray-900 focus:ring-amber-500 focus:border-amber-500"></textarea>
+                            </div>
+
+                            <div class="pt-3 flex justify-end space-x-3 border-t border-gray-100">
+                                <button type="button" @click="showModalObservado = false"
+                                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-all">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                        class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+                                    Confirmar y Consolidar
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

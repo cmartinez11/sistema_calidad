@@ -49,26 +49,42 @@ class PncController extends Controller
         $productos = Producto::where('activo', true)->orderBy('nombre', 'asc')->get();
         $lotes = Lote::orderBy('codigo_lote', 'desc')->limit(50)->get();
 
-        // Datos iniciales
+        // Datos iniciales heredados de la auditoría de cavidades
         $inspeccion = null;
-        $selectedProductoId = null;
-        $selectedLoteId = null;
+        $selectedProducto = null;
+        $selectedLote = null;
         $motivosScrapStr = '';
         $cantidadSugerida = 0;
 
         if ($codigoInspeccion) {
-            $cavidades = InspeccionCavidad::with(['producto', 'operario'])
+            $cavidades = InspeccionCavidad::with(['producto', 'operario', 'maquina'])
                 ->where('codigo_inspeccion', $codigoInspeccion)
                 ->get();
 
             if ($cavidades->isNotEmpty()) {
                 $firstCav = $cavidades->first();
-                $selectedProductoId = $firstCav->producto_id;
+                $selectedProducto = $firstCav->producto;
 
-                $calidad = InspeccionCalidad::where('codigo_inspeccion', $codigoInspeccion)->first();
-                if ($calidad) {
-                    $selectedLoteId = $calidad->lote_id;
+                $calidad = InspeccionCalidad::with('lote')->where('codigo_inspeccion', $codigoInspeccion)->first();
+                if ($calidad && $calidad->lote) {
+                    $selectedLote = $calidad->lote;
                     $motivosScrapStr = $calidad->motivo_scrap ?? '';
+                } else {
+                    // Si aún no está en inspecciones_calidad (bloqueo preventivo), buscar o crear el lote asignado
+                    $now = Carbon::now('America/Lima');
+                    $codigoLoteCalculado = "PET" . $now->format('y') . sprintf('%02d', $now->isoWeek) . ($firstCav->maquina ? strtoupper(trim($firstCav->maquina->codigo)) : 'M01');
+                    $selectedLote = Lote::where('codigo_lote', $codigoLoteCalculado)->first();
+                    if (!$selectedLote) {
+                        $selectedLote = Lote::create([
+                            'codigo_lote' => $codigoLoteCalculado,
+                            'producto_id' => $firstCav->producto_id,
+                            'maquina_id' => $firstCav->maquina_id,
+                            'fecha_produccion' => $now->toDateString(),
+                            'estado_lote' => 'liberado',
+                        ]);
+                    }
+                    $motivosScrap = $cavidades->pluck('motivo_scrap')->filter()->unique()->toArray();
+                    $motivosScrapStr = implode(', ', $motivosScrap);
                 }
 
                 $inspeccion = $firstCav;
@@ -90,8 +106,8 @@ class PncController extends Controller
             'productos',
             'lotes',
             'inspeccion',
-            'selectedProductoId',
-            'selectedLoteId',
+            'selectedProducto',
+            'selectedLote',
             'motivosScrapStr',
             'cantidadSugerida',
             'nextCodigoPnc',
@@ -209,13 +225,51 @@ class PncController extends Controller
                 'estado_pnc' => 'EMITIDO',
             ]);
 
-            // Cierre y Actualización de Estado en la inspección de calidad consolidada
+            // Cierre y Actualización o Creación de Estado en la inspección de calidad consolidada
             if (!empty($validated['codigo_inspeccion'])) {
-                InspeccionCalidad::where('codigo_inspeccion', $validated['codigo_inspeccion'])
-                    ->update([
+                $inspeccionCalidad = InspeccionCalidad::where('codigo_inspeccion', $validated['codigo_inspeccion'])->first();
+
+                if ($inspeccionCalidad) {
+                    $inspeccionCalidad->update([
                         'estado_evaluacion' => 'PNC',
-                        'causa' => $validated['causa_principal'] ?? 'Producto No Conforme Emitido (' . $validated['codigo_pnc'] . ')'
+                        'causa' => $validated['causa_principal'] ?? ('Producto No Conforme Emitido (' . $validated['codigo_pnc'] . ')')
                     ]);
+                } else {
+                    $cavidades = InspeccionCavidad::where('codigo_inspeccion', $validated['codigo_inspeccion'])->get();
+                    if ($cavidades->isNotEmpty()) {
+                        $header = $cavidades->first();
+                        $pesos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('peso_medido')->filter()->toArray();
+                        $paredes = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_pared')->filter()->toArray();
+                        $fondos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_fondo')->filter()->toArray();
+                        $alturas = $cavidades->where('estado', '!=', 'ANULADO')->pluck('altura')->filter()->toArray();
+                        $motivosScrap = $cavidades->pluck('motivo_scrap')->filter()->unique()->toArray();
+                        $observaciones = $cavidades->pluck('observaciones')->filter()->unique()->toArray();
+
+                        InspeccionCalidad::create([
+                            'codigo_inspeccion' => $validated['codigo_inspeccion'],
+                            'producto_id' => $validated['producto_id'],
+                            'lote_id' => $validated['lote_id'] ?? null,
+                            'maquina_id' => $header->maquina_id,
+                            'molde_id' => $header->molde_id,
+                            'resina_id' => $header->resina_id,
+                            'user_id' => $userId,
+                            'turno_id' => $header->turno_id,
+                            'operario_id' => $header->operario_id,
+                            'peso_min' => count($pesos) > 0 ? min($pesos) : null,
+                            'peso_max' => count($pesos) > 0 ? max($pesos) : null,
+                            'esp_pared_min' => count($paredes) > 0 ? min($paredes) : null,
+                            'esp_pared_max' => count($paredes) > 0 ? max($paredes) : null,
+                            'esp_fondo_min' => count($fondos) > 0 ? min($fondos) : null,
+                            'esp_fondo_max' => count($fondos) > 0 ? max($fondos) : null,
+                            'altura_min' => count($alturas) > 0 ? min($alturas) : null,
+                            'altura_max' => count($alturas) > 0 ? max($alturas) : null,
+                            'estado_evaluacion' => 'PNC',
+                            'motivo_scrap' => count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null,
+                            'causa' => $validated['causa_principal'] ?? ('Producto No Conforme Emitido (' . $validated['codigo_pnc'] . ')'),
+                            'comentarios' => count($observaciones) > 0 ? implode('; ', $observaciones) : null,
+                        ]);
+                    }
+                }
             }
 
             ActivityLog::create([

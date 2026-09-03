@@ -36,6 +36,8 @@ class InspeccionCalidad extends Model
         'altura_max',
         'estado_evaluacion',
         'motivo_scrap',
+        'motivo_observacion_id',
+        'motivo_observacion_texto',
         'desviacion',
         'causa',
         'comentarios',
@@ -84,6 +86,11 @@ class InspeccionCalidad extends Model
     public function cavidades(): HasMany
     {
         return $this->hasMany(InspeccionCavidad::class, 'inspeccion_id');
+    }
+
+    public function motivoObservacion(): BelongsTo
+    {
+        return $this->belongsTo(MotivoObservacion::class, 'motivo_observacion_id');
     }
 
     public function alertas(): HasMany

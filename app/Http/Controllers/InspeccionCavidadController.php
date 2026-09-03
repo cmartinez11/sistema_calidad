@@ -54,7 +54,9 @@ class InspeccionCavidadController extends Controller
                 DB::raw('MIN(created_at) as created_at'),
                 DB::raw('COUNT(*) as total_cavidades'),
                 DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO') THEN 1 END) as defectos_count"),
-                DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count")
+                DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count"),
+                DB::raw("(SELECT estado_evaluacion FROM inspecciones_calidad WHERE inspecciones_calidad.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion LIMIT 1) as estado_evaluacion"),
+                DB::raw("EXISTS(SELECT 1 FROM pnc WHERE pnc.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion) as tiene_pnc")
             )
             ->groupBy('codigo_inspeccion', 'producto_id', 'maquina_id', 'operario_id', 'turno_id', 'user_id')
             ->orderBy(DB::raw('MIN(created_at)'), 'desc')
@@ -509,44 +511,45 @@ class InspeccionCavidadController extends Controller
             $strObs = count($observaciones) > 0 ? implode('; ', $observaciones) : null;
 
             if ($defectosCount > 0) {
-                $estadoEvaluacionGlobal = 'OBSERVADO';
-            } elseif ($pasablesCount > 0) {
-                $estadoEvaluacionGlobal = 'PASABLE';
+                // BLOQUEO PREVENTIVO INICIAL: No se crea el registro en inspecciones_calidad hasta que el usuario decida el flujo de salida
+                $msg = "Auditoría código {$codigoInspeccion} registrada correctamente. Debido a que contiene {$defectosCount} cavidad(es) observadas/fuera de rango, la auditoría permanece bloqueada preventivamente hasta que selecciones el flujo de salida ('Generar Inspección' o 'Generar PNC').";
             } else {
-                $estadoEvaluacionGlobal = 'CONFORME';
+                $estadoEvaluacionGlobal = ($pasablesCount > 0) ? 'PASABLE' : 'CONFORME';
+
+                InspeccionCalidad::create([
+                    'codigo_inspeccion' => $codigoInspeccion,
+                    'producto_id' => $producto->id,
+                    'lote_id' => $lote->id,
+                    'maquina_id' => $validated['maquina_id'] ?? null,
+                    'molde_id' => $validated['molde_id'] ?? null,
+                    'resina_id' => $validated['resina_id'] ?? null,
+                    'user_id' => $userId,
+                    'turno_id' => $validated['turno_id'] ?? null,
+                    'operario_id' => $validated['operario_id'] ?? null,
+
+                    'peso_min' => $pesoMin,
+                    'peso_max' => $pesoMax,
+
+                    'esp_pared_medido' => $espParedMin,
+                    'esp_pared_min' => $espParedMin,
+                    'esp_pared_max' => $espParedMax,
+
+                    'esp_fondo_medido' => $espFondoMin,
+                    'esp_fondo_min' => $espFondoMin,
+                    'esp_fondo_max' => $espFondoMax,
+
+                    'altura_medida' => $alturaMin,
+                    'altura_min' => $alturaMin,
+                    'altura_max' => $alturaMax,
+
+                    'estado_evaluacion' => $estadoEvaluacionGlobal,
+                    'motivo_scrap' => $strMotivos,
+                    'causa' => $strMotivos,
+                    'comentarios' => $strObs,
+                ]);
+
+                $msg = "Auditoría de cavidades y resumen de calidad registrados exitosamente (Lote: {$codigoLote}, Inspección: {$codigoInspeccion}). Estado: {$estadoEvaluacionGlobal}.";
             }
-
-            InspeccionCalidad::create([
-                'codigo_inspeccion' => $codigoInspeccion,
-                'producto_id' => $producto->id,
-                'lote_id' => $lote->id,
-                'maquina_id' => $validated['maquina_id'] ?? null,
-                'molde_id' => $validated['molde_id'] ?? null,
-                'resina_id' => $validated['resina_id'] ?? null,
-                'user_id' => $userId,
-                'turno_id' => $validated['turno_id'] ?? null,
-                'operario_id' => $validated['operario_id'] ?? null,
-
-                'peso_min' => $pesoMin,
-                'peso_max' => $pesoMax,
-
-                'esp_pared_medido' => $espParedMin,
-                'esp_pared_min' => $espParedMin,
-                'esp_pared_max' => $espParedMax,
-
-                'esp_fondo_medido' => $espFondoMin,
-                'esp_fondo_min' => $espFondoMin,
-                'esp_fondo_max' => $espFondoMax,
-
-                'altura_medida' => $alturaMin,
-                'altura_min' => $alturaMin,
-                'altura_max' => $alturaMax,
-
-                'estado_evaluacion' => $estadoEvaluacionGlobal,
-                'motivo_scrap' => $strMotivos,
-                'causa' => $strMotivos,
-                'comentarios' => $strObs,
-            ]);
 
             // Registrar movimiento de auditoría en activity_logs
             ActivityLog::create([
@@ -557,10 +560,6 @@ class InspeccionCavidadController extends Controller
             ]);
 
             DB::commit();
-
-            $totalCount = count($validated['cavidades']);
-            $estadoResumen = ($defectosCount === 0) ? 'CONFORME' : "{$defectosCount} cavidades con observaciones/defectos";
-            $msg = "Auditoría de cavidades y resumen de calidad registrados exitosamente (Lote: {$codigoLote}, Inspección: {$codigoInspeccion}). Total evaluado: {$totalCount} cavidades ({$estadoResumen}).";
 
             return redirect()->route('inspecciones-cavidades.show', $codigoInspeccion)
                 ->with('success', $msg);
@@ -606,6 +605,8 @@ class InspeccionCavidadController extends Controller
         $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount + $anuladoCount);
         $promedioPeso = number_format($cavidades->where('estado', '!=', 'ANULADO')->avg('peso_medido') ?? 0, 2);
 
+        $motivosObservacion = \App\Models\MotivoObservacion::where('activo', true)->orderBy('nombre', 'asc')->get();
+
         return view('inspecciones_cavidades.show', compact(
             'codigo',
             'cavidades',
@@ -619,7 +620,8 @@ class InspeccionCavidadController extends Controller
             'observadoCount',
             'pasableCount',
             'conformesCount',
-            'promedioPeso'
+            'promedioPeso',
+            'motivosObservacion'
         ));
     }
 
@@ -677,28 +679,89 @@ class InspeccionCavidadController extends Controller
     }
 
     /**
-     * Consolida y asigna el estado exclusivo de OBSERVADO a la auditoría en inspecciones_calidad.
+     * Consolida y asigna el estado exclusivo de OBSERVADO a la auditoría en inspecciones_calidad con su motivo obligatorio.
      */
     public function consolidarObservado(string $codigo, Request $request): RedirectResponse
     {
+        $validated = $request->validate([
+            'motivo_observacion_id' => 'required|exists:motivos_observacion,id',
+            'motivo_observacion_texto' => 'nullable|string|max:500',
+        ], [
+            'motivo_observacion_id.required' => 'Debes seleccionar obligatoriamente un motivo de pase con observación.',
+            'motivo_observacion_id.exists' => 'El motivo de observación seleccionado no es válido.',
+        ]);
+
         $inspeccionCalidad = InspeccionCalidad::where('codigo_inspeccion', $codigo)->first();
 
         if (!$inspeccionCalidad) {
-            return back()->with('error', 'No se encontró el registro consolidado para esta auditoría.');
-        }
+            $cavidades = InspeccionCavidad::where('codigo_inspeccion', $codigo)->get();
+            if ($cavidades->isEmpty()) {
+                return back()->with('error', 'No se encontraron cavidades registradas para esta auditoría.');
+            }
 
-        $inspeccionCalidad->update([
-            'estado_evaluacion' => 'OBSERVADO',
-        ]);
+            $header = $cavidades->first();
+            $pesos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('peso_medido')->filter()->toArray();
+            $paredes = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_pared')->filter()->toArray();
+            $fondos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_fondo')->filter()->toArray();
+            $alturas = $cavidades->where('estado', '!=', 'ANULADO')->pluck('altura')->filter()->toArray();
+            $motivosScrap = $cavidades->pluck('motivo_scrap')->filter()->unique()->toArray();
+            $observaciones = $cavidades->pluck('observaciones')->filter()->unique()->toArray();
+
+            $now = Carbon::now('America/Lima');
+            $codigoLote = "PET" . $now->format('y') . sprintf('%02d', $now->isoWeek) . ($header->maquina ? strtoupper(trim($header->maquina->codigo)) : 'M01');
+            $lote = Lote::firstOrCreate(
+                ['codigo_lote' => $codigoLote],
+                [
+                    'producto_id' => $header->producto_id,
+                    'maquina_id' => $header->maquina_id,
+                    'fecha_produccion' => $now->toDateString(),
+                    'estado_lote' => 'liberado',
+                ]
+            );
+
+            $inspeccionCalidad = InspeccionCalidad::create([
+                'codigo_inspeccion' => $codigo,
+                'producto_id' => $header->producto_id,
+                'lote_id' => $lote->id,
+                'maquina_id' => $header->maquina_id,
+                'molde_id' => $header->molde_id,
+                'resina_id' => $header->resina_id,
+                'user_id' => Auth::id(),
+                'turno_id' => $header->turno_id,
+                'operario_id' => $header->operario_id,
+
+                'peso_min' => count($pesos) > 0 ? min($pesos) : null,
+                'peso_max' => count($pesos) > 0 ? max($pesos) : null,
+                'esp_pared_min' => count($paredes) > 0 ? min($paredes) : null,
+                'esp_pared_max' => count($paredes) > 0 ? max($paredes) : null,
+                'esp_fondo_min' => count($fondos) > 0 ? min($fondos) : null,
+                'esp_fondo_max' => count($fondos) > 0 ? max($fondos) : null,
+                'altura_min' => count($alturas) > 0 ? min($alturas) : null,
+                'altura_max' => count($alturas) > 0 ? max($alturas) : null,
+
+                'estado_evaluacion' => 'OBSERVADO',
+                'motivo_observacion_id' => $validated['motivo_observacion_id'],
+                'motivo_observacion_texto' => $validated['motivo_observacion_texto'] ?? null,
+                'motivo_scrap' => count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null,
+                'causa' => count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null,
+                'comentarios' => count($observaciones) > 0 ? implode('; ', $observaciones) : null,
+            ]);
+        } else {
+            $inspeccionCalidad->update([
+                'estado_evaluacion' => 'OBSERVADO',
+                'motivo_observacion_id' => $validated['motivo_observacion_id'],
+                'motivo_observacion_texto' => $validated['motivo_observacion_texto'] ?? null,
+            ]);
+        }
 
         ActivityLog::create([
             'user_id' => Auth::id(),
             'accion' => 'CONSOLIDAR_INSPECCION_OBSERVADO',
-            'descripcion' => "Se consolidó manualmente la inspección {$codigo} con estado exclusivo OBSERVADO.",
+            'descripcion' => "Se consolidó manualmente la inspección {$codigo} con motivo de observación ID {$validated['motivo_observacion_id']}.",
             'ip_address' => $request->ip(),
         ]);
 
         return redirect()->route('inspecciones-calidad.index')
-            ->with('success', "La auditoría {$codigo} ha sido consolidada exitosamente con el estado OBSERVADO.");
+            ->with('success', "La auditoría {$codigo} ha sido consolidada exitosamente en el Resumen de Calidad con el estado OBSERVADO.");
     }
 }

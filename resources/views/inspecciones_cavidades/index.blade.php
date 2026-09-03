@@ -97,17 +97,25 @@
 
                             <!-- Estado Global -->
                             <td class="px-6 py-4 text-center whitespace-nowrap">
-                                @if(($insp->defectos_count ?? 0) > 0)
-                                    <span class="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-300">
-                                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> OBSERVADO ({{ $insp->defectos_count }})
+                                @if(!empty($insp->tiene_pnc) || ($insp->estado_evaluacion ?? null) === 'PNC')
+                                    <span class="inline-flex items-center px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full shadow-sm">
+                                        <span class="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span> 🔴 PNC
                                     </span>
-                                @elseif(($insp->pasables_count ?? 0) > 0)
+                                @elseif(($insp->estado_evaluacion ?? null) === 'OBSERVADO' || ($insp->estado_evaluacion ?? null) === 'OBSERVADO_PNC')
+                                    <span class="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-300">
+                                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> 🟠 OBSERVADO
+                                    </span>
+                                @elseif(($insp->defectos_count ?? 0) > 0 && empty($insp->estado_evaluacion))
+                                    <span class="inline-flex items-center px-3 py-1 bg-amber-200 text-amber-900 text-xs font-bold rounded-full border border-amber-300" title="Auditoría bloqueada preventivamente hasta definir su flujo de salida">
+                                        <span class="w-1.5 h-1.5 bg-amber-600 rounded-full mr-1.5 animate-ping"></span> ⏳ RETENIDO
+                                    </span>
+                                @elseif(($insp->pasables_count ?? 0) > 0 || ($insp->estado_evaluacion ?? null) === 'PASABLE')
                                     <span class="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full border border-amber-300">
-                                        <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5"></span> PASABLE ({{ $insp->pasables_count }})
+                                        <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5"></span> ⚠️ PASABLE
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
-                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> CONFORME
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> 🟢 CONFORME
                                     </span>
                                 @endif
                             </td>
