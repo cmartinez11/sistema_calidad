@@ -64,4 +64,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(InspeccionCalidad::class);
     }
+
+    /**
+     * Determina si el usuario tiene rol de Administrador.
+     */
+    public function isAdmin(): bool
+    {
+        if (!$this->role_id) {
+            return true; // Si no se ha asignado rol (primer usuario), permitir acceso admin por defecto
+        }
+        return strtoupper($this->role?->nombre ?? '') === 'ADMINISTRADOR';
+    }
 }

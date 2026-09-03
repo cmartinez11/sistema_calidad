@@ -58,12 +58,31 @@
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         Producto No Conforme (PNC)
                     </a>
+                    @if(Auth::check() && Auth::user()->isAdmin())
+                        <a href="{{ route('users.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('users.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                            Gestión de Usuarios
+                        </a>
+                    @endif
                 </nav>
             </div>
             
-            <!-- Pie del Sidebar -->
-            <div class="p-4 border-t border-gray-800 text-xs text-center text-gray-500">
-                Sistema de Calidad v1.0
+            <!-- Pie del Sidebar y Botón Cerrar Sesión -->
+            <div class="p-4 border-t border-gray-800 space-y-3">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800/80 hover:bg-red-600/90 text-gray-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-gray-700/50 hover:border-red-500 cursor-pointer shadow-sm group">
+                        <svg class="w-4 h-4 mr-2 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </form>
+
+                <div class="text-[10px] text-center text-gray-500 font-mono">
+                    Sistema de Calidad v1.0
+                </div>
             </div>
         </aside>
 
@@ -87,9 +106,32 @@
                     </div>
                 </div>
 
-                <!-- Bienvenida al Usuario -->
+                <!-- Bienvenida al Usuario y Botón Cerrar Sesión -->
                 <div class="flex items-center space-x-4">
-                    <span class="font-medium text-gray-700 text-sm">Hola, <span class="font-bold text-fenix">{{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span></span>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-fenix/10 border border-fenix/30 text-fenix font-bold text-xs flex items-center justify-center">
+                            {{ strtoupper(substr(Auth::user()->name ?? Auth::user()->username ?? 'U', 0, 2)) }}
+                        </div>
+                        <div class="text-left hidden sm:block">
+                            <span class="block text-xs font-bold text-gray-800">{{ Auth::user()->name ?? Auth::user()->username ?? 'Usuario' }}</span>
+                            <span class="block text-[10px] text-gray-400 font-mono uppercase">{{ Auth::user()->role->nombre ?? 'Usuario' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="h-6 w-px bg-gray-200"></div>
+
+                    <!-- Botón Cerrar Sesión (Header) -->
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                title="Cerrar Sesión"
+                                class="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            <span class="hidden md:inline">Cerrar Sesión</span>
+                        </button>
+                    </form>
                 </div>
             </header>
 

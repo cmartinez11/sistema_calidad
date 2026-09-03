@@ -15,6 +15,8 @@ use Carbon\Carbon;
 
 use App\Http\Controllers\PncController;
 
+use App\Http\Controllers\UserController;
+
 Route::get('/', function () {
     return view('auth.login');
 });
@@ -31,6 +33,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutas protegidas exclusivamente para Administradores
+    Route::middleware('admin')->group(function () {
+        Route::resource('users', UserController::class);
+    });
 
     // Rutas para Gestión de Productos y Parámetros
     Route::get('productos/plantilla', [ProductoController::class, 'downloadPlantilla'])->name('productos.plantilla');
