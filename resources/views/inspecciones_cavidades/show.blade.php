@@ -85,8 +85,23 @@
             </div>
             
             <div>
-                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Operario / Auditor</span>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Operario</span>
                 <span class="font-bold text-gray-900">{{ $header->operario->nombre ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Encargado</span>
+                <span class="font-bold text-gray-900">{{ $header->user->name ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Molde</span>
+                <span class="font-bold text-gray-900">{{ $header->molde->nombre ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Turno</span>
+                <span class="font-bold text-gray-900">{{ $header->turno->nombre ?? 'N/A' }}</span>
             </div>
         </div>
 
@@ -149,12 +164,12 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @foreach($cavidades as $cav)
-                            <tr class="{{ $cav->estado === 'FUERA_DE_RANGO' ? 'bg-red-50 font-semibold text-red-900' : ($cav->estado === 'PASABLE' ? 'bg-amber-50/50' : 'hover:bg-gray-50/50') }}">
+                            <tr class="{{ $cav->estado === 'ANULADO' ? 'bg-gray-100/90 text-gray-500 italic' : ($cav->estado === 'FUERA_DE_RANGO' ? 'bg-red-50 font-semibold text-red-900' : ($cav->estado === 'PASABLE' ? 'bg-amber-50/50' : 'hover:bg-gray-50/50')) }}">
                                 <td class="px-3 py-2 text-center font-mono font-bold text-gray-800">
                                     C-{{ sprintf('%02d', $cav->cavidad_numero) }}
                                 </td>
-                                <td class="px-3 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : 'text-gray-900' }}">
-                                    {{ number_format($cav->peso_medido, 2) }} g
+                                <td class="px-3 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : ($cav->estado === 'ANULADO' ? 'text-gray-400' : 'text-gray-900') }}">
+                                    {{ $cav->estado === 'ANULADO' ? 'N/A' : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
                                 </td>
                                 <td class="px-3 py-2 text-center font-mono text-gray-500">
                                     {{ $param && $param->peso_min > 0 ? $param->peso_min.' - '.$param->peso_max.' g' : '-' }}
@@ -171,6 +186,10 @@
                                     @elseif($cav->estado === 'PASABLE')
                                         <span class="px-2.5 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">
                                             ⚠️ Pasable
+                                        </span>
+                                    @elseif($cav->estado === 'ANULADO')
+                                        <span class="px-2.5 py-0.5 bg-gray-200 text-gray-700 text-[10px] font-bold rounded-full border border-gray-300">
+                                            ⚪ Anulado
                                         </span>
                                     @else
                                         <span class="px-2.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">

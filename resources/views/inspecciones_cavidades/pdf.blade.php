@@ -147,6 +147,14 @@
             color: #dc2626;
             font-weight: bold;
         }
+        .badge-anulado {
+            color: #6b7280;
+            font-weight: bold;
+        }
+        .row-anulado {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
 
         .signatures-table {
             margin-top: 30px;
@@ -276,12 +284,12 @@
         </thead>
         <tbody>
             @foreach($cavidades as $index => $cav)
-                <tr class="{{ $cav->estado === 'FUERA_DE_RANGO' ? 'row-scrap' : ($index % 2 === 1 ? 'row-even' : '') }}">
+                <tr class="{{ $cav->estado === 'ANULADO' ? 'row-anulado' : ($cav->estado === 'FUERA_DE_RANGO' ? 'row-scrap' : ($index % 2 === 1 ? 'row-even' : '')) }}">
                     <td style="text-align: center; font-family: monospace; font-weight: bold;">
                         Cavidad {{ sprintf('%02d', $cav->cavidad_numero) }}
                     </td>
                     <td style="text-align: center; font-family: monospace; font-weight: bold;">
-                        {{ number_format($cav->peso_medido, 2) }} g
+                        {{ $cav->estado === 'ANULADO' ? 'N/A' : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
                     </td>
                     <td style="text-align: center; font-family: monospace; color: #6b7280;">
                         {{ $param && $param->peso_min > 0 ? $param->peso_min.' - '.$param->peso_max.' g' : '-' }}
@@ -289,12 +297,20 @@
                     <td style="text-align: center;">
                         @if($cav->estado === 'CONFORME')
                             <span class="badge-conforme">• CONFORME</span>
+                        @elseif($cav->estado === 'ANULADO')
+                            <span class="badge-anulado">• ANULADO</span>
+                        @elseif($cav->estado === 'OBSERVADO')
+                            <span class="badge-scrap">• OBSERVADO</span>
+                        @elseif($cav->estado === 'PASABLE')
+                            <span class="badge-conforme">• PASABLE</span>
                         @else
                             <span class="badge-scrap">• FUERA DE RANGO</span>
                         @endif
                     </td>
                     <td style="text-align: left;">
-                        @if($cav->estado === 'FUERA_DE_RANGO')
+                        @if($cav->estado === 'ANULADO')
+                            <span style="color: #4b5563; font-style: italic;">Anulado: {{ $cav->observaciones ?? 'Sin motivo' }}</span>
+                        @elseif(in_array($cav->estado, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE']))
                             <strong style="color: #dc2626;">{{ $cav->motivo_scrap ?? 'Sin especificar' }}</strong>
                         @else
                             <span style="color: #9ca3af; font-style: italic;">Sin defecto</span>

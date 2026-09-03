@@ -78,6 +78,7 @@
                     altura: '',
                     tiene_defecto: false,
                     es_pasable: false,
+                    anulada: false,
                     estado: 'CONFORME',
                     motivo_scrap: '',
                     observaciones: ''
@@ -110,6 +111,7 @@
                     altura: '',
                     tiene_defecto: false,
                     es_pasable: false,
+                    anulada: false,
                     estado: 'CONFORME',
                     motivo_scrap: '',
                     observaciones: ''
@@ -120,6 +122,14 @@
     },
 
     evaluarCavidad(cav) {
+        if (cav.anulada) {
+            cav.estado = 'ANULADO';
+            cav.motivo_scrap = '';
+            cav.tiene_defecto = false;
+            cav.es_pasable = false;
+            return;
+        }
+
         if (cav.tiene_defecto) {
             if (cav.es_pasable) {
                 cav.estado = 'PASABLE';
@@ -200,6 +210,7 @@
                         altura: '',
                         tiene_defecto: false,
                         es_pasable: false,
+                        anulada: false,
                         estado: 'CONFORME',
                         motivo_scrap: '',
                         observaciones: ''
@@ -255,8 +266,12 @@
         return this.cavidades.filter(c => c.estado === 'PASABLE').length;
     },
 
+    get anuladasCount(){
+        return this.cavidades.filter(c => c.estado === 'ANULADO').length;
+    },
+
     get promedioPeso() {
-        let medidos = this.cavidades.filter(c => !isNaN(parseFloat(c.peso_medido)) && c.peso_medido !== '');
+        let medidos = this.cavidades.filter(c => c.estado !== 'ANULADO' && !isNaN(parseFloat(c.peso_medido)) && c.peso_medido !== '');
         if (medidos.length === 0) return '0.00';
         let suma = medidos.reduce((acc, c) => acc + parseFloat(c.peso_medido), 0);
         return (suma / medidos.length).toFixed(2);
@@ -461,6 +476,8 @@
                         <span class="text-green-600 font-bold">🟢 Conformes: <span x-text="conformesCount"></span></span>
                         <span class="text-red-600 font-bold">🔴 Fuera Rango: <span x-text="fueraDeRangoCount"></span></span>
                         <span class="text-amber-600 font-bold">🟠 Observados: <span x-text="observadoCount"></span></span>
+                        <span class="text-purple-600 font-bold">🟠 Pasables: <span x-text="pasablesCount"></span></span>
+                        <span class="text-gray-500 font-bold">⚪ Anuladas: <span x-text="anuladasCount"></span></span>
                         <span>Promedio: <strong class="text-fenix font-mono font-bold" x-text="promedioPeso + ' g'"></strong></span>
                     </div>
                 </div>
@@ -495,11 +512,12 @@
                                     <th class="px-3 py-3 text-center w-36">Estado</th>
                                     <th class="px-3 py-3 w-44">Motivo de Scrap / Defecto</th>
                                     <th class="px-3 py-3 w-56">Observaciones</th>
+                                    <th class="px-3 py-3 text-center w-32 bg-gray-200/70 text-gray-800 font-extrabold">ANULAR CAVIDAD</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <template x-for="(cav, index) in cavidades" :key="cav.cavidad_numero">
-                                    <tr :class="(cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO') ? 'bg-red-50/90 border-l-4 border-l-red-500' : (cav.estado === 'PASABLE' ? 'bg-amber-50/90 border-l-4 border-l-amber-500' : 'hover:bg-gray-50/80')" class="transition-colors">
+                                    <tr :class="cav.anulada ? 'bg-gray-100/90 border-l-4 border-l-gray-400 opacity-60' : ((cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO') ? 'bg-red-50/90 border-l-4 border-l-red-500' : (cav.estado === 'PASABLE' ? 'bg-amber-50/90 border-l-4 border-l-amber-500' : 'hover:bg-gray-50/80'))" class="transition-colors">
                                         
                                         <!-- N° Cavidad -->
                                         <td class="px-3 py-3 text-center font-bold font-mono text-gray-800">
@@ -514,8 +532,9 @@
                                                    x-model="cav.peso_medido" 
                                                    @input="evaluarCavidad(cav)"
                                                    placeholder="Ej. 23.10"
-                                                   required
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900">
+                                                   :required="!cav.anulada"
+                                                   :disabled="cav.anulada"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900 disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Espesor de Pared -->
@@ -525,7 +544,8 @@
                                                    x-model="cav.espesor_pared" 
                                                    @input="evaluarCavidad(cav)"
                                                    placeholder="Ej. 2.50"
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   :disabled="cav.anulada"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Espesor de Fondo -->
@@ -535,7 +555,8 @@
                                                    x-model="cav.espesor_fondo" 
                                                    @input="evaluarCavidad(cav)"
                                                    placeholder="Ej. 3.10"
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   :disabled="cav.anulada"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Altura -->
@@ -545,7 +566,8 @@
                                                    x-model="cav.altura" 
                                                    @input="evaluarCavidad(cav)"
                                                    placeholder="Ej. 150.0"
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono">
+                                                   :disabled="cav.anulada"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Checkbox TIENE DEFECTO? -->
@@ -553,7 +575,8 @@
                                             <input type="checkbox" 
                                                    x-model="cav.tiene_defecto" 
                                                    @change="evaluarCavidad(cav)"
-                                                   class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer">
+                                                   :disabled="cav.anulada"
+                                                   class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Estado y Check ¿Es Pasable? -->
@@ -577,7 +600,11 @@
                                                     <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">Pasable</span>
                                                 </template>
 
-                                                <template x-if="cav.tiene_defecto">
+                                                <template x-if="cav.estado === 'ANULADO'">
+                                                    <span class="px-2 py-0.5 bg-gray-200 text-gray-700 text-[10px] font-bold rounded-full border border-gray-300">⚪ Anulado</span>
+                                                </template>
+
+                                                <template x-if="!cav.anulada && cav.tiene_defecto">
                                                     <label class="inline-flex items-center space-x-1 cursor-pointer bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                                                         <input type="checkbox" x-model="cav.es_pasable" @change="evaluarCavidad(cav)" class="w-4 h-4 text-amber-600 rounded">
                                                         <span class="text-[10px] font-bold text-amber-800">¿Pasable?</span>
@@ -588,11 +615,12 @@
                                         
                                         <!-- Motivo de Scrap -->
                                         <td class="px-3 py-3">
-                                            <div x-show="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'" x-cloak>
+                                            <div x-show="!cav.anulada && (cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE')" x-cloak>
                                                 <select :name="'cavidades[' + index + '][motivo_scrap]'" 
                                                         x-model="cav.motivo_scrap"
-                                                        :required="cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE'"
-                                                        class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60">
+                                                        :disabled="cav.anulada"
+                                                        :required="!cav.anulada && (cav.estado === 'FUERA_DE_RANGO' || cav.estado === 'OBSERVADO' || cav.estado === 'PASABLE')"
+                                                        class="w-full px-2 py-1.5 border border-red-300 rounded-xl text-xs font-semibold text-red-800 bg-red-100/60 disabled:cursor-not-allowed">
                                                     <option value="">-- Defecto * --</option>
                                                     <option value="Puntos negros">Puntos negros</option>
                                                     <option value="Quemados">Quemados</option>
@@ -606,13 +634,25 @@
                                             </div>
                                         </td>
 
-                                        <!-- Observaciones -->
+                                        <!-- Observaciones / Justificación -->
                                         <td class="px-3 py-3">
                                             <input type="text" 
                                                    :name="'cavidades[' + index + '][observaciones]'" 
                                                    x-model="cav.observaciones" 
-                                                   placeholder="Comentario opcional..."
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs bg-gray-50/50">
+                                                   :placeholder="cav.anulada ? 'Justificación de anulación *' : 'Comentario opcional...'"
+                                                   :required="cav.anulada"
+                                                   class="w-full px-2 py-1.5 border rounded-xl text-xs transition-colors"
+                                                   :class="cav.anulada ? 'border-gray-400 bg-yellow-50/80 font-medium text-gray-900 focus:ring-1 focus:ring-amber-500' : 'border-gray-300 bg-gray-50/50'">
+                                        </td>
+
+                                        <!-- ANULAR CAVIDAD -->
+                                        <td class="px-3 py-3 text-center bg-gray-50/50">
+                                            <label class="inline-flex items-center justify-center cursor-pointer">
+                                                <input type="checkbox" 
+                                                       x-model="cav.anulada" 
+                                                       @change="evaluarCavidad(cav)"
+                                                       class="w-4.5 h-4.5 text-gray-600 border-gray-300 rounded focus:ring-gray-500 cursor-pointer">
+                                            </label>
                                         </td>
                                     </tr>
                                 </template>

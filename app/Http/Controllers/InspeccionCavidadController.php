@@ -327,17 +327,17 @@ class InspeccionCavidadController extends Controller
             'resina_id'=> 'nullable|exists:resinas,id',
             'cavidades' => 'required|array|min:1',
             'cavidades.*.cavidad_numero' => 'required|integer|min:1',
-            'cavidades.*.peso_medido' => 'required|numeric|min:0',
+            'cavidades.*.peso_medido' => 'required_unless:cavidades.*.estado,ANULADO|nullable|numeric|min:0',
             'cavidades.*.espesor_pared' => 'nullable|numeric|min:0',
             'cavidades.*.espesor_fondo' => 'nullable|numeric|min:0',
             'cavidades.*.altura' => 'nullable|numeric|min:0',
-            'cavidades.*.estado' => 'required|string|in:CONFORME,FUERA_DE_RANGO,OBSERVADO,PASABLE',
+            'cavidades.*.estado' => 'required|string|in:CONFORME,FUERA_DE_RANGO,OBSERVADO,PASABLE,ANULADO',
             'cavidades.*.motivo_scrap' => 'nullable|string|max:100',
             'cavidades.*.observaciones' => 'nullable|string|max:255',
         ], [
             'producto_id.required' => 'Debes seleccionar un producto válido.',
             'cavidades.required' => 'Debes registrar al menos una cavidad.',
-            'cavidades.*.peso_medido.required' => 'El peso real es obligatorio en todas las cavidades.',
+            'cavidades.*.peso_medido.required' => 'El peso real es obligatorio en todas las cavidades activas.',
         ]);
 
         DB::beginTransaction();
@@ -366,6 +366,11 @@ class InspeccionCavidadController extends Controller
             // 1. Inserción detallada e intacta cavidad por cavidad
             foreach ($validated['cavidades'] as $cavData) {
                 $estadoClean = strtoupper(str_replace(' ', '_', $cavData['estado']));
+                $isAnulado = ($estadoClean === 'ANULADO' || !empty($cavData['anulado']) || !empty($cavData['anulada']));
+
+                if ($isAnulado) {
+                    $estadoClean = 'ANULADO';
+                }
                 
                 if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE'])) {
                     $defectosCount++;
@@ -383,18 +388,31 @@ class InspeccionCavidadController extends Controller
                     $observaciones[] = $cavData['observaciones'];
                 }
 
-                // Coleccionar valores numéricos para extremos
-                if (isset($cavData['peso_medido']) && is_numeric($cavData['peso_medido'])) {
-                    $pesos[] = (float)$cavData['peso_medido'];
-                }
-                if (isset($cavData['espesor_pared']) && is_numeric($cavData['espesor_pared'])) {
-                    $paredes[] = (float)$cavData['espesor_pared'];
-                }
-                if (isset($cavData['espesor_fondo']) && is_numeric($cavData['espesor_fondo'])) {
-                    $fondos[] = (float)$cavData['espesor_fondo'];
-                }
-                if (isset($cavData['altura']) && is_numeric($cavData['altura'])) {
-                    $alturas[] = (float)$cavData['altura'];
+                // Asignar valores predeterminados seguros (0.00) si la cavidad está ANULADA para evitar violaciones NOT NULL en PostgreSQL
+                if ($isAnulado) {
+                    $pesoMedido = (isset($cavData['peso_medido']) && $cavData['peso_medido'] !== '') ? (float)$cavData['peso_medido'] : 0.00;
+                    $espesorPared = (isset($cavData['espesor_pared']) && $cavData['espesor_pared'] !== '') ? (float)$cavData['espesor_pared'] : 0.00;
+                    $espesorFondo = (isset($cavData['espesor_fondo']) && $cavData['espesor_fondo'] !== '') ? (float)$cavData['espesor_fondo'] : 0.00;
+                    $altura = (isset($cavData['altura']) && $cavData['altura'] !== '') ? (float)$cavData['altura'] : 0.00;
+                } else {
+                    $pesoMedido = (isset($cavData['peso_medido']) && $cavData['peso_medido'] !== '') ? (float)$cavData['peso_medido'] : null;
+                    $espesorPared = (isset($cavData['espesor_pared']) && $cavData['espesor_pared'] !== '') ? (float)$cavData['espesor_pared'] : null;
+                    $espesorFondo = (isset($cavData['espesor_fondo']) && $cavData['espesor_fondo'] !== '') ? (float)$cavData['espesor_fondo'] : null;
+                    $altura = (isset($cavData['altura']) && $cavData['altura'] !== '') ? (float)$cavData['altura'] : null;
+
+                    // Coleccionar valores numéricos para extremos (excluyendo cavidades anuladas)
+                    if ($pesoMedido !== null) {
+                        $pesos[] = $pesoMedido;
+                    }
+                    if ($espesorPared !== null) {
+                        $paredes[] = $espesorPared;
+                    }
+                    if ($espesorFondo !== null) {
+                        $fondos[] = $espesorFondo;
+                    }
+                    if ($altura !== null) {
+                        $alturas[] = $altura;
+                    }
                 }
 
                 InspeccionCavidad::create([
@@ -407,7 +425,10 @@ class InspeccionCavidadController extends Controller
                     'resina_id' => $validated['resina_id'] ?? null,
                     'user_id' => $userId,
                     'cavidad_numero' => $cavData['cavidad_numero'],
-                    'peso_medido' => $cavData['peso_medido'],
+                    'peso_medido' => $pesoMedido,
+                    'espesor_pared' => $espesorPared,
+                    'espesor_fondo' => $espesorFondo,
+                    'altura' => $altura,
                     'estado' => $estadoClean,
                     'motivo_scrap' => $motivo,
                     'observaciones' => $cavData['observaciones'] ?? null,
@@ -565,8 +586,9 @@ class InspeccionCavidadController extends Controller
         $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
         $observadoCount = $cavidades->where('estado', 'OBSERVADO')->count();
         $pasableCount = $cavidades->where('estado', 'PASABLE')->count();
-        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount);
-        $promedioPeso = number_format($cavidades->avg('peso_medido'), 2);
+        $anuladoCount = $cavidades->where('estado', 'ANULADO')->count();
+        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount + $anuladoCount);
+        $promedioPeso = number_format($cavidades->where('estado', '!=', 'ANULADO')->avg('peso_medido') ?? 0, 2);
 
         return view('inspecciones_cavidades.show', compact(
             'codigo',
@@ -613,8 +635,9 @@ class InspeccionCavidadController extends Controller
         $fueraDeRangoCount = $cavidades->where('estado', 'FUERA_DE_RANGO')->count();
         $observadoCount = $cavidades->where('estado', 'OBSERVADO')->count();
         $pasableCount = $cavidades->where('estado', 'PASABLE')->count();
-        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount);
-        $promedioPeso = number_format($cavidades->avg('peso_medido'), 2);
+        $anuladoCount = $cavidades->where('estado', 'ANULADO')->count();
+        $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount + $anuladoCount);
+        $promedioPeso = number_format($cavidades->where('estado', '!=', 'ANULADO')->avg('peso_medido') ?? 0, 2);
         $porcentajeConforme = number_format(($conformesCount / max($totalCavidades, 1)) * 100, 1);
 
         $pdf = Pdf::loadView('inspecciones_cavidades.pdf', compact(
