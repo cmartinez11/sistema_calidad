@@ -67,6 +67,25 @@
             width: 50%;
             vertical-align: top;
         }
+        /* Casillas de Checkbox Compatibles con Motores PDF (Sin caracteres Unicode frágiles) */
+        .chk {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border: 1.2px solid #111827;
+            text-align: center;
+            line-height: 9px;
+            font-size: 8px;
+            font-weight: bold;
+            margin-right: 3px;
+            vertical-align: middle;
+            background-color: #ffffff;
+            color: #111827;
+        }
+        .chk-active {
+            background-color: #111827;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +103,7 @@
             </td>
             <td style="width: 25%; font-size: 7.5px; line-height: 1.3;">
                 <strong>Código:</strong> FE-SIG-FOR-30-V<br>
-                <strong>Versión:</strong> 00<br>
+                <strong>Versión:</strong> 01<br>
                 <strong>Fecha:</strong> 9/11/2023<br>
                 <strong style="color: #dc2626; font-size: 8.5px;">PNC: {{ $pnc->codigo_pnc }}</strong>
             </td>
@@ -110,15 +129,15 @@
                 </td>
             </tr>
             <tr>
-                <td style="width: 25%; pt-2">
+                <td style="width: 25%; padding-top: 4px;">
                     <span class="field-label">Lote Producción</span>
                     <span class="field-value">{{ $pnc->lote->codigo_lote ?? '-' }}</span>
                 </td>
-                <td style="width: 25%; pt-2">
+                <td style="width: 25%; padding-top: 4px;">
                     <span class="field-label">Cantidad Afectada</span>
                     <span class="field-value" style="color: #dc2626;">{{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}</span>
                 </td>
-                <td style="width: 50%; pt-2" colspan="2">
+                <td style="width: 50%; padding-top: 4px;" colspan="2">
                     <span class="field-label">Cliente / Proveedor</span>
                     <span class="field-value">{{ $pnc->cliente_proveedor ?: 'Planta Inyección Grupo Fénix' }}</span>
                 </td>
@@ -139,7 +158,7 @@
         <tr>
             <td style="padding-right: 4px;">
                 <div class="section-box">
-                    <div class="section-title">📍 Dónde se Detectó la Falla</div>
+                    <div class="section-title">Dónde se Detectó la Falla</div>
                     <strong>Área:</strong> {{ $pnc->detectado_area }}<br>
                     <strong>Fecha:</strong> {{ $pnc->detectado_fecha ? $pnc->detectado_fecha->format('d/m/Y') : '-' }}<br>
                     <strong>Responsable:</strong> {{ $pnc->detectado_responsable }}<br>
@@ -148,7 +167,7 @@
             </td>
             <td style="padding-left: 4px;">
                 <div class="section-box">
-                    <div class="section-title">🏭 Dónde se Originó la No Conformidad</div>
+                    <div class="section-title">Dónde se Originó la No Conformidad</div>
                     <strong>Área:</strong> {{ $pnc->originado_area }}<br>
                     <strong>Fecha:</strong> {{ $pnc->originado_fecha ? $pnc->originado_fecha->format('d/m/Y') : '-' }}<br>
                     <strong>Responsable:</strong> {{ $pnc->originado_responsable ?: '-' }}<br>
@@ -163,36 +182,36 @@
         <div class="section-title">4. Evaluación / Pruebas Realizadas</div>
         <table style="width: 100%; font-size: 8px;">
             <tr>
-                <td style="width: 25%;">{!! $pnc->eval_revision_registros ? '☑' : '☐' !!} Revisión Registros / Proceso</td>
-                <td style="width: 25%;">{!! $pnc->eval_inspeccion_visual ? '☑' : '☐' !!} Inspección Visual</td>
-                <td style="width: 25%;">{!! $pnc->eval_analisis_pruebas ? '☑' : '☐' !!} Análisis / Pruebas Metrológicas</td>
-                <td style="width: 25%;">{!! $pnc->eval_otros_check ? '☑' : '☐' !!} Otros: {{ $pnc->eval_otros_texto ?: '-' }}</td>
+                <td style="width: 25%;"><span class="chk {{ $pnc->eval_revision_registros ? 'chk-active' : '' }}">{{ $pnc->eval_revision_registros ? 'X' : '' }}</span> Revisión Registros / Proceso</td>
+                <td style="width: 25%;"><span class="chk {{ $pnc->eval_inspeccion_visual ? 'chk-active' : '' }}">{{ $pnc->eval_inspeccion_visual ? 'X' : '' }}</span> Inspección Visual</td>
+                <td style="width: 25%;"><span class="chk {{ $pnc->eval_analisis_pruebas ? 'chk-active' : '' }}">{{ $pnc->eval_analisis_pruebas ? 'X' : '' }}</span> Análisis / Pruebas Metrológicas</td>
+                <td style="width: 25%;"><span class="chk {{ $pnc->eval_otros_check ? 'chk-active' : '' }}">{{ $pnc->eval_otros_check ? 'X' : '' }}</span> Otros: {{ $pnc->eval_otros_texto ?: '-' }}</td>
             </tr>
         </table>
     </div>
 
-    <!-- 5. TRATAMIENTO DE SALIDA NO CONFORME Y AUTORIZACIÓN -->
+    <!-- 5. TRATAMIENTO DE SALIDA NO CONFORME & AUTORIZACIÓN -->
     <div class="section-box">
         <div class="section-title">5. Tratamiento de Salida No Conforme & Autorización</div>
         <table style="width: 100%; font-size: 8px; margin-bottom: 6px;">
             <tr>
-                <td>{!! $pnc->tratamiento_devolucion ? '☑' : '☐' !!} Devolución</td>
-                <td>{!! $pnc->tratamiento_reproceso ? '☑' : '☐' !!} Reproceso</td>
-                <td>{!! $pnc->tratamiento_reclasificado ? '☑' : '☐' !!} Reclasificado</td>
+                <td style="width: 33%;"><span class="chk {{ $pnc->tratamiento_devolucion ? 'chk-active' : '' }}">{{ $pnc->tratamiento_devolucion ? 'X' : '' }}</span> Devolución</td>
+                <td style="width: 33%;"><span class="chk {{ $pnc->tratamiento_reproceso ? 'chk-active' : '' }}">{{ $pnc->tratamiento_reproceso ? 'X' : '' }}</span> Reproceso</td>
+                <td style="width: 34%;"><span class="chk {{ $pnc->tratamiento_reclasificado ? 'chk-active' : '' }}">{{ $pnc->tratamiento_reclasificado ? 'X' : '' }}</span> Reclasificado</td>
             </tr>
             <tr>
-                <td>{!! $pnc->tratamiento_molido ? '☑' : '☐' !!} Molido / Peletizado</td>
-                <td>{!! $pnc->tratamiento_desperdicio ? '☑' : '☐' !!} Desperdicio / Scrap</td>
-                <td>{!! $pnc->tratamiento_refilado ? '☑' : '☐' !!} Refilado</td>
+                <td><span class="chk {{ $pnc->tratamiento_molido ? 'chk-active' : '' }}">{{ $pnc->tratamiento_molido ? 'X' : '' }}</span> Molido / Peletizado</td>
+                <td><span class="chk {{ $pnc->tratamiento_desperdicio ? 'chk-active' : '' }}">{{ $pnc->tratamiento_desperdicio ? 'X' : '' }}</span> Desperdicio / Scrap</td>
+                <td><span class="chk {{ $pnc->tratamiento_refilado ? 'chk-active' : '' }}">{{ $pnc->tratamiento_refilado ? 'X' : '' }}</span> Refilado</td>
             </tr>
             <tr>
-                <td>{!! $pnc->tratamiento_concesion ? '☑' : '☐' !!} Concesión</td>
-                <td>{!! $pnc->tratamiento_desviacion ? '☑' : '☐' !!} Desviación</td>
-                <td>{!! $pnc->tratamiento_otros ? '☑' : '☐' !!} Otros</td>
+                <td><span class="chk {{ $pnc->tratamiento_concesion ? 'chk-active' : '' }}">{{ $pnc->tratamiento_concesion ? 'X' : '' }}</span> Concesión</td>
+                <td><span class="chk {{ $pnc->tratamiento_desviacion ? 'chk-active' : '' }}">{{ $pnc->tratamiento_desviacion ? 'X' : '' }}</span> Desviación</td>
+                <td><span class="chk {{ $pnc->tratamiento_otros ? 'chk-active' : '' }}">{{ $pnc->tratamiento_otros ? 'X' : '' }}</span> Otros</td>
             </tr>
         </table>
 
-        <table style="width: 100%; font-size: 8px; border-top: 1px solid #d1d5db; pt-4">
+        <table style="width: 100%; font-size: 8px; border-top: 1px solid #d1d5db; padding-top: 4px;">
             <tr>
                 <td style="width: 40%;">
                     <strong>Autorizado Por:</strong> {{ $pnc->tratamiento_autorizado_por ?: 'Jefatura de Calidad' }}
@@ -210,13 +229,13 @@
     <!-- 6. ANÁLISIS DE CAUSA RAÍZ (5M) Y ACCIÓN CORRECTIVA -->
     <div class="section-box">
         <div class="section-title">6. Análisis de Causa Raíz (5M) y Acción Correctiva</div>
-        <div style="font-size: 8px; margin-bottom: 4px;">
-            <strong>Factores Involucrados:</strong>
-            {!! $pnc->causa_mano_obra ? '☑' : '☐' !!} Mano Obra |
-            {!! $pnc->causa_maquina ? '☑' : '☐' !!} Máquina |
-            {!! $pnc->causa_material ? '☑' : '☐' !!} Material |
-            {!! $pnc->causa_metodo ? '☑' : '☐' !!} Método |
-            {!! $pnc->causa_medio_ambiente ? '☑' : '☐' !!} Medio Ambiente
+        <div style="font-size: 8px; margin-bottom: 6px;">
+            <strong>Factores Involucrados (5M):</strong> &nbsp;
+            <span class="chk {{ $pnc->causa_mano_obra ? 'chk-active' : '' }}">{{ $pnc->causa_mano_obra ? 'X' : '' }}</span> Mano Obra &nbsp;&nbsp;
+            <span class="chk {{ $pnc->causa_maquina ? 'chk-active' : '' }}">{{ $pnc->causa_maquina ? 'X' : '' }}</span> Máquina &nbsp;&nbsp;
+            <span class="chk {{ $pnc->causa_material ? 'chk-active' : '' }}">{{ $pnc->causa_material ? 'X' : '' }}</span> Material &nbsp;&nbsp;
+            <span class="chk {{ $pnc->causa_metodo ? 'chk-active' : '' }}">{{ $pnc->causa_metodo ? 'X' : '' }}</span> Método &nbsp;&nbsp;
+            <span class="chk {{ $pnc->causa_medio_ambiente ? 'chk-active' : '' }}">{{ $pnc->causa_medio_ambiente ? 'X' : '' }}</span> Medio Ambiente
         </div>
 
         <table class="grid-2" style="font-size: 8px;">
