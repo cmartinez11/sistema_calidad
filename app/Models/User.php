@@ -76,4 +76,32 @@ class User extends Authenticatable
         }
         return strtoupper($this->role?->nombre ?? '') === 'ADMINISTRADOR';
     }
+
+    /**
+     * Determina si el usuario posee alguno de los roles especificados.
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        if (!$this->role_id) {
+            return true; // Acceso total si el usuario no tiene rol asignado
+        }
+
+        $userRole = strtoupper(trim($this->role?->nombre ?? ''));
+
+        if (is_string($roles)) {
+            $roles = explode('|', $roles);
+        }
+
+        $allowed = array_map(fn($r) => strtoupper(trim($r)), $roles);
+
+        return in_array($userRole, $allowed);
+    }
+
+    /**
+     * Determina si el usuario es Supervisor o Administrador.
+     */
+    public function isSupervisorOrAdmin(): bool
+    {
+        return $this->hasRole(['Administrador', 'Supervisor', 'Admin']);
+    }
 }

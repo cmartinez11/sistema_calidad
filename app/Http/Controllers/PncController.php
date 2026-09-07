@@ -342,4 +342,36 @@ class PncController extends Controller
 
         return $pdf->download("PNC_{$pnc->codigo_pnc}.pdf");
     }
+
+    /**
+     * Procesa oficialmente el reporte PNC cambiando su estado a PROCESADO.
+     * Permitido únicamente para usuarios con rol de Supervisor o Administrador.
+     */
+    public function procesar(int $id): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->hasRole('Supervisor|Administrador')) {
+            abort(403, 'Acceso denegado. Se requieren privilegios de Supervisor o Administrador para procesar reportes de Producto No Conforme.');
+        }
+
+        $pnc = Pnc::findOrFail($id);
+
+        if ($pnc->estado_pnc === 'PROCESADO') {
+            return back()->with('info', "El reporte PNC {$pnc->codigo_pnc} ya se encuentra en estado PROCESADO.");
+        }
+
+        $pnc->update([
+            'estado_pnc' => 'PROCESADO',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'accion' => 'PROCESAR_PNC',
+            'descripcion' => "El usuario {$user->name} cambió el estado de la PNC {$pnc->codigo_pnc} a PROCESADO",
+            'ip_address' => request()->ip(),
+        ]);
+
+        return back()->with('success', "¡Excelente! El reporte de Producto No Conforme {$pnc->codigo_pnc} ha sido oficialmente PROCESADO.");
+    }
 }

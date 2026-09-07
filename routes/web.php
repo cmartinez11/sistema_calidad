@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::post('pnc', [PncController::class, 'store'])->name('pnc.store');
     Route::get('pnc/{id}', [PncController::class, 'show'])->name('pnc.show')->whereNumber('id');
     Route::get('pnc/{id}/pdf', [PncController::class, 'exportPdf'])->name('pnc.pdf')->whereNumber('id');
+    Route::post('pnc/{id}/procesar', [PncController::class, 'procesar'])->name('pnc.procesar')->whereNumber('id');
 
     // Rutas para Resumen de Inspecciones de Calidad
     Route::get('inspecciones-calidad', [InspeccionCalidadController::class, 'index'])->name('inspecciones-calidad.index');

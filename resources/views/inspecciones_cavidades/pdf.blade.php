@@ -9,7 +9,7 @@
         }
         body {
             font-family: Helvetica, Arial, sans-serif;
-            font-size: 10px;
+            font-size: 12px;
             color: #1f2937;
             line-height: 1.3;
         }
@@ -101,13 +101,13 @@
             margin-bottom: 2px;
         }
         .box-num {
-            font-size: 13px;
+            font-size: 15px;
             font-weight: bold;
             font-family: monospace;
         }
 
         .section-title {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
             color: #111827;
             text-transform: uppercase;
@@ -168,14 +168,14 @@
         .signature-line {
             border-top: 1px solid #9ca3af;
             padding-top: 4px;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: bold;
             color: #374151;
         }
         .footer-note {
             margin-top: 20px;
             text-align: center;
-            font-size: 8px;
+            font-size: 10px;
             color: #9ca3af;
             border-top: 1px solid #f3f4f6;
             padding-top: 6px;
@@ -231,7 +231,7 @@
                 <span class="meta-value">{{ $resinaObj->nombre ?? ($calidadResumen->resina->nombre ?? ($resinaObj->codigo ?? ($calidadResumen->resina->codigo ?? 'N/A'))) }}</span>
             </td>
             <td style="width: 20%;">
-                <span class="meta-label">Operario / Auditor</span>
+                <span class="meta-label">Operario</span>
                 <span class="meta-value">{{ $header->operario->nombre ?? 'N/A' }}</span>
             </td>
         </tr>
@@ -321,27 +321,9 @@
         </tbody>
     </table>
 
-    <!-- FIRMAS DE CONFORMIDAD -->
-    <table class="signatures-table">
-        <tr>
-            <td>
-                <div class="signature-line">
-                    {{ $header->operario->nombre ?? 'Operador de Planta' }}<br>
-                    <span style="font-size: 8px; font-weight: normal; color: #6b7280;">Operario / Inspector de Calidad</span>
-                </div>
-            </td>
-            <td>
-                <div class="signature-line">
-                    Jefatura de Aseguramiento de Calidad<br>
-                    <span style="font-size: 8px; font-weight: normal; color: #6b7280;">Firma y Sello de Validación - Grupo Fénix</span>
-                </div>
-            </td>
-        </tr>
-    </table>
-
     <!-- PIE DE PÁGINA -->
     <div class="footer-note">
-        Este documento es un reporte oficial metrológico generado automáticamente por el Sistema de Calidad de Grupo Fénix. Documento confidencial de uso interno.
+        Este documento es un reporte oficial generado automáticamente por el Sistema de Calidad de Grupo Fénix. Documento confidencial de uso interno.
     </div>
 
 </body>

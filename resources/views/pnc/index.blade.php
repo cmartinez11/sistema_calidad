@@ -83,11 +83,28 @@
                                 {{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <span class="px-2.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">
-                                    {{ $pnc->estado_pnc }}
-                                </span>
+                                @if($pnc->estado_pnc === 'PROCESADO')
+                                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-300 inline-flex items-center space-x-1 shadow-2xs">
+                                        <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                        <span>PROCESADO</span>
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-full border border-amber-300">
+                                        {{ $pnc->estado_pnc }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-right space-x-2">
+                                @if(auth()->user()?->hasRole('Supervisor|Administrador') && $pnc->estado_pnc !== 'PROCESADO')
+                                    <form action="{{ route('pnc.procesar', $pnc->id) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de cambiar el estado de la PNC {{ $pnc->codigo_pnc }} a PROCESADO?')">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all text-xs inline-flex items-center space-x-1 shadow-sm cursor-pointer">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            <span>PROCESAR PNC</span>
+                                        </button>
+                                    </form>
+                                @endif
+
                                 <a href="{{ route('pnc.show', $pnc->id) }}" 
                                    class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition-all text-xs inline-flex items-center space-x-1">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
