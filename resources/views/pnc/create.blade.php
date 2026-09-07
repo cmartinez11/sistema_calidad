@@ -166,9 +166,86 @@
                     <span>2. Descripción Detallada de la No Conformidad Detectada</span>
                 </h3>
 
-                <textarea name="descripcion_nc" rows="3" required
-                          placeholder="Describe detalladamente el problema..."
-                          class="w-full px-3.5 py-2.5 border border-red-200 rounded-xl text-xs font-medium text-gray-900 bg-red-50/30 focus:ring-red-500 focus:border-red-500"></textarea>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Columna Izquierda: Textarea Descripción -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Detalle del Problema / Falla Registrada *
+                        </label>
+                        <textarea name="descripcion_nc" rows="5" required
+                                  placeholder="Describe detalladamente las no conformidades físicas, dimensionales o visuales detectadas en las preformas..."
+                                  class="w-full px-3.5 py-2.5 border border-red-200 rounded-xl text-xs font-medium text-gray-900 bg-red-50/30 focus:ring-red-500 focus:border-red-500 shadow-inner h-40 resize-none">{{ old('descripcion_nc') }}</textarea>
+                    </div>
+
+                    <!-- Columna Derecha: Subsección Cavidades con Fallas Detectadas -->
+                    <div class="bg-gray-50/80 p-4 rounded-xl border border-gray-200/80 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-3">
+                                <h4 class="text-xs font-extrabold text-gray-800 uppercase tracking-wider flex items-center space-x-1.5">
+                                    <span>🔍 Cavidades con Fallas Detectadas</span>
+                                </h4>
+                                @if(isset($cavidadesDefectuosas) && $cavidadesDefectuosas->count() > 0)
+                                    <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full border border-red-200 font-mono">
+                                        {{ $cavidadesDefectuosas->count() }} afectas
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if(isset($cavidadesDefectuosas) && $cavidadesDefectuosas->count() > 0)
+                                <div class="max-h-32 overflow-y-auto space-y-2 pr-1">
+                                    @foreach($cavidadesDefectuosas as $cav)
+                                        <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-2xs flex items-center justify-between text-xs">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded text-[11px] border border-gray-200">
+                                                    Cav. {{ sprintf('%02d', $cav->cavidad_numero) }}
+                                                </span>
+                                                @if(!empty($cav->motivo_scrap))
+                                                    <span class="text-[11px] font-semibold text-gray-700 truncate max-w-[130px]" title="{{ $cav->motivo_scrap }}">
+                                                        {{ $cav->motivo_scrap }}
+                                                    </span>
+                                                @elseif(!empty($cav->observaciones))
+                                                    <span class="text-[11px] font-medium text-gray-600 truncate max-w-[130px]" title="{{ $cav->observaciones }}">
+                                                        {{ $cav->observaciones }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <!-- Badge de Estado exacto -->
+                                            <div>
+                                                @if($cav->estado === 'FUERA_DE_RANGO')
+                                                    <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full border border-red-200">
+                                                        🔴 FUERA DE RANGO
+                                                    </span>
+                                                @elseif($cav->estado === 'OBSERVADO')
+                                                    <span class="px-2 py-0.5 bg-orange-100 text-orange-800 text-[10px] font-bold rounded-full border border-orange-200">
+                                                        🟠 OBSERVADO
+                                                    </span>
+                                                @elseif($cav->estado === 'PASABLE')
+                                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full border border-amber-200">
+                                                        ⚠️ PASABLE
+                                                    </span>
+                                                @elseif($cav->estado === 'ANULADO')
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-full border border-gray-200">
+                                                        ⚪ ANULADO
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full border border-red-200">
+                                                        🔴 {{ $cav->estado }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="p-4 text-center text-gray-400 bg-white rounded-lg border border-dashed border-gray-200">
+                                    <p class="text-xs font-medium text-gray-500">No hay auditoría de cavidades asociada</p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">O no se identificaron cavidades con desviación metrológica.</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- SECCIÓN 3: DÓNDE SE DETECTÓ Y DÓNDE SE ORIGINÓ -->
@@ -371,7 +448,7 @@
                             </label>
 
                             <label class="inline-flex items-center space-x-2 bg-white px-3 py-1.5 rounded-lg border border-emerald-200 text-xs font-semibold cursor-pointer">
-                                <input type="checkbox" name="causa_maquina" value="1" {{ old('causa_maquina', true) ? 'checked' : '' }} class="w-4 h-4 text-emerald-600 rounded">
+                                <input type="checkbox" name="causa_maquina" value="1" {{ old('causa_maquina') ? 'checked' : '' }} class="w-4 h-4 text-emerald-600 rounded">
                                 <span>Máquina</span>
                             </label>
 

@@ -56,6 +56,8 @@ class PncController extends Controller
         $motivosScrapStr = '';
         $cantidadSugerida = 0;
 
+        $cavidadesDefectuosas = collect();
+
         if ($codigoInspeccion) {
             $cavidades = InspeccionCavidad::with(['producto', 'operario', 'maquina'])
                 ->where('codigo_inspeccion', $codigoInspeccion)
@@ -88,10 +90,12 @@ class PncController extends Controller
                 }
 
                 $inspeccion = $firstCav;
-                $defectuosas = $cavidades->filter(function ($c) {
+                $cavidadesDefectuosasList = $cavidades->filter(function ($c) {
                     return $c->estado !== 'CONFORME' || !empty($c->observaciones) || !empty($c->motivo_scrap);
-                })->count();
-                $cantidadSugerida = $defectuosas;
+                })->values();
+
+                $cavidadesDefectuosas = $cavidadesDefectuosasList;
+                $cantidadSugerida = $cavidadesDefectuosasList->count();
             }
         }
 
@@ -112,6 +116,7 @@ class PncController extends Controller
             'selectedLote',
             'motivosScrapStr',
             'cantidadSugerida',
+            'cavidadesDefectuosas',
             'nextCodigoPnc',
             'today'
         ));

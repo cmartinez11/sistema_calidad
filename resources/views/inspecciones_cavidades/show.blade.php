@@ -308,7 +308,7 @@
 
                     <!-- Columna 2: Usuario / Encargado de Validación -->
                     <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">👤 Validado Por (Auditor / Encargado)</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">👤 Validado Por:</span>
                         <p class="font-bold text-gray-900 text-xs">
                             @if($calidadResumen && $calidadResumen->user)
                                 {{ $calidadResumen->user->name }} <span class="text-[11px] font-normal text-gray-400">(@ {{ $calidadResumen->user->username }})</span>
