@@ -131,23 +131,37 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     <!-- Cantidad -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad *</label>
                         <input type="number" step="0.01" name="cantidad" value="{{ old('cantidad', $cantidadSugerida) }}" required
                                placeholder="Ej. 10.50"
                                class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900">
                     </div>
 
-                    <!-- Unidad de Medida -->
+                    <!-- Unidad de Medida 1 -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida *</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida 1 *</label>
                         <select name="unidad_medida" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900">
                             <option value="Millares" {{ old('unidad_medida') == 'Millares' ? 'selected' : '' }}>Millares</option>
                             <option value="Unidades" {{ old('unidad_medida') == 'Unidades' ? 'selected' : '' }}>Unidades</option>
                             <option value="Kg" {{ old('unidad_medida') == 'Kg' ? 'selected' : '' }}>Kg (Kilogramos)</option>
                             <option value="Cajas / Bultos" {{ old('unidad_medida') == 'Cajas / Bultos' ? 'selected' : '' }}>Cajas / Bultos</option>
+                        </select>
+                    </div>
+
+                    <!-- Unidad de Medida 2 -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida 2 (Opcional)</label>
+                        <select name="unidad_medida_2" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900">
+                            <option value="">-- Ninguna / Opcional --</option>
+                            <option value="Unidades" {{ old('unidad_medida_2') == 'Unidades' ? 'selected' : '' }}>Unidades</option>
+                            <option value="Kg" {{ old('unidad_medida_2') == 'Kg' ? 'selected' : '' }}>Kg (Kilogramos)</option>
+                            <option value="Millares" {{ old('unidad_medida_2') == 'Millares' ? 'selected' : '' }}>Millares</option>
+                            <option value="Cajas / Bultos" {{ old('unidad_medida_2') == 'Cajas / Bultos' ? 'selected' : '' }}>Cajas / Bultos</option>
+                            <option value="Preformas" {{ old('unidad_medida_2') == 'Preformas' ? 'selected' : '' }}>Preformas</option>
+                            <option value="Paquetes" {{ old('unidad_medida_2') == 'Paquetes' ? 'selected' : '' }}>Paquetes</option>
                         </select>
                     </div>
 
@@ -469,13 +483,13 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                    <div class="space-y-4">
+                        <div class="w-full">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Causa Principal</label>
                             <textarea name="causa_principal" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs font-medium text-gray-900 bg-white">{{ old('causa_principal') }}</textarea>
                         </div>
 
-                        <div>
+                        <div class="w-full">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Acción Correctiva</label>
                             <textarea name="accion_correctiva" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs font-medium text-gray-900 bg-white">{{ old('accion_correctiva') }}</textarea>
                         </div>

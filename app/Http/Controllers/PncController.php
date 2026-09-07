@@ -135,6 +135,7 @@ class PncController extends Controller
             'fecha' => 'required|date',
             'cantidad' => 'required|numeric|min:0',
             'unidad_medida' => 'required|string|max:50',
+            'unidad_medida_2' => 'nullable|string|max:50',
             'cliente_proveedor' => 'nullable|string|max:150',
             'descripcion_nc' => 'required|string',
             'detectado_area' => 'nullable|string|max:100',
@@ -192,6 +193,7 @@ class PncController extends Controller
                 'fecha' => $validated['fecha'],
                 'cantidad' => $validated['cantidad'],
                 'unidad_medida' => $validated['unidad_medida'],
+                'unidad_medida_2' => $validated['unidad_medida_2'] ?? null,
                 'cliente_proveedor' => $validated['cliente_proveedor'] ?? null,
                 'descripcion_nc' => $validated['descripcion_nc'],
 
@@ -305,7 +307,17 @@ class PncController extends Controller
         $pnc = Pnc::with(['producto', 'lote', 'user', 'inspeccionCalidad'])
             ->findOrFail($id);
 
-        return view('pnc.show', compact('pnc'));
+        $cavidadesDefectuosas = collect();
+        if ($pnc->codigo_inspeccion) {
+            $cavidadesDefectuosas = InspeccionCavidad::with(['operario', 'maquina'])
+                ->where('codigo_inspeccion', $pnc->codigo_inspeccion)
+                ->get()
+                ->filter(function ($c) {
+                    return $c->estado !== 'CONFORME' || !empty($c->observaciones) || !empty($c->motivo_scrap);
+                })->values();
+        }
+
+        return view('pnc.show', compact('pnc', 'cavidadesDefectuosas'));
     }
 
     /**
@@ -316,7 +328,17 @@ class PncController extends Controller
         $pnc = Pnc::with(['producto', 'lote', 'user', 'inspeccionCalidad'])
             ->findOrFail($id);
 
-        $pdf = Pdf::loadView('pnc.pdf', compact('pnc'));
+        $cavidadesDefectuosas = collect();
+        if ($pnc->codigo_inspeccion) {
+            $cavidadesDefectuosas = InspeccionCavidad::with(['operario', 'maquina'])
+                ->where('codigo_inspeccion', $pnc->codigo_inspeccion)
+                ->get()
+                ->filter(function ($c) {
+                    return $c->estado !== 'CONFORME' || !empty($c->observaciones) || !empty($c->motivo_scrap);
+                })->values();
+        }
+
+        $pdf = Pdf::loadView('pnc.pdf', compact('pnc', 'cavidadesDefectuosas'));
 
         return $pdf->download("PNC_{$pnc->codigo_pnc}.pdf");
     }

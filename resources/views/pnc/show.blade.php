@@ -93,7 +93,12 @@
 
                 <div>
                     <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad Afectada</span>
-                    <span class="font-mono font-bold text-red-700 text-sm">{{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}</span>
+                    <span class="font-mono font-bold text-red-700 text-sm">
+                        {{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}
+                        @if(!empty($pnc->unidad_medida_2))
+                            <span class="text-xs text-gray-500 font-semibold font-sans">({{ $pnc->unidad_medida_2 }})</span>
+                        @endif
+                    </span>
                 </div>
 
                 <div class="col-span-2">
@@ -104,12 +109,74 @@
         </div>
 
         <!-- 2. DESCRIPCIÓN DE LA NO CONFORMIDAD DETECTADA -->
-        <div class="border border-gray-800 rounded-xl p-4 space-y-2">
+        <div class="border border-gray-800 rounded-xl p-4 space-y-3">
             <h3 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider bg-gray-100 p-1.5 rounded border border-gray-300">
-                2. Descripción de la No Conformidad Detectada
+                2. Descripción Detallada de la No Conformidad Detectada
             </h3>
-            <div class="p-3 bg-red-50/50 rounded-lg border border-red-200 text-xs font-medium text-gray-900 min-h-[60px]">
-                {{ $pnc->descripcion_nc }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Columna Izquierda: Descripción -->
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">Detalle del Problema / Falla Registrada:</span>
+                    <div class="p-3 bg-red-50/50 rounded-lg border border-red-200 text-xs font-medium text-gray-900 min-h-[80px]">
+                        {{ $pnc->descripcion_nc }}
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Cavidades con Fallas Detectadas -->
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-700 uppercase tracking-wider block">Cavidades con Fallas Detectadas:</span>
+                        @if(isset($cavidadesDefectuosas) && $cavidadesDefectuosas->count() > 0)
+                            <span class="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold rounded-full border border-red-200 font-mono">
+                                {{ $cavidadesDefectuosas->count() }} afectas
+                            </span>
+                        @endif
+                    </div>
+
+                    @if(isset($cavidadesDefectuosas) && $cavidadesDefectuosas->count() > 0)
+                        <div class="border border-gray-200 rounded-lg overflow-hidden max-h-44 overflow-y-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-gray-100 text-[10px] font-bold text-gray-700 uppercase border-b border-gray-200">
+                                    <tr>
+                                        <th class="p-1.5 border-r border-gray-200">Cavidad</th>
+                                        <th class="p-1.5 border-r border-gray-200">Motivo / Observación</th>
+                                        <th class="p-1.5 text-center">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 text-[11px]">
+                                    @foreach($cavidadesDefectuosas as $cav)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="p-1.5 font-mono font-bold text-gray-900 border-r border-gray-200">
+                                                Cav. {{ sprintf('%02d', $cav->cavidad_numero) }}
+                                            </td>
+                                            <td class="p-1.5 text-gray-700 border-r border-gray-200">
+                                                {{ $cav->motivo_scrap ?: ($cav->observaciones ?: '-') }}
+                                            </td>
+                                            <td class="p-1.5 text-center font-bold">
+                                                @if($cav->estado === 'FUERA_DE_RANGO')
+                                                    <span class="text-red-700">🔴 FUERA RANGO</span>
+                                                @elseif($cav->estado === 'OBSERVADO')
+                                                    <span class="text-orange-700">🟠 OBSERVADO</span>
+                                                @elseif($cav->estado === 'PASABLE')
+                                                    <span class="text-amber-700">⚠️ PASABLE</span>
+                                                @elseif($cav->estado === 'ANULADO')
+                                                    <span class="text-gray-500">⚪ ANULADO</span>
+                                                @else
+                                                    <span class="text-red-700">🔴 {{ $cav->estado }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-500 text-center min-h-[80px] flex items-center justify-center">
+                            No hay cavidades registradas con observaciones o auditoría manual.
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -230,15 +297,15 @@
                 <div>{!! $pnc->causa_medio_ambiente ? '☑' : '☐' !!} Medio Ambiente</div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                    <strong class="block text-gray-700">Causa Principal:</strong>
-                    <p class="p-2 bg-gray-50 rounded border border-gray-200 mt-1 min-h-[50px]">{{ $pnc->causa_principal ?: 'Sin especificar' }}</p>
+            <div class="space-y-4 text-xs">
+                <div class="w-full">
+                    <strong class="block text-gray-700 uppercase tracking-wider text-[10px]">Causa Principal Determinada:</strong>
+                    <p class="p-3 bg-gray-50 rounded-lg border border-gray-200 mt-1 min-h-[40px] text-gray-900 font-medium w-full">{{ $pnc->causa_principal ?: 'Sin especificar' }}</p>
                 </div>
 
-                <div>
-                    <strong class="block text-gray-700">Acción Correctiva Imputada:</strong>
-                    <p class="p-2 bg-gray-50 rounded border border-gray-200 mt-1 min-h-[50px]">{{ $pnc->accion_correctiva ?: 'Sin especificar' }}</p>
+                <div class="w-full">
+                    <strong class="block text-gray-700 uppercase tracking-wider text-[10px]">Acción Correctiva Imputada:</strong>
+                    <p class="p-3 bg-gray-50 rounded-lg border border-gray-200 mt-1 min-h-[40px] text-gray-900 font-medium w-full">{{ $pnc->accion_correctiva ?: 'Sin especificar' }}</p>
                 </div>
             </div>
         </div>
