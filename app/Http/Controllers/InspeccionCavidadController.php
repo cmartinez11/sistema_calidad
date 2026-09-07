@@ -53,7 +53,7 @@ class InspeccionCavidadController extends Controller
                 'user_id',
                 DB::raw('MIN(created_at) as created_at'),
                 DB::raw('COUNT(*) as total_cavidades'),
-                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO') THEN 1 END) as defectos_count"),
+                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE', 'ANULADO') OR (observaciones IS NOT NULL AND observaciones != '') THEN 1 END) as defectos_count"),
                 DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count"),
                 DB::raw("(SELECT estado_evaluacion FROM inspecciones_calidad WHERE inspecciones_calidad.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion LIMIT 1) as estado_evaluacion"),
                 DB::raw("EXISTS(SELECT 1 FROM pnc WHERE pnc.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion) as tiene_pnc")
@@ -376,10 +376,8 @@ class InspeccionCavidadController extends Controller
                     $estadoClean = 'ANULADO';
                 }
                 
-                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO'])) {
+                if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE', 'ANULADO']) || !empty($cavData['observaciones'])) {
                     $defectosCount++;
-                } elseif ($estadoClean === 'PASABLE') {
-                    $pasablesCount++;
                 }
 
                 if (in_array($estadoClean, ['FUERA_DE_RANGO', 'OBSERVADO'])) {
@@ -514,7 +512,7 @@ class InspeccionCavidadController extends Controller
                 // BLOQUEO PREVENTIVO INICIAL: No se crea el registro en inspecciones_calidad hasta que el usuario decida el flujo de salida
                 $msg = "Auditoría código {$codigoInspeccion} registrada correctamente. Debido a que contiene {$defectosCount} cavidad(es) observadas/fuera de rango, la auditoría permanece bloqueada preventivamente hasta que selecciones el flujo de salida ('Generar Inspección' o 'Generar PNC').";
             } else {
-                $estadoEvaluacionGlobal = ($pasablesCount > 0) ? 'PASABLE' : 'CONFORME';
+                $estadoEvaluacionGlobal = 'CONFORME';
 
                 InspeccionCalidad::create([
                     'codigo_inspeccion' => $codigoInspeccion,
@@ -591,9 +589,11 @@ class InspeccionCavidadController extends Controller
         $producto = $header->producto;
         $param = $producto->parametroPreforma ?? null;
 
-        $calidadResumen = InspeccionCalidad::with(['resina', 'molde', 'maquina', 'operario', 'turno'])
+        $calidadResumen = InspeccionCalidad::with(['resina', 'molde', 'maquina', 'operario', 'turno', 'user', 'motivoObservacion'])
             ->where('codigo_inspeccion', $codigo)
             ->first();
+
+        $pnc = \App\Models\Pnc::with(['user', 'lote'])->where('codigo_inspeccion', $codigo)->first();
 
         $resinaObj = $header->resina ?? ($calidadResumen->resina ?? null);
 
@@ -605,6 +605,9 @@ class InspeccionCavidadController extends Controller
         $conformesCount = $totalCavidades - ($fueraDeRangoCount + $observadoCount + $pasableCount + $anuladoCount);
         $promedioPeso = number_format($cavidades->where('estado', '!=', 'ANULADO')->avg('peso_medido') ?? 0, 2);
 
+        $tieneDefectos = ($fueraDeRangoCount + $observadoCount + $pasableCount + $anuladoCount > 0) ||
+            $cavidades->filter(fn($c) => !empty($c->observaciones) || !empty($c->motivo_scrap))->count() > 0;
+
         $motivosObservacion = \App\Models\MotivoObservacion::where('activo', true)->orderBy('nombre', 'asc')->get();
 
         return view('inspecciones_cavidades.show', compact(
@@ -614,6 +617,7 @@ class InspeccionCavidadController extends Controller
             'producto',
             'param',
             'calidadResumen',
+            'pnc',
             'resinaObj',
             'totalCavidades',
             'fueraDeRangoCount',
@@ -621,7 +625,8 @@ class InspeccionCavidadController extends Controller
             'pasableCount',
             'conformesCount',
             'promedioPeso',
-            'motivosObservacion'
+            'motivosObservacion',
+            'tieneDefectos'
         ));
     }
 

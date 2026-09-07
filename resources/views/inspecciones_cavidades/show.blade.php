@@ -224,13 +224,134 @@
             </div>
         </div>
 
-        <!-- SECCIÓN DE ACCIONES CUANDO EXISTEN DEFECTOS O CAV. OBSERVADAS -->
         @php
-            $tieneDefectos = $cavidades->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO'])->count() > 0;
             $estadoActualCalidad = $calidadResumen->estado_evaluacion ?? null;
+            $tieneDefectos = $tieneDefectos ?? (($fueraDeRangoCount ?? 0) + ($observadoCount ?? 0) + ($pasableCount ?? 0) + ($anuladoCount ?? 0) > 0);
         @endphp
 
-        @if($tieneDefectos)
+        <!-- PANEL INFORMATIVO DE CIERRE Y CONSOLIDACIÓN DE AUDITORÍA (SOLO LECTURA) -->
+        @if(!empty($estadoActualCalidad))
+            <div class="mt-6 p-6 rounded-2xl shadow-sm border print:hidden transition-all
+                @if($estadoActualCalidad === 'CONFORME')
+                    bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200
+                @elseif($estadoActualCalidad === 'OBSERVADO')
+                    bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200
+                @elseif($estadoActualCalidad === 'PNC')
+                    bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 border-red-200
+                @else
+                    bg-gray-50 border-gray-200
+                @endif">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4
+                    @if($estadoActualCalidad === 'CONFORME') border-emerald-200/80
+                    @elseif($estadoActualCalidad === 'OBSERVADO') border-amber-200/80
+                    @elseif($estadoActualCalidad === 'PNC') border-red-200/80
+                    @else border-gray-200 @endif">
+                    
+                    <div class="flex items-center space-x-3">
+                        <div class="p-3 rounded-xl shadow-md text-white
+                            @if($estadoActualCalidad === 'CONFORME') bg-emerald-600
+                            @elseif($estadoActualCalidad === 'OBSERVADO') bg-amber-600
+                            @elseif($estadoActualCalidad === 'PNC') bg-red-600
+                            @else bg-gray-600 @endif">
+                            @if($estadoActualCalidad === 'CONFORME')
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            @elseif($estadoActualCalidad === 'OBSERVADO')
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            @elseif($estadoActualCalidad === 'PNC')
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            @endif
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h4 class="text-base font-extrabold text-gray-900">Auditoría Procesada y Consolidada</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm
+                                    @if($estadoActualCalidad === 'CONFORME') bg-green-100 text-green-800 border border-green-300
+                                    @elseif($estadoActualCalidad === 'OBSERVADO') bg-amber-100 text-amber-900 border border-amber-300
+                                    @elseif($estadoActualCalidad === 'PNC') bg-red-600 text-white
+                                    @else bg-gray-200 text-gray-800 @endif">
+                                    @if($estadoActualCalidad === 'CONFORME') 🟢 CONFORME
+                                    @elseif($estadoActualCalidad === 'OBSERVADO') 🟠 OBSERVADO
+                                    @elseif($estadoActualCalidad === 'PNC') 🔴 PNC
+                                    @else {{ $estadoActualCalidad }} @endif
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-0.5">
+                                Esta auditoría ya cuenta con una resolución definitiva registrada y los botones de modificación de flujo se encuentran bloqueados.
+                            </p>
+                        </div>
+                    </div>
+
+                    @if($pnc)
+                        <a href="{{ route('pnc.show', $pnc->id) }}" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 self-start md:self-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            <span>Ver Reporte PNC ({{ $pnc->codigo_pnc }})</span>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- DETALLES DE RESOLUCIÓN Y VALIDACIÓN -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <!-- Columna 1: Fecha y Hora de Confirmación -->
+                    <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">📅 Fecha y Hora de Confirmación</span>
+                        <p class="font-mono font-bold text-gray-900 text-xs">
+                            @if($estadoActualCalidad === 'PNC' && $pnc)
+                                {{ \Carbon\Carbon::parse($pnc->created_at)->format('d/m/Y h:i:s A') }}
+                            @elseif($calidadResumen)
+                                {{ \Carbon\Carbon::parse($calidadResumen->updated_at ?? $calidadResumen->created_at)->format('d/m/Y h:i:s A') }}
+                            @else
+                                {{ \Carbon\Carbon::parse($header->created_at)->format('d/m/Y h:i:s A') }}
+                            @endif
+                        </p>
+                    </div>
+
+                    <!-- Columna 2: Usuario / Encargado de Validación -->
+                    <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">👤 Validado Por (Auditor / Encargado)</span>
+                        <p class="font-bold text-gray-900 text-xs">
+                            @if($calidadResumen && $calidadResumen->user)
+                                {{ $calidadResumen->user->name }} <span class="text-[11px] font-normal text-gray-400">(@ {{ $calidadResumen->user->username }})</span>
+                            @elseif($pnc && $pnc->user)
+                                {{ $pnc->user->name }} <span class="text-[11px] font-normal text-gray-400">(@ {{ $pnc->user->username }})</span>
+                            @elseif($header && $header->user)
+                                {{ $header->user->name }}
+                            @else
+                                Sistema Grupo Fénix
+                            @endif
+                        </p>
+                    </div>
+
+                    <!-- Columna 3: Motivo o Resolución Técnica -->
+                    <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">📋 Resolución / Motivo Registrado</span>
+                        <div class="text-xs text-gray-800">
+                            @if($estadoActualCalidad === 'CONFORME')
+                                <span class="text-emerald-700 font-bold">100% Conforme:</span> Todas las cavidades cumplen especificaciones.
+                            @elseif($estadoActualCalidad === 'OBSERVADO')
+                                @if($calidadResumen && $calidadResumen->motivoObservacion)
+                                    <strong class="text-amber-800">{{ $calidadResumen->motivoObservacion->nombre }}</strong>
+                                    @if($calidadResumen->motivo_observacion_texto)
+                                        <p class="text-[11px] text-gray-600 mt-0.5 italic">"{{ $calidadResumen->motivo_observacion_texto }}"</p>
+                                    @endif
+                                @elseif($calidadResumen && $calidadResumen->motivo_scrap)
+                                    <strong class="text-amber-800">{{ $calidadResumen->motivo_scrap }}</strong>
+                                @else
+                                    <span class="text-gray-600 font-semibold">Pase con Observación Registrado</span>
+                                @endif
+                            @elseif($estadoActualCalidad === 'PNC')
+                                @if($pnc)
+                                    <strong class="text-red-700">PNC {{ $pnc->codigo_pnc }}:</strong> <span class="text-gray-700">{{ Str::limit($pnc->descripcion_nc, 60) }}</span>
+                                @else
+                                    <span class="text-red-700 font-bold">Derivado al Módulo PNC</span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($tieneDefectos)
+            <!-- SECCIÓN DE ACCIONES DE RETENCIÓN PREVENTIVA (SOLO CUANDO NO ESTÁ CONSOLIDADA AÚN) -->
             <div x-data="{ showModalObservado: false }" class="mt-6 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 p-6 rounded-2xl border-2 border-amber-200 shadow-sm print:hidden">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="flex items-start space-x-3">
@@ -240,34 +361,13 @@
                         <div>
                             <h4 class="text-base font-bold text-gray-900">Se detectaron preformas fuera de rango u observadas</h4>
                             <p class="text-xs text-gray-600 mt-0.5">
-                                @if(!$estadoActualCalidad)
-                                    <span class="text-red-700 font-bold">🔒 Auditoría retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
-                                @else
-                                    Selecciona el flujo deseado para consolidar el estado en el Resumen de Calidad:
-                                @endif
+                                <span class="text-red-700 font-bold">🔒 Auditoría retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
                             </p>
-                            @if($estadoActualCalidad)
-                                <div class="mt-2 inline-flex items-center space-x-2 text-xs">
-                                    <span class="text-gray-500 font-semibold">Estado actual consolidado:</span>
-                                    @if($estadoActualCalidad === 'CONFORME')
-                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-green-100 text-green-700 border border-green-200">🟢 CONFORME</span>
-                                    @elseif($estadoActualCalidad === 'PASABLE')
-                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-100 text-amber-800 border border-amber-300">⚠️ PASABLE</span>
-                                    @elseif($estadoActualCalidad === 'OBSERVADO' || $estadoActualCalidad === 'OBSERVADO_PNC')
-                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-orange-100 text-orange-800 border border-orange-300">🟠 OBSERVADO</span>
-                                    @elseif($estadoActualCalidad === 'PNC')
-                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-red-600 text-white shadow-sm">🔴 PNC</span>
-                                    @else
-                                        <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-gray-200 text-gray-700">{{ $estadoActualCalidad }}</span>
-                                    @endif
-                                </div>
-                            @else
-                                <div class="mt-2 inline-flex items-center space-x-2 text-xs">
-                                    <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-200 text-amber-900 border border-amber-300 animate-pulse">
-                                        ⏳ PENDIENTE DE CONSOLIDAR (BLOQUEO PREVENTIVO)
-                                    </span>
-                                </div>
-                            @endif
+                            <div class="mt-2 inline-flex items-center space-x-2 text-xs">
+                                <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-200 text-amber-900 border border-amber-300 animate-pulse">
+                                    ⏳ PENDIENTE DE CONSOLIDAR (BLOQUEO PREVENTIVO)
+                                </span>
+                            </div>
                         </div>
                     </div>
 

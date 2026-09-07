@@ -88,7 +88,9 @@ class PncController extends Controller
                 }
 
                 $inspeccion = $firstCav;
-                $defectuosas = $cavidades->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE'])->count();
+                $defectuosas = $cavidades->filter(function ($c) {
+                    return $c->estado !== 'CONFORME' || !empty($c->observaciones) || !empty($c->motivo_scrap);
+                })->count();
                 $cantidadSugerida = $defectuosas;
             }
         }
