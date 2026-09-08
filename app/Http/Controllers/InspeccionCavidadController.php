@@ -146,7 +146,7 @@ class InspeccionCavidadController extends Controller
      */
     public function create(Request $request): View
     {
-        $productos = Producto::with('parametroPreforma')
+        $productos = Producto::with(['parametroPreforma.molde', 'molde'])
             ->where('activo', true)
             ->orderBy('nombre', 'asc')
             ->get();

@@ -20,6 +20,7 @@
         id: '',
         codigo: '',
         nombre: '',
+        molde_id: '',
         numero_cavidades: 0,
         peso_nominal: '',
         peso_min: '',
@@ -115,9 +116,18 @@
                                 </span>
                             </td>
 
-                            <!-- Nombre -->
+                            <!-- Nombre y Molde Asociado -->
                             <td class="px-6 py-4 font-medium text-gray-800">
-                                {{ $producto->nombre }}
+                                <div class="font-bold text-gray-900">{{ $producto->nombre }}</div>
+                                @if($producto->molde || $producto->parametroPreforma?->molde)
+                                    @php $moldeAssoc = $producto->molde ?? $producto->parametroPreforma->molde; @endphp
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[11px] font-mono font-bold rounded border border-emerald-200" title="Molde Asignado">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                            <span>Molde: <strong>{{ $moldeAssoc->codigo }}</strong> ({{ $moldeAssoc->numero_cavidades }} Cav.)</span>
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
 
                             <!-- Tipo de Producto -->
@@ -177,6 +187,7 @@
                                                     id: {{ $producto->id }},
                                                     codigo: '{{ e($producto->codigo) }}',
                                                     nombre: '{{ e($producto->nombre) }}',
+                                                    molde_id: '{{ $producto->parametroPreforma->molde_id ?? $producto->molde_id ?? '' }}',
                                                     numero_cavidades: '{{ $producto->parametroPreforma->numero_cavidades ?? 0 }}',
                                                     peso_nominal: '{{ $producto->parametroPreforma->peso_nominal ?? $producto->peso_unitario ?? '' }}',
                                                     peso_min: '{{ $producto->parametroPreforma->peso_min ?? '' }}',
@@ -455,13 +466,26 @@
             <form :action="paramUrl" method="POST" class="p-6 space-y-4">
                 @csrf
                 
-                <!-- SECCIÓN 1: CAVIDADES Y TOLERANCIAS DE PESO -->
+                <!-- SECCIÓN 1: MOLDE, CAVIDADES Y TOLERANCIAS DE PESO -->
                 <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 space-y-3">
                     <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center space-x-1.5">
-                        <span>Cavidades y Tolerancias de Peso (Gramos)</span>
+                        <span>Molde, Cavidades y Tolerancias de Peso (Gramos)</span>
                     </h4>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <!-- Molde Asociado -->
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Molde Asociado</label>
+                            <select name="molde_id" x-model="paramProduct.molde_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-medium focus:outline-none focus:border-emerald-600 bg-white">
+                                <option value="">-- Sin Molde Asignado --</option>
+                                @foreach($moldes as $molde)
+                                    <option value="{{ $molde->id }}">
+                                        {{ $molde->codigo }} - {{ $molde->nombre ?? 'Molde' }} ({{ $molde->numero_cavidades }} Cav.)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <!-- Cavidades -->
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">N° Cavidades *</label>
@@ -471,18 +495,20 @@
 
                         <!-- Peso Nominal -->
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Unitario(g) *</label>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Unit.(g) *</label>
                             <input type="number" step="0.01" name="peso_nominal" x-model="paramProduct.peso_nominal" required placeholder="Ej. 28.00"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-bold text-emerald-800">
                         </div>
 
                         <!-- Peso Min -->
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Mínimo (g) *</label>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Mín (g) *</label>
                             <input type="number" step="0.01" name="peso_min" x-model="paramProduct.peso_min" required placeholder="Ej. 27.50"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-emerald-600 font-mono">
                         </div>
+                    </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
                         <!-- Peso Max -->
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Peso Máximo (g) *</label>

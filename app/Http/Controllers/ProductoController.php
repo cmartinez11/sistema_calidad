@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Molde;
 use App\Models\Producto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class ProductoController extends Controller
         $search = $request->get('search');
 
         $productos = Producto::query()
-            ->with('parametroPreforma')
+            ->with(['parametroPreforma.molde', 'molde'])
             ->when($search, function ($query, $search) {
                 $query->where('codigo', 'ILIKE', "%{$search}%")
                     ->orWhere('nombre', 'ILIKE', "%{$search}%")
@@ -29,7 +30,11 @@ class ProductoController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('productos.index', compact('productos', 'search'));
+        $moldes = Molde::where('activo', true)
+            ->orderBy('codigo', 'asc')
+            ->get();
+
+        return view('productos.index', compact('productos', 'moldes', 'search'));
     }
 
     /**
@@ -305,18 +310,20 @@ class ProductoController extends Controller
      */
     public function getParametrosJson(Producto $producto)
     {
-        $producto->load('parametroPreforma');
+        $producto->load(['parametroPreforma.molde', 'molde']);
         $param = $producto->parametroPreforma;
+        $moldeId = $param->molde_id ?? $producto->molde_id ?? null;
 
         return response()->json([
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
-            'numero_cavidades' => $param->numero_cavidades ?? 1,
-            'peso_nominal' => $param->peso_nominal ?? 0,
+            'molde_id' => $moldeId,
+            'numero_cavidades' => $param->numero_cavidades ?? ($producto->molde->numero_cavidades ?? 1),
+            'peso_nominal' => $param->peso_nominal ?? $producto->peso_unitario ?? 0,
             'peso_min' => $param->peso_min ?? 0,
             'peso_max' => $param->peso_max ?? 0,
             
-            // Usando los nombres exactos que muestra tu base de datos pgAdmin
+            // Usando los nombres exactos que muestra la base de datos
             'espesor_pared_min' => $param->esp_pared_min ?? 0,
             'espesor_pared_max' => $param->esp_pared_max ?? 0,
             'espesor_fondo_min' => $param->esp_fondo_min ?? 0,

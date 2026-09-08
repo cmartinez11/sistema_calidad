@@ -15,6 +15,7 @@ class ParametroPreformaController extends Controller
     public function storeOrUpdate(Request $request, Producto $producto): RedirectResponse
     {
         $validated = $request->validate([
+            'molde_id' => 'nullable|exists:molde,id',
             'numero_cavidades' => 'required|integer|min:0',
             'peso_nominal' => 'required|numeric|min:0',
             'peso_min' => 'required|numeric|min:0',
@@ -31,14 +32,18 @@ class ParametroPreformaController extends Controller
             'peso_nominal.required' => 'El peso nominal es obligatorio.',
             'peso_min.required' => 'El peso mínimo es obligatorio.',
             'peso_max.required' => 'El peso máximo es obligatorio.',
+            'molde_id.exists' => 'El molde seleccionado no es válido.',
         ]);
 
         $validated['activo'] = $request->has('activo') ? (bool)$request->activo : true;
+        $validated['molde_id'] = $request->filled('molde_id') ? $request->molde_id : null;
 
         ParametroPreforma::updateOrCreate(
             ['producto_id' => $producto->id],
             $validated
         );
+
+        $producto->update(['molde_id' => $validated['molde_id']]);
 
         return redirect()->route('productos.index')
             ->with('success', "Parámetros técnicos de preforma para {$producto->codigo} guardados exitosamente.");

@@ -14,6 +14,7 @@ class ParametroPreforma extends Model
 
     protected $fillable = [
         'producto_id',
+        'molde_id',
         'numero_cavidades',
         'peso_nominal',
         'gramaje',
@@ -39,5 +40,10 @@ class ParametroPreforma extends Model
     public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    public function molde(): BelongsTo
+    {
+        return $this->belongsTo(Molde::class, 'molde_id');
     }
 }

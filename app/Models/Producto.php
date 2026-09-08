@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -18,6 +19,7 @@ class Producto extends Model
         'tipo_producto',
         'unidad_medida',
         'peso_unitario',
+        'molde_id',
         'activo',
     ];
 
@@ -32,6 +34,11 @@ class Producto extends Model
     public function getGramajeAttribute(): ?float
     {
         return $this->peso_unitario ? (float) $this->peso_unitario : null;
+    }
+
+    public function molde(): BelongsTo
+    {
+        return $this->belongsTo(Molde::class, 'molde_id');
     }
 
     public function parametroPreforma(): HasOne

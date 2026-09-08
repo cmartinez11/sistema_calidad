@@ -68,23 +68,33 @@
             this.alturaMin = parseFloat(data.altura_min || 0);
             this.alturaMax = parseFloat(data.altura_max || 0);
 
-            let newCavidades = [];
-            for (let i = 1; i <= this.numeroCavidades; i++) {
-                newCavidades.push({
-                    cavidad_numero: i,
-                    peso_medido: '',
-                    espesor_pared: '',
-                    espesor_fondo: '',
-                    altura: '',
-                    tiene_defecto: false,
-                    es_pasable: false,
-                    anulada: false,
-                    estado: 'CONFORME',
-                    motivo_scrap: '',
-                    observaciones: ''
-                });
+            if (data.molde_id) {
+                this.moldeId = data.molde_id.toString();
             }
-            this.cavidades = newCavidades;
+
+            this.$nextTick(() => {
+                if (this.moldeId) {
+                    this.actualizarCavidadesMolde();
+                } else {
+                    let newCavidades = [];
+                    for (let i = 1; i <= this.numeroCavidades; i++) {
+                        newCavidades.push({
+                            cavidad_numero: i,
+                            peso_medido: '',
+                            espesor_pared: '',
+                            espesor_fondo: '',
+                            altura: '',
+                            tiene_defecto: false,
+                            es_pasable: false,
+                            anulada: false,
+                            estado: 'CONFORME',
+                            motivo_scrap: '',
+                            observaciones: ''
+                        });
+                    }
+                    this.cavidades = newCavidades;
+                }
+            });
         } catch (e) {
             console.error(e);
             alert('No se pudieron obtener los parámetros del producto seleccionado.');
@@ -334,10 +344,16 @@
                     search: '',
                     productosList: [
                         @foreach($productos as $prod)
+                            @php
+                                $mId = $prod->parametroPreforma->molde_id ?? $prod->molde_id ?? '';
+                                $mCode = $prod->parametroPreforma->molde->codigo ?? $prod->molde->codigo ?? null;
+                                $cavs = $prod->parametroPreforma->numero_cavidades ?? $prod->molde->numero_cavidades ?? 1;
+                            @endphp
                             {
                                 id: '{{ $prod->id }}',
-                                text: '{{ $prod->codigo }} - {{ $prod->nombre }} ({{ $prod->parametroPreforma->numero_cavidades ?? 1 }} Cavidades)',
-                                searchKey: '{{ strtolower($prod->codigo . ' ' . $prod->nombre . ' ' . ($prod->parametroPreforma->numero_cavidades ?? 1)) }}'
+                                molde_id: '{{ $mId }}',
+                                text: '{{ $prod->codigo }} - {{ $prod->nombre }} ({{ $cavs }} Cav.){{ $mCode ? " [Molde: {$mCode}]" : "" }}',
+                                searchKey: '{{ strtolower($prod->codigo . ' ' . $prod->nombre . ' ' . $cavs . ' ' . ($mCode ?? '')) }}'
                             },
                         @endforeach
                     ],
@@ -351,6 +367,9 @@
                         this.selectedText = prod.text;
                         this.open = false;
                         this.search = '';
+                        if (prod.molde_id) {
+                            this.moldeId = prod.molde_id;
+                        }
                         this.cargarParametros();
                     }
                 }" @click.away="open = false">
