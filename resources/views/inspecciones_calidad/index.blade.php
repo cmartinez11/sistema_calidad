@@ -22,13 +22,6 @@
         </div>
 
         <div class="flex items-center space-x-3">
-            <!-- Botón Búsqueda -->
-            <form method="GET" action="{{ route('inspecciones-calidad.index') }}" class="relative">
-                <input type="text" name="search" value="{{ $search }}" placeholder="Buscar por código, lote, producto..." 
-                       class="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-fenix focus:ring-1 focus:ring-fenix w-64 transition-all">
-                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </form>
-
             <!-- Acceso a Auditoría Cavidades -->
             <a href="{{ route('inspecciones-cavidades.create') }}" 
                class="bg-fenix hover:bg-fenix-dark text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
@@ -36,6 +29,101 @@
                 <span>Nueva Auditoría</span>
             </a>
         </div>
+    </div>
+
+    <!-- PANEL DE FILTROS AVANZADOS -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-fenix flex items-center justify-center font-bold">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                </div>
+                <h3 class="text-sm font-bold text-gray-800">Filtros Avanzados</h3>
+                @if($fechaInicio || $fechaFin || $productoId || $lote || $estado || $search)
+                    <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-300">
+                        Filtros Activos
+                    </span>
+                @endif
+            </div>
+
+            @if($fechaInicio || $fechaFin || $productoId || $lote || $estado || $search)
+                <a href="{{ route('inspecciones-calidad.index') }}" 
+                   class="text-xs text-red-600 hover:text-red-800 font-medium flex items-center space-x-1 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Limpiar Filtros</span>
+                </a>
+            @endif
+        </div>
+
+        <form method="GET" action="{{ route('inspecciones-calidad.index') }}" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <!-- Rango de Fechas: Desde -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Desde</label>
+                    <input type="date" name="fecha_inicio" value="{{ $fechaInicio }}" 
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                </div>
+
+                <!-- Rango de Fechas: Hasta -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Hasta</label>
+                    <input type="date" name="fecha_fin" value="{{ $fechaFin }}" 
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                </div>
+
+                <!-- Filtro por Producto -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Producto</label>
+                    <select name="producto_id" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                        <option value="">Todos los Productos</option>
+                        @foreach($productos as $prod)
+                            <option value="{{ $prod->id }}" {{ (string)$productoId === (string)$prod->id ? 'selected' : '' }}>
+                                {{ $prod->codigo }} - {{ $prod->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Filtro por Lote -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Número de Lote</label>
+                    <input type="text" name="lote" value="{{ $lote }}" placeholder="Ej. PET2636M01" 
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                </div>
+
+                <!-- Filtro por Estado -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Estado Evaluación</label>
+                    <select name="estado" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                        <option value="">Todos los Estados</option>
+                        <option value="CONFORME" {{ $estado === 'CONFORME' ? 'selected' : '' }}>🟢 CONFORME</option>
+                        <option value="OBSERVADO" {{ $estado === 'OBSERVADO' ? 'selected' : '' }}>🟠 OBSERVADO</option>
+                        <option value="PNC" {{ $estado === 'PNC' ? 'selected' : '' }}>🔴 PNC</option>
+                    </select>
+                </div>
+
+                <!-- Texto libre / Búsqueda -->
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Búsqueda General</label>
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Código, Operario..." 
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t border-gray-50">
+                <a href="{{ route('inspecciones-calidad.index') }}" 
+                   class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-all flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Limpiar Filtros</span>
+                </a>
+                <button type="submit" 
+                        class="px-5 py-2 bg-fenix hover:bg-fenix-dark text-white font-bold rounded-xl text-xs shadow-md hover:shadow-lg transition-all flex items-center space-x-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <span>Filtrar</span>
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- TABLA CONSOLIDADA DE INSPECCIONES DE CALIDAD -->

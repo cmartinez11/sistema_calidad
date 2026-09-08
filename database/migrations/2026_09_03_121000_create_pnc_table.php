@@ -68,7 +68,7 @@ return new class extends Migration
             $table->text('causa_principal')->nullable();
             $table->text('accion_correctiva')->nullable();
 
-            $table->string('estado_pnc', 30)->default('EMITIDO');
+            $table->string('estado_pnc', 30)->default('PENDIENTE');
 
             $table->timestamps();
         });

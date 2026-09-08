@@ -23,20 +23,44 @@ class PncController extends Controller
      */
     public function index(Request $request): View
     {
+        $fechaInicio = $request->get('fecha_inicio');
+        $fechaFin = $request->get('fecha_fin');
+        $productoId = $request->get('producto_id');
+        $lote = $request->get('lote');
+        $estado = $request->get('estado');
         $search = $request->get('search');
 
-        $pncs = Pnc::with(['producto', 'lote', 'user'])
+        $pncs = Pnc::query()
+            ->with(['producto', 'lote', 'user'])
+            ->when($fechaInicio, fn($q) => $q->whereDate('fecha', '>=', $fechaInicio))
+            ->when($fechaFin, fn($q) => $q->whereDate('fecha', '<=', $fechaFin))
+            ->when($productoId, fn($q) => $q->where('producto_id', $productoId))
+            ->when($lote, fn($q) => $q->whereHas('lote', fn($l) => $l->where('codigo_lote', 'ILIKE', "%{$lote}%")))
+            ->when($estado, fn($q) => $q->where('estado_pnc', $estado))
             ->when($search, function ($query, $search) {
-                $query->where('codigo_pnc', 'ILIKE', "%{$search}%")
-                    ->orWhere('codigo_inspeccion', 'ILIKE', "%{$search}%")
-                    ->orWhereHas('producto', fn($q) => $q->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
-                    ->orWhereHas('lote', fn($q) => $q->where('codigo_lote', 'ILIKE', "%{$search}%"));
+                $query->where(function ($q) use ($search) {
+                    $q->where('codigo_pnc', 'ILIKE', "%{$search}%")
+                        ->orWhere('codigo_inspeccion', 'ILIKE', "%{$search}%")
+                        ->orWhereHas('producto', fn($p) => $p->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
+                        ->orWhereHas('lote', fn($l) => $l->where('codigo_lote', 'ILIKE', "%{$search}%"));
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        return view('pnc.index', compact('pncs', 'search'));
+        $productos = Producto::orderBy('nombre', 'asc')->get();
+
+        return view('pnc.index', compact(
+            'pncs',
+            'productos',
+            'fechaInicio',
+            'fechaFin',
+            'productoId',
+            'lote',
+            'estado',
+            'search'
+        ));
     }
 
     /**
@@ -231,7 +255,7 @@ class PncController extends Controller
                 'causa_principal' => $validated['causa_principal'] ?? null,
                 'accion_correctiva' => $validated['accion_correctiva'] ?? null,
 
-                'estado_pnc' => 'EMITIDO',
+                'estado_pnc' => 'PENDIENTE',
             ]);
 
             // Cierre y Actualización o Creación de Estado en la inspección de calidad consolidada

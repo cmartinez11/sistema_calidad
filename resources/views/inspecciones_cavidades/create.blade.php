@@ -512,7 +512,7 @@
                                     <th class="px-3 py-3 text-center w-36">Estado</th>
                                     <th class="px-3 py-3 w-44">Motivo de Scrap / Defecto</th>
                                     <th class="px-3 py-3 w-56">Observaciones</th>
-                                    <th class="px-3 py-3 text-center w-32 bg-gray-200/70 text-gray-800 font-extrabold">ANULAR CAVIDAD</th>
+                                    <th class="px-3 py-3 text-center w-32 bg-gray-200/70 text-gray-800 font-extrabold">CAVIDAD ANULADA</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">

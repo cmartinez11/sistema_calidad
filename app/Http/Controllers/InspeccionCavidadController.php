@@ -32,38 +32,113 @@ class InspeccionCavidadController extends Controller
      */
     public function index(Request $request): View
     {
+        $fechaInicio = $request->get('fecha_inicio');
+        $fechaFin = $request->get('fecha_fin');
+        $productoId = $request->get('producto_id');
+        $lote = $request->get('lote');
+        $estado = $request->get('estado');
         $search = $request->get('search');
 
-        $inspecciones = InspeccionCavidad::query()
+        $query = InspeccionCavidad::query()
             ->with(['producto', 'maquina', 'operario', 'turno', 'user'])
             ->whereNotNull('codigo_inspeccion')
-            ->where('codigo_inspeccion', '!=', '')
-            ->when($search, function ($query, $search) {
-                $query->where('codigo_inspeccion', 'ILIKE', "%{$search}%")
-                    ->orWhereHas('producto', fn($q) => $q->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
-                    ->orWhereHas('maquina', fn($q) => $q->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
-                    ->orWhereHas('operario', fn($q) => $q->where('nombre', 'ILIKE', "%{$search}%"));
-            })
-            ->select(
-                'codigo_inspeccion',
-                'producto_id',
-                'maquina_id',
-                'operario_id',
-                'turno_id',
-                'user_id',
-                DB::raw('MIN(created_at) as created_at'),
-                DB::raw('COUNT(*) as total_cavidades'),
-                DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE', 'ANULADO') OR (observaciones IS NOT NULL AND observaciones != '') THEN 1 END) as defectos_count"),
-                DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count"),
-                DB::raw("(SELECT estado_evaluacion FROM inspecciones_calidad WHERE inspecciones_calidad.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion LIMIT 1) as estado_evaluacion"),
-                DB::raw("EXISTS(SELECT 1 FROM pnc WHERE pnc.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion) as tiene_pnc")
-            )
-            ->groupBy('codigo_inspeccion', 'producto_id', 'maquina_id', 'operario_id', 'turno_id', 'user_id')
-            ->orderBy(DB::raw('MIN(created_at)'), 'desc')
-            ->paginate(10)
-            ->withQueryString();
+            ->where('codigo_inspeccion', '!=', '');
 
-        return view('inspecciones_cavidades.index', compact('inspecciones', 'search'));
+        // Filtro por Rango de Fechas
+        if ($fechaInicio) {
+            $query->whereDate('created_at', '>=', $fechaInicio);
+        }
+        if ($fechaFin) {
+            $query->whereDate('created_at', '<=', $fechaFin);
+        }
+
+        // Filtro por Producto
+        if ($productoId) {
+            $query->where('producto_id', $productoId);
+        }
+
+        // Filtro por Lote
+        if ($lote) {
+            $query->whereExists(function ($sub) use ($lote) {
+                $sub->select(DB::raw(1))
+                    ->from('inspecciones_calidad')
+                    ->join('lotes', 'lotes.id', '=', 'inspecciones_calidad.lote_id')
+                    ->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion')
+                    ->where('lotes.codigo_lote', 'ILIKE', "%{$lote}%");
+            });
+        }
+
+        // Búsqueda general por código o relaciones
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('codigo_inspeccion', 'ILIKE', "%{$search}%")
+                    ->orWhereHas('producto', fn($p) => $p->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
+                    ->orWhereHas('maquina', fn($m) => $m->where('codigo', 'ILIKE', "%{$search}%")->orWhere('nombre', 'ILIKE', "%{$search}%"))
+                    ->orWhereHas('operario', fn($o) => $o->where('nombre', 'ILIKE', "%{$search}%"));
+            });
+        }
+
+        // Filtro por Estado Global
+        if ($estado) {
+            if ($estado === 'PNC') {
+                $query->where(function ($q) {
+                    $q->whereExists(function ($sub) {
+                        $sub->select(DB::raw(1))->from('pnc')->whereColumn('pnc.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
+                    })
+                    ->orWhereExists(function ($sub) {
+                        $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion')->where('estado_evaluacion', 'PNC');
+                    });
+                });
+            } elseif ($estado === 'OBSERVADO') {
+                $query->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion')->where('estado_evaluacion', 'OBSERVADO');
+                });
+            } elseif ($estado === 'CONFORME') {
+                $query->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))->from('pnc')->whereColumn('pnc.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
+                })
+                ->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion')->where('estado_evaluacion', 'CONFORME');
+                });
+            } elseif ($estado === 'RETENIDO') {
+                $query->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
+                })
+                ->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE', 'ANULADO']);
+            }
+        }
+
+        $inspecciones = $query->select(
+            'codigo_inspeccion',
+            'producto_id',
+            'maquina_id',
+            'operario_id',
+            'turno_id',
+            'user_id',
+            DB::raw('MIN(created_at) as created_at'),
+            DB::raw('COUNT(*) as total_cavidades'),
+            DB::raw("COUNT(CASE WHEN estado IN ('FUERA_DE_RANGO', 'OBSERVADO', 'PASABLE', 'ANULADO') OR (observaciones IS NOT NULL AND observaciones != '') THEN 1 END) as defectos_count"),
+            DB::raw("COUNT(CASE WHEN estado = 'PASABLE' THEN 1 END) as pasables_count"),
+            DB::raw("(SELECT estado_evaluacion FROM inspecciones_calidad WHERE inspecciones_calidad.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion LIMIT 1) as estado_evaluacion"),
+            DB::raw("EXISTS(SELECT 1 FROM pnc WHERE pnc.codigo_inspeccion = inspecciones_cavidades.codigo_inspeccion) as tiene_pnc")
+        )
+        ->groupBy('codigo_inspeccion', 'producto_id', 'maquina_id', 'operario_id', 'turno_id', 'user_id')
+        ->orderBy(DB::raw('MIN(created_at)'), 'desc')
+        ->paginate(10)
+        ->withQueryString();
+
+        $productos = Producto::orderBy('nombre', 'asc')->get();
+
+        return view('inspecciones_cavidades.index', compact(
+            'inspecciones',
+            'productos',
+            'fechaInicio',
+            'fechaFin',
+            'productoId',
+            'lote',
+            'estado',
+            'search'
+        ));
     }
 
     /**
