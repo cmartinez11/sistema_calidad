@@ -91,17 +91,8 @@
                 1. Datos Generales de la Falla
             </h3>
 
-            <div class="grid grid-cols-4 gap-4 text-xs">
-                <div>
-                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Fecha de Emisión</span>
-                    <span class="font-mono font-bold text-gray-900">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
-                </div>
-
-                <div>
-                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Código de Auditoría</span>
-                    <span class="font-mono font-bold text-fenix-dark">{{ $pnc->codigo_inspeccion ?: 'Manual / Sin Auditoría' }}</span>
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <!-- Fila 1: Producto Afectado, Lote de Producción, Fecha de Emisión -->
                 <div class="col-span-2">
                     <span class="text-gray-500 block text-[10px] uppercase font-bold">Producto Afectado</span>
                     <span class="font-bold text-gray-900">{{ $pnc->producto->codigo ?? '' }} - {{ $pnc->producto->nombre ?? 'N/A' }}</span>
@@ -113,16 +104,36 @@
                 </div>
 
                 <div>
-                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad Afectada</span>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Fecha de Emisión</span>
+                    <span class="font-mono font-bold text-gray-900">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
+                </div>
+
+                <!-- Fila 2: Cantidad (1), Cantidad 2 / U.M. 2, Código de Inspección -->
+                <div>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad (1)</span>
                     <span class="font-mono font-bold text-red-700 text-sm">
-                        {{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}
-                        <!--@if(!empty($pnc->unidad_medida_2))
-                            <span class="text-xs text-gray-500 font-semibold font-sans">({{ $pnc->unidad_medida_2 }})</span>
-                        @endif-->
+                        {{ number_format($pnc->cantidad, 2) }} <span class="text-xs text-gray-700 font-sans font-semibold">{{ $pnc->unidad_medida }}</span>
+                    </span>
+                </div>
+
+                <div>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad 2 (Opcional)</span>
+                    <span class="font-mono font-bold text-gray-800 text-sm">
+                        @if($pnc->cantidad_2 || $pnc->unidad_medida_2)
+                            {{ $pnc->cantidad_2 ? number_format($pnc->cantidad_2, 2) : '' }} <span class="text-xs text-gray-700 font-sans font-semibold">{{ $pnc->unidad_medida_2 }}</span>
+                        @else
+                            <span class="text-gray-400 font-normal">-</span>
+                        @endif
                     </span>
                 </div>
 
                 <div class="col-span-2">
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Código de Inspección</span>
+                    <span class="font-mono font-bold text-fenix-dark">{{ $pnc->codigo_inspeccion ?: 'Manual / Sin Inspección' }}</span>
+                </div>
+
+                <!-- Fila 3: Cliente / Proveedor a Ancho Completo (100%) -->
+                <div class="col-span-1 md:col-span-4 pt-2 border-t border-gray-100">
                     <span class="text-gray-500 block text-[10px] uppercase font-bold">Cliente / Proveedor</span>
                     <span class="font-semibold text-gray-800">{{ $pnc->cliente_proveedor ?: '-' }}</span>
                 </div>

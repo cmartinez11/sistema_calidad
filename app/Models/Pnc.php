@@ -22,6 +22,7 @@ class Pnc extends Model
         'fecha',
         'cantidad',
         'unidad_medida',
+        'cantidad_2',
         'unidad_medida_2',
         'cliente_proveedor',
         'descripcion_nc',

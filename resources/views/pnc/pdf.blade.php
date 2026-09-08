@@ -118,37 +118,49 @@
     <div class="section-box">
         <div class="section-title">1. Datos Generales de la Falla</div>
         <table style="width: 100%; border-collapse: collapse;">
+            <!-- Fila 1: Producto Afectado, Lote Producción, Fecha Emisión -->
             <tr>
-                <td style="width: 25%;">
-                    <span class="field-label">Fecha Emisión</span>
-                    <span class="field-value">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
-                </td>
-                <td style="width: 25%;">
-                    <span class="field-label">Auditoría Código</span>
-                    <span class="field-value">{{ $pnc->codigo_inspeccion ?: '-' }}</span>
-                </td>
                 <td style="width: 50%;" colspan="2">
                     <span class="field-label">Producto Afectado</span>
                     <span class="field-value">{{ $pnc->producto->codigo ?? '' }} - {{ $pnc->producto->nombre ?? 'N/A' }}</span>
                 </td>
-            </tr>
-            <tr>
-                <td style="width: 25%; padding-top: 4px;">
+                <td style="width: 25%;">
                     <span class="field-label">Lote Producción</span>
                     <span class="field-value">{{ $pnc->lote->codigo_lote ?? '-' }}</span>
                 </td>
-                <td style="width: 25%; padding-top: 4px;">
-                    <span class="field-label">Cantidad Afectada</span>
+                <td style="width: 25%;">
+                    <span class="field-label">Fecha Emisión</span>
+                    <span class="field-value">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
+                </td>
+            </tr>
+            <!-- Fila 2: Cantidad (1), Cantidad 2 / U.M. 2, Inspección Código -->
+            <tr>
+                <td style="width: 25%; padding-top: 5px;">
+                    <span class="field-label">Cantidad Afectada (1)</span>
                     <span class="field-value" style="color: #dc2626;">
                         {{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}
-                        <!--@if(!empty($pnc->unidad_medida_2))
-                            <span style="color: #4b5563; font-weight: normal; font-size: 10px;">({{ $pnc->unidad_medida_2 }})</span>
-                        @endif-->
                     </span>
                 </td>
-                <td style="width: 50%; padding-top: 4px;" colspan="2">
+                <td style="width: 25%; padding-top: 5px;">
+                    <span class="field-label">Cantidad 2 / U.M. 2</span>
+                    <span class="field-value">
+                        @if($pnc->cantidad_2 || $pnc->unidad_medida_2)
+                            {{ $pnc->cantidad_2 ? number_format($pnc->cantidad_2, 2) : '' }} {{ $pnc->unidad_medida_2 }}
+                        @else
+                            -
+                        @endif
+                    </span>
+                </td>
+                <td style="width: 50%; padding-top: 5px;" colspan="2">
+                    <span class="field-label">Inspección Código</span>
+                    <span class="field-value">{{ $pnc->codigo_inspeccion ?: 'Manual / Sin Inspección' }}</span>
+                </td>
+            </tr>
+            <!-- Fila 3: Cliente / Proveedor (Ancho Completo - 100%) -->
+            <tr>
+                <td style="width: 100%; padding-top: 5px;" colspan="4">
                     <span class="field-label">Cliente / Proveedor</span>
-                    <span class="field-value">{{ $pnc->cliente_proveedor ?: '' }}</span>
+                    <span class="field-value">{{ $pnc->cliente_proveedor ?: '-' }}</span>
                 </td>
             </tr>
         </table>

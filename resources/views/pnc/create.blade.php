@@ -132,7 +132,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                    <!-- Cantidad -->
+                    <!-- Cantidad 1 -->
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad *</label>
                         <input type="number" step="0.01" name="cantidad" value="{{ old('cantidad', $cantidadSugerida) }}" required
@@ -151,7 +151,15 @@
                         </select>
                     </div>
 
-                    <!-- Unidad de Medida 2 -->
+                    <!-- Cantidad 2 (Opcional) -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad 2 (Opcional)</label>
+                        <input type="number" step="0.01" name="cantidad_2" value="{{ old('cantidad_2') }}"
+                               placeholder="Ej. 150.00"
+                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-mono font-semibold text-gray-900">
+                    </div>
+
+                    <!-- Unidad de Medida 2 (Opcional) -->
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida 2 (Opcional)</label>
                         <select name="unidad_medida_2" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900">
@@ -164,12 +172,14 @@
                             <option value="Paquetes" {{ old('unidad_medida_2') == 'Paquetes' ? 'selected' : '' }}>Paquetes</option>
                         </select>
                     </div>
+                </div>
 
-                    <!-- Cliente / Proveedor -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cliente / Proveedor (Opcional)</label>
-                        <input type="text" name="cliente_proveedor" value="{{ old('cliente_proveedor') }}" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-medium text-gray-900">
-                    </div>
+                <!-- Fila 3: Cliente / Proveedor (Ancho Completo - 100%) -->
+                <div class="pt-2">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cliente / Proveedor (Opcional)</label>
+                    <input type="text" name="cliente_proveedor" value="{{ old('cliente_proveedor') }}"
+                           placeholder="Indicar el nombre del cliente o proveedor si corresponde (Opcional)..."
+                           class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-medium text-gray-900">
                 </div>
             </div>
 
