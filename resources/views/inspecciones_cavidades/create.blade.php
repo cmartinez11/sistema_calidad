@@ -686,7 +686,7 @@
                 <button type="submit" 
                         class="bg-fenix hover:bg-fenix-dark text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all flex items-center space-x-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    <span>Guardar Auditoría de Calidad</span>
+                    <span>Guardar Inspección de Calidad</span>
                 </button>
             </div>
 

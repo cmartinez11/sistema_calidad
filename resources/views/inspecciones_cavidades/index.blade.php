@@ -27,7 +27,7 @@
     <!-- TARJETA SUPERIOR CABECERA -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Historial de Auditorías por Cavidades</h2>
+            <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Historial de Inspecciones por Cavidades</h2>
             <p class="text-xs text-gray-400 mt-1">Registro histórico de pesajes unitarios cavidad por cavidad y reportes imprimibles</p>
         </div>
 
@@ -36,7 +36,7 @@
             <a href="{{ route('inspecciones-cavidades.create') }}" 
                class="bg-fenix hover:bg-fenix-dark text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Nueva Auditoría</span>
+                <span>Nueva Inspección</span>
             </a>
         </div>
     </div>
@@ -143,7 +143,7 @@
             <table class="w-full text-left text-sm text-gray-600">
                 <thead class="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     <tr>
-                        <th class="px-6 py-4">Código Auditoría</th>
+                        <th class="px-6 py-4">Código Inspeccion</th>
                         <th class="px-6 py-4">Fecha y Hora</th>
                         <th class="px-6 py-4">Producto</th>
                         <th class="px-6 py-4">Inyectora / Operario</th>
@@ -195,7 +195,7 @@
                                         <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> 🟠 OBSERVADO
                                     </span>
                                 @elseif(($insp->defectos_count ?? 0) > 0 && empty($insp->estado_evaluacion))
-                                    <span class="inline-flex items-center px-3 py-1 bg-amber-200 text-amber-900 text-xs font-bold rounded-full border border-amber-300" title="Auditoría bloqueada preventivamente hasta definir su flujo de salida">
+                                    <span class="inline-flex items-center px-3 py-1 bg-amber-200 text-amber-900 text-xs font-bold rounded-full border border-amber-300" title="Inspección retenida preventivamente hasta definir su flujo de salida">
                                         <span class="w-1.5 h-1.5 bg-amber-600 rounded-full mr-1.5 animate-ping"></span> ⏳ RETENIDO
                                     </span>
                                 @else
@@ -218,8 +218,8 @@
                             <td colspan="7" class="text-center py-12 text-gray-400">
                                 <div class="flex flex-col items-center justify-center space-y-2">
                                     <span class="text-4xl">🧪</span>
-                                    <p class="text-base font-medium text-gray-500">No se encontraron auditorías registradas</p>
-                                    <p class="text-xs text-gray-400">Haz clic en "Nueva Auditoría" para registrar el primer pesaje.</p>
+                                    <p class="text-base font-medium text-gray-500">No se encontraron inspecciones registradas</p>
+                                    <p class="text-xs text-gray-400">Haz clic en "Nueva Inspección" para registrar el primer pesaje.</p>
                                 </div>
                             </td>
                         </tr>

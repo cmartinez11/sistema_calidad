@@ -41,7 +41,7 @@
         <!-- 1. SECCIÓN MÁQUINAS -->
         <div x-show="tab === 'maquinas'" class="space-y-4" x-cloak>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h3 class="text-base font-bold text-gray-800">Listado de Máquinas / Inyectoras</h3>
+                <h3 class="text-base font-bold text-gray-800">Listado de Máquinas</h3>
                 <a href="{{ route('maquinas.create') }}" 
                    class="px-4 py-2 bg-fenix hover:bg-fenix-dark text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

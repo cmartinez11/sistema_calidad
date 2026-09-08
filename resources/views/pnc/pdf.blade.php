@@ -103,7 +103,7 @@
             </td>
             <td style="width: 50%; text-align: center;">
                 <strong style="font-size: 12.5px; display: block; letter-spacing: 0.2px;">REPORTE DE PRODUCTO NO CONFORME (PNC)</strong>
-                <span style="font-size: 9px; color: #4b5563;">Control Metrológico y Aseguramiento de Calidad</span>
+                <span style="font-size: 9px; color: #4b5563;">Control de Calidad</span>
             </td>
             <td style="width: 25%; font-size: 8.5px; line-height: 1.3;">
                 <strong>Código:</strong> FE-SIG-FOR-30-V<br>
@@ -206,7 +206,7 @@
                         </table>
                     @else
                         <div style="padding: 4px; background-color: #f9fafb; border: 1px solid #e5e7eb; min-height: 45px; font-size: 9.5px; color: #6b7280; text-align: center;">
-                            No hay cavidades registradas con observaciones o auditoría no vinculada.
+                            No hay cavidades registradas con observaciones o inspección no vinculada.
                         </div>
                     @endif
                 </td>
@@ -295,7 +295,7 @@
 
     <!-- 6. ANÁLISIS DE CAUSA RAÍZ (5M) Y ACCIÓN CORRECTIVA -->
     <div class="section-box">
-        <div class="section-title">6. Análisis de Causa Raíz (5M) y Acción Correctiva</div>
+        <div class="section-title">6. Causa Raiz</div>
         <div style="font-size: 10px; margin-bottom: 4px;">
             <strong>Factores Involucrados (5M):</strong> &nbsp;
             <span class="chk {{ $pnc->causa_mano_obra ? 'chk-active' : '' }}">{{ $pnc->causa_mano_obra ? 'X' : '' }}</span> Mano Obra &nbsp;&nbsp;

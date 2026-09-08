@@ -41,7 +41,7 @@
                 <div class="bg-fenix text-white p-3 rounded-xl font-black text-xl shadow-sm">GF</div>
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 tracking-tight uppercase">Grupo Fénix - Control de Calidad</h1>
-                    <p class="text-xs text-gray-500 font-semibold uppercase">Reporte Metrológico de Auditoría de Pesos por Cavidad</p>
+                    <p class="text-xs text-gray-500 font-semibold uppercase">Reporte Inspección de Pesos por Cavidad</p>
                 </div>
             </div>
             <div class="text-right">
@@ -65,7 +65,7 @@
                 <span class="font-bold text-gray-900">{{ $producto->nombre }}</span>
             </div>
             <div>
-                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Inyectora / Máquina</span>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Máquina</span>
                 <span class="font-bold text-gray-900">{{ $header->maquina->codigo ?? 'N/A' }} {{ $header->maquina ? '('.$header->maquina->nombre.')' : '' }}</span>
             </div>
 
@@ -142,7 +142,7 @@
             <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
                 <span class="text-[10px] text-blue-700 font-semibold uppercase block">Peso Promedio</span>
                 <span class="text-base font-mono font-bold text-blue-900">{{ $promedioPeso }} g</span>
-                <span class="text-[10px] text-blue-600 block mt-0.5">Evaluación metrológica</span>
+                <span class="text-[10px] text-blue-600 block mt-0.5">Evaluación</span>
             </div>
         </div>
 
@@ -264,7 +264,7 @@
                         </div>
                         <div>
                             <div class="flex items-center space-x-2">
-                                <h4 class="text-base font-extrabold text-gray-900">Auditoría Procesada y Consolidada</h4>
+                                <h4 class="text-base font-extrabold text-gray-900">Inspeccion Procesada y Consolidada</h4>
                                 <span class="px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm
                                     @if($estadoActualCalidad === 'CONFORME') bg-green-100 text-green-800 border border-green-300
                                     @elseif($estadoActualCalidad === 'OBSERVADO') bg-amber-100 text-amber-900 border border-amber-300
@@ -277,7 +277,7 @@
                                 </span>
                             </div>
                             <p class="text-xs text-gray-600 mt-0.5">
-                                Esta auditoría ya cuenta con una resolución definitiva registrada y los botones de modificación de flujo se encuentran bloqueados.
+                                Esta inspección ya cuenta con una resolución definitiva registrada y los botones de modificación de flujo se encuentran bloqueados.
                             </p>
                         </div>
                     </div>
@@ -361,7 +361,7 @@
                         <div>
                             <h4 class="text-base font-bold text-gray-900">Se detectaron preformas fuera de rango u observadas</h4>
                             <p class="text-xs text-gray-600 mt-0.5">
-                                <span class="text-red-700 font-bold">🔒 Auditoría retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
+                                <span class="text-red-700 font-bold">🔒 Inspección retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
                             </p>
                             <div class="mt-2 inline-flex items-center space-x-2 text-xs">
                                 <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-200 text-amber-900 border border-amber-300 animate-pulse">
@@ -465,7 +465,7 @@
         <div class="pt-12 grid grid-cols-2 gap-8 text-center text-xs text-gray-500 hidden print:grid">
             <div class="border-t border-gray-400 pt-2">
                 <p class="font-bold text-gray-800">{{ $header->operario->nombre ?? 'Operador de Planta' }}</p>
-                <p class="text-[10px] text-gray-400">Operario / Auditor Metrológico</p>
+                <p class="text-[10px] text-gray-400">Operario</p>
             </div>
             <div class="border-t border-gray-400 pt-2">
                 <p class="font-bold text-gray-800">Jefatura de Control de Calidad</p>

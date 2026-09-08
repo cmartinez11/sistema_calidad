@@ -253,8 +253,8 @@
                                 </div>
                             @else
                                 <div class="p-4 text-center text-gray-400 bg-white rounded-lg border border-dashed border-gray-200">
-                                    <p class="text-xs font-medium text-gray-500">No hay auditoría de cavidades asociada</p>
-                                    <p class="text-[10px] text-gray-400 mt-0.5">O no se identificaron cavidades con desviación metrológica.</p>
+                                    <p class="text-xs font-medium text-gray-500">No hay inspección de cavidades asociada</p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">O no se identificaron cavidades con desviación.</p>
                                 </div>
                             @endif
                         </div>
@@ -353,7 +353,7 @@
 
                     <label class="inline-flex items-center space-x-2 cursor-pointer bg-white p-2.5 rounded-lg border border-gray-200 text-xs font-semibold">
                         <input type="checkbox" name="eval_analisis_pruebas" value="1" {{ old('eval_analisis_pruebas') ? 'checked' : '' }} class="w-4 h-4 text-blue-600 rounded">
-                        <span>Análisis Metrológico / Pruebas</span>
+                        <span>Análisis / Pruebas</span>
                     </label>
 
                     <div x-data="{ checkOtros: {{ old('eval_otros_check') ? 'true' : 'false' }} }" class="bg-white p-2.5 rounded-lg border border-gray-200 space-y-2">

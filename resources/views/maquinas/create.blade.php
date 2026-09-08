@@ -4,7 +4,7 @@
 <div class="max-w-xl mx-auto space-y-6">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
         <div class="flex justify-between items-center border-b pb-4">
-            <h2 class="text-lg font-bold text-gray-800">Registrar Nueva Máquina / Inyectora</h2>
+            <h2 class="text-lg font-bold text-gray-800">Registrar Nueva Máquina</h2>
             <a href="{{ route('catalogos.index') }}" class="text-xs text-gray-500 hover:text-gray-700 font-bold">← Volver a Catálogos</a>
         </div>
 

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte Metrológico {{ $codigo }}</title>
+    <title>Reporte {{ $codigo }}</title>
     <style>
         @page {
             margin: 25px 30px;
@@ -195,7 +195,7 @@
                         </td>
                         <td style="vertical-align: middle; padding-left: 8px;">
                             <span style="font-size: 14px; font-weight: bold; color: #111827; text-transform: uppercase; display: block;">GRUPO FÉNIX</span>
-                            <span style="font-size: 9px; color: #4b5563; font-weight: bold; text-transform: uppercase;">Sistema de Control de Calidad - Reporte Metrológico</span>
+                            <span style="font-size: 9px; color: #4b5563; font-weight: bold; text-transform: uppercase;">Sistema de Control de Calidad - Reporte</span>
                         </td>
                     </tr>
                 </table>

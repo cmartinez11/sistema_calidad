@@ -26,7 +26,7 @@
             <a href="{{ route('inspecciones-cavidades.create') }}" 
                class="bg-fenix hover:bg-fenix-dark text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Nueva Auditoría</span>
+                <span>Nueva Inspección</span>
             </a>
         </div>
     </div>

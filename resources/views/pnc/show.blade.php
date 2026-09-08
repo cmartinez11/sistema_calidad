@@ -72,7 +72,7 @@
                 <!-- Título Oficial del Formato -->
                 <div class="col-span-6 p-4 flex flex-col justify-center bg-white">
                     <h1 class="text-base font-extrabold text-gray-900 uppercase tracking-tight">REPORTE DE PRODUCTO NO CONFORME (PNC)</h1>
-                    <span class="text-[11px] text-gray-500 font-medium">Control Metrológico y Aseguramiento de Calidad</span>
+                    <span class="text-[11px] text-gray-500 font-medium">Control de Calidad</span>
                 </div>
 
                 <!-- Código Documental -->
@@ -311,7 +311,7 @@
         <!-- 6. CAUSA RAÍZ (5M) Y ACCIÓN CORRECTIVA -->
         <div class="border border-gray-800 rounded-xl p-4 space-y-3">
             <h3 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider bg-gray-100 p-1.5 rounded border border-gray-300">
-                6. Análisis de Causa Raíz
+                6. Causa Raíz
             </h3>
 
             <div class="flex flex-wrap gap-4 text-xs border-b border-gray-200 pb-2">

@@ -131,7 +131,7 @@
                 <thead class="bg-gray-50 border-b border-gray-100 text-gray-600 font-bold uppercase tracking-wider">
                     <tr>
                         <th class="px-4 py-3.5">Código PNC</th>
-                        <th class="px-4 py-3.5">Auditoría Asoc.</th>
+                        <th class="px-4 py-3.5">Inspección Asoc.</th>
                         <th class="px-4 py-3.5">Fecha</th>
                         <th class="px-4 py-3.5">Producto</th>
                         <th class="px-4 py-3.5">Lote</th>
