@@ -377,7 +377,7 @@
                                 @click="showModalObservado = true"
                                 class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center space-x-2 cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <span>📋 Generar Inspección (OBSERVADO)</span>
+                            <span>📋 GUARDAR CON DESVIACION </span>
                         </button>
 
                         <!-- BOTÓN 2: Generar PNC -->
