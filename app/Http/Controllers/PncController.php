@@ -70,7 +70,10 @@ class PncController extends Controller
     {
         $codigoInspeccion = $request->get('codigo_inspeccion');
 
-        $productos = Producto::where('activo', true)->orderBy('nombre', 'asc')->get();
+        $productos = Producto::with(['matrizEmpaques', 'parametroPreforma'])
+            ->where('activo', true)
+            ->orderBy('nombre', 'asc')
+            ->get();
         $lotes = Lote::orderBy('codigo_lote', 'desc')->limit(50)->get();
 
         // Datos iniciales heredados de la auditoría de cavidades
@@ -83,7 +86,7 @@ class PncController extends Controller
         $cavidadesDefectuosas = collect();
 
         if ($codigoInspeccion) {
-            $cavidades = InspeccionCavidad::with(['producto', 'operario', 'maquina'])
+            $cavidades = InspeccionCavidad::with(['producto.matrizEmpaques', 'producto.parametroPreforma', 'operario', 'maquina'])
                 ->where('codigo_inspeccion', $codigoInspeccion)
                 ->get();
 
@@ -159,11 +162,11 @@ class PncController extends Controller
             'fecha' => 'required|date',
             'cantidad' => 'required|numeric|min:0',
             'unidad_medida' => 'required|string|max:50',
-            'cantidad_2' => 'nullable|numeric|min:0',
-            'unidad_medida_2' => 'nullable|string|max:50',
+            'total_millares' => 'nullable|numeric|min:0',
+            'total_peso_kg' => 'nullable|numeric|min:0',
             'cliente_proveedor' => 'nullable|string|max:150',
             'descripcion_nc' => 'required|string',
-            'detectado_area' => 'nullable|string|max:100',
+            'detectado_area' => 'nullable|string|in:Laminado,Termoformado,Inyección,Almacén,Cliente',
             'detectado_fecha' => 'nullable|date',
             'detectado_responsable' => 'nullable|string|max:150',
             'originado_area' => 'nullable|string|max:100',
@@ -204,6 +207,48 @@ class PncController extends Controller
             'cantidad.required' => 'La cantidad de producto no conforme es obligatoria.',
         ]);
 
+        // Cálculo de respaldo backend de conversión por matriz de empaque
+        $producto = Producto::with(['matrizEmpaques', 'parametroPreforma'])->find($validated['producto_id']);
+        $cantidad = (float) $validated['cantidad'];
+        $unidad = strtoupper(trim($validated['unidad_medida']));
+        $gramaje = (float) ($producto?->parametroPreforma?->peso_nominal ?? $producto?->peso_unitario ?? 0);
+
+        $totalMillares = $validated['total_millares'] !== null ? (float)$validated['total_millares'] : null;
+        $totalPesoKg = $validated['total_peso_kg'] !== null ? (float)$validated['total_peso_kg'] : null;
+
+        if ($totalMillares === null || $totalPesoKg === null) {
+            if (str_contains($unidad, 'CAJA')) {
+                $caja = $producto?->getMatrizEmpaque('CAJA');
+                if ($caja) {
+                    $totalMillares = $cantidad * $caja->factor_millares;
+                    $totalPesoKg = $cantidad * $caja->factor_peso_kg;
+                } else {
+                    // Fallback predeterminado para caja según gramaje
+                    $totalMillares = $cantidad * 1.55;
+                    $totalPesoKg = $gramaje > 0 ? ($totalMillares * 1000 * $gramaje / 1000) : 0;
+                }
+            } elseif (str_contains($unidad, 'SACO')) {
+                $saco = $producto?->getMatrizEmpaque('SACO');
+                if ($saco) {
+                    $totalMillares = $cantidad * $saco->factor_millares;
+                    $totalPesoKg = $cantidad * $saco->factor_peso_kg;
+                } else {
+                    // Fallback predeterminado para saco según gramaje
+                    $totalMillares = $cantidad * 3.0;
+                    $totalPesoKg = $gramaje > 0 ? ($totalMillares * 1000 * $gramaje / 1000) : 0;
+                }
+            } elseif (str_contains($unidad, 'MILLAR')) {
+                $totalMillares = $cantidad;
+                $totalPesoKg = $gramaje > 0 ? ($cantidad * $gramaje) : 0;
+            } elseif (str_contains($unidad, 'KG') || str_contains($unidad, 'KILO')) {
+                $totalPesoKg = $cantidad;
+                $totalMillares = $gramaje > 0 ? ($cantidad / $gramaje) : 0;
+            } else { // Unidades / Preformas
+                $totalMillares = $cantidad / 1000;
+                $totalPesoKg = $gramaje > 0 ? (($cantidad * $gramaje) / 1000) : 0;
+            }
+        }
+
         DB::beginTransaction();
 
         try {
@@ -218,12 +263,12 @@ class PncController extends Controller
                 'fecha' => $validated['fecha'],
                 'cantidad' => $validated['cantidad'],
                 'unidad_medida' => $validated['unidad_medida'],
-                'cantidad_2' => $validated['cantidad_2'] ?? null,
-                'unidad_medida_2' => $validated['unidad_medida_2'] ?? null,
+                'total_millares' => $totalMillares,
+                'total_peso_kg' => $totalPesoKg,
                 'cliente_proveedor' => $validated['cliente_proveedor'] ?? null,
                 'descripcion_nc' => $validated['descripcion_nc'],
 
-                'detectado_area' => $validated['detectado_area'] ?? 'Inyección / Calidad',
+                'detectado_area' => $validated['detectado_area'] ?? 'Inyección',
                 'detectado_fecha' => $validated['detectado_fecha'] ?? $validated['fecha'],
                 'detectado_responsable' => $validated['detectado_responsable'] ?? Auth::user()->name,
 

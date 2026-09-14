@@ -30,7 +30,11 @@
         esp_fondo_min: '',
         esp_fondo_max: '',
         altura_min: '',
-        altura_max: ''
+        altura_max: '',
+        caja_factor_millares: '',
+        caja_factor_peso_kg: '',
+        saco_factor_millares: '',
+        saco_factor_peso_kg: ''
     },
     editUrl: '',
     deleteUrl: '',
@@ -182,6 +186,10 @@
                             <td class="px-6 py-4 text-right whitespace-nowrap space-x-1">
                                 <!-- Botón Parámetros Técnicos (Preforma) -->
                                 @if(($producto->tipo_producto ?? 'PREFORMA') === 'PREFORMA')
+                                    @php
+                                        $cajaMat = $producto->getMatrizEmpaque('CAJA');
+                                        $sacoMat = $producto->getMatrizEmpaque('SACO');
+                                    @endphp
                                     <button @click="
                                                 paramProduct = {
                                                     id: {{ $producto->id }},
@@ -197,7 +205,11 @@
                                                     esp_fondo_min: '{{ $producto->parametroPreforma->esp_fondo_min ?? '' }}',
                                                     esp_fondo_max: '{{ $producto->parametroPreforma->esp_fondo_max ?? '' }}',
                                                     altura_min: '{{ $producto->parametroPreforma->altura_min ?? '' }}',
-                                                    altura_max: '{{ $producto->parametroPreforma->altura_max ?? '' }}'
+                                                    altura_max: '{{ $producto->parametroPreforma->altura_max ?? '' }}',
+                                                    caja_factor_millares: '{{ $cajaMat->factor_millares ?? '' }}',
+                                                    caja_factor_peso_kg: '{{ $cajaMat->factor_peso_kg ?? '' }}',
+                                                    saco_factor_millares: '{{ $sacoMat->factor_millares ?? '' }}',
+                                                    saco_factor_peso_kg: '{{ $sacoMat->factor_peso_kg ?? '' }}'
                                                 };
                                                 paramUrl = '{{ route('productos.parametros.store', $producto->id) }}';
                                                 paramModalOpen = true;
@@ -573,6 +585,63 @@
                                 <label class="block text-[11px] font-medium text-gray-600">Altura Máxima</label>
                                 <input type="number" step="0.01" name="altura_max" x-model="paramProduct.altura_max" placeholder="Ej. 112.50"
                                        class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: MATRIZ DE EMPAQUE (CONVERSIÓN DINÁMICA CAJA Y SACO) -->
+                <div class="bg-blue-50/70 p-4 rounded-xl border border-blue-200 space-y-3">
+                    <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center justify-between">
+                        <span class="flex items-center space-x-1.5">
+                            <span>📦</span>
+                            <span>Matriz de Empaque (Factores por Presentación)</span>
+                        </span>
+                        <span class="text-[10px] text-blue-600 font-normal normal-case">Conversión para PNC</span>
+                    </h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Presentación CAJA -->
+                        <div class="bg-white p-3 rounded-lg border border-blue-200 space-y-2">
+                            <div class="flex items-center justify-between border-b border-blue-100 pb-1.5">
+                                <span class="text-xs font-bold text-gray-800 flex items-center space-x-1">
+                                    <span>📦</span> <span>1 CAJA</span>
+                                </span>
+                                <span class="text-[10px] text-gray-400 font-mono" x-text="paramProduct.caja_factor_millares ? (paramProduct.caja_factor_millares * 1000) + ' u' : ''"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-medium text-gray-600">Millares / Caja</label>
+                                    <input type="number" step="0.0001" name="caja_factor_millares" x-model="paramProduct.caja_factor_millares" placeholder="Ej. 1.55"
+                                           class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-gray-600">Peso Neto (Kg) / Caja</label>
+                                    <input type="number" step="0.0001" name="caja_factor_peso_kg" x-model="paramProduct.caja_factor_peso_kg" placeholder="Ej. 19.22"
+                                           class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-600">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Presentación SACO -->
+                        <div class="bg-white p-3 rounded-lg border border-blue-200 space-y-2">
+                            <div class="flex items-center justify-between border-b border-blue-100 pb-1.5">
+                                <span class="text-xs font-bold text-gray-800 flex items-center space-x-1">
+                                    <span>🛍️</span> <span>1 SACO</span>
+                                </span>
+                                <span class="text-[10px] text-gray-400 font-mono" x-text="paramProduct.saco_factor_millares ? (paramProduct.saco_factor_millares * 1000) + ' u' : ''"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-medium text-gray-600">Millares / Saco</label>
+                                    <input type="number" step="0.0001" name="saco_factor_millares" x-model="paramProduct.saco_factor_millares" placeholder="Ej. 3.00"
+                                           class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-gray-600">Peso Neto (Kg) / Saco</label>
+                                    <input type="number" step="0.0001" name="saco_factor_peso_kg" x-model="paramProduct.saco_factor_peso_kg" placeholder="Ej. 37.20"
+                                           class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-600">
+                                </div>
                             </div>
                         </div>
                     </div>

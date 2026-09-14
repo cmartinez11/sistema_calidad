@@ -57,15 +57,15 @@
 
         <div class="p-6 space-y-8 divide-y divide-gray-100">
 
-            <!-- SECCIÓN 1: DATOS GENERALES -->
-            <div class="space-y-4">
+            <!-- SECCIÓN 1: DATOS GENERALES Y CANTIDAD CON CONVERSIÓN DINÁMICA -->
+            <div class="space-y-4" x-data="pncCalculos">
                 <h3 class="text-sm font-extrabold text-gray-800 uppercase tracking-wider flex items-center space-x-2">
                     <span class="w-2 h-2 bg-fenix rounded-full"></span>
-                    <span>1. Datos Generales de la Falla</span>
+                    <span>1. Datos Generales de la Falla y Registro de Cantidad</span>
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <!-- Producto Afectado (Solo Lectura Heredado) -->
+                    <!-- Producto Afectado (Solo Lectura Heredado o Selección) -->
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
                             <span>Producto Afectado</span>
@@ -80,7 +80,7 @@
                             </div>
                             <input type="hidden" name="producto_id" value="{{ $selectedProducto->id }}">
                         @else
-                            <select name="producto_id" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 focus:ring-fenix focus:border-fenix">
+                            <select name="producto_id" x-model="productoId" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 focus:ring-fenix focus:border-fenix">
                                 <option value="">-- Seleccionar Producto --</option>
                                 @foreach($productos as $prod)
                                     <option value="{{ $prod->id }}" {{ old('producto_id') == $prod->id ? 'selected' : '' }}>
@@ -131,47 +131,79 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                    <!-- Cantidad 1 -->
+                <!-- CONTROLES DE CANTIDAD Y PRESENTACIÓN DE EMPAQUE -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <!-- Cantidad Afectada -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad *</label>
-                        <input type="number" step="0.01" name="cantidad" value="{{ old('cantidad', $cantidadSugerida) }}" required
-                               placeholder="Ej. 10.50"
-                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad Registrada *</label>
+                        <input type="number" step="0.01" name="cantidad" x-model="cantidad" required
+                               placeholder="Ej. 3"
+                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900 focus:ring-fenix focus:border-fenix">
                     </div>
 
-                    <!-- Unidad de Medida 1 -->
+                    <!-- Tipo de Empaque / Unidad Principal -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida 1 *</label>
-                        <select name="unidad_medida" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900">
-                            <option value="Millares" {{ old('unidad_medida') == 'Millares' ? 'selected' : '' }}>Millares</option>
-                            <option value="Unidades" {{ old('unidad_medida') == 'Unidades' ? 'selected' : '' }}>Unidades</option>
-                            <option value="Kg" {{ old('unidad_medida') == 'Kg' ? 'selected' : '' }}>Kg (Kilogramos)</option>
-                            <option value="Cajas / Bultos" {{ old('unidad_medida') == 'Cajas / Bultos' ? 'selected' : '' }}>Cajas / Bultos</option>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Tipo de Empaque / Unidad *</label>
+                        <select name="unidad_medida" x-model="unidadMedida" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-bold text-gray-900 focus:ring-fenix focus:border-fenix">
+                            <option value="Cajas">📦 Cajas</option>
+                            <option value="Sacos">🛍️ Sacos</option>
+                            <option value="Millares">🔢 Millares</option>
+                            <option value="Kg">⚖️ Kg (Kilogramos)</option>
+                            <option value="Unidades">🧩 Unidades</option>
                         </select>
                     </div>
 
-                    <!-- Cantidad 2 (Opcional) -->
+                    <!-- Gramaje del Producto (Informativo) -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Cantidad 2 (Opcional)</label>
-                        <input type="number" step="0.01" name="cantidad_2" value="{{ old('cantidad_2') }}"
-                               placeholder="Ej. 150.00"
-                               class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-mono font-semibold text-gray-900">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Gramaje Nominal</label>
+                        <div class="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold text-gray-700 flex items-center justify-between shadow-inner">
+                            <span x-text="gramaje ? (gramaje.toFixed(2) + ' g') : 'Sin gramaje registrado'"></span>
+                            <span class="text-[10px] text-gray-400 font-sans font-normal">Base Matriz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TARJETA VISUAL DE CONVERSIÓN DINÁMICA EN TIEMPO REAL -->
+                <div class="mt-4 p-5 bg-gradient-to-r from-slate-900 via-gray-900 to-red-950 rounded-2xl text-white shadow-xl border border-red-900/40 relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="px-2.5 py-0.5 bg-red-500/20 text-red-300 text-[10px] font-extrabold uppercase rounded-md border border-red-500/30 tracking-wider">
+                                    ⚡ CONVERSIÓN MATRIZ DE EMPAQUE
+                                </span>
+                            </div>
+                            <div class="text-xs text-red-200/80 font-mono font-medium" x-text="formulaUsada"></div>
+                            <p class="text-[11px] text-gray-400 mt-1">Sustituye automáticamente la segunda unidad manual. Calculado en tiempo real.</p>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <!-- Equivalente Total Millares -->
+                            <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/15 text-center min-w-[140px] shadow-sm">
+                                <span class="text-[10px] uppercase font-bold text-gray-300 block tracking-wider">Total Millares</span>
+                                <div class="flex items-baseline justify-center space-x-1">
+                                    <span class="text-2xl font-mono font-extrabold text-emerald-400" x-text="totalMillares ? totalMillares.toFixed(3) : '0.000'">0.000</span>
+                                    <span class="text-xs text-gray-300 font-bold">mil</span>
+                                </div>
+                                <span class="text-[10px] text-gray-300 font-mono block mt-0.5" x-text="'(' + unidadesTotales.toLocaleString() + ' u)'"></span>
+                            </div>
+
+                            <!-- Equivalente Total Peso Neto (Kg) -->
+                            <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/15 text-center min-w-[140px] shadow-sm">
+                                <span class="text-[10px] uppercase font-bold text-gray-300 block tracking-wider">Peso Neto Total</span>
+                                <div class="flex items-baseline justify-center space-x-1">
+                                    <span class="text-2xl font-mono font-extrabold text-amber-300" x-text="totalPesoKg ? totalPesoKg.toFixed(2) : '0.00'">0.00</span>
+                                    <span class="text-xs text-gray-300 font-bold">Kg</span>
+                                </div>
+                                <span class="text-[10px] text-gray-300 block mt-0.5">Masa acumulada</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Unidad de Medida 2 (Opcional) -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Unidad de Medida 2 (Opcional)</label>
-                        <select name="unidad_medida_2" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900">
-                            <option value="">-- Ninguna / Opcional --</option>
-                            <option value="Unidades" {{ old('unidad_medida_2') == 'Unidades' ? 'selected' : '' }}>Unidades</option>
-                            <option value="Kg" {{ old('unidad_medida_2') == 'Kg' ? 'selected' : '' }}>Kg (Kilogramos)</option>
-                            <option value="Millares" {{ old('unidad_medida_2') == 'Millares' ? 'selected' : '' }}>Millares</option>
-                            <option value="Cajas / Bultos" {{ old('unidad_medida_2') == 'Cajas / Bultos' ? 'selected' : '' }}>Cajas / Bultos</option>
-                            <option value="Preformas" {{ old('unidad_medida_2') == 'Preformas' ? 'selected' : '' }}>Preformas</option>
-                            <option value="Paquetes" {{ old('unidad_medida_2') == 'Paquetes' ? 'selected' : '' }}>Paquetes</option>
-                        </select>
-                    </div>
+                    <!-- Campos Ocultos para Persistir Totales en BD -->
+                    <input type="hidden" name="total_millares" :value="totalMillares">
+                    <input type="hidden" name="total_peso_kg" :value="totalPesoKg">
                 </div>
 
                 <!-- Fila 3: Cliente / Proveedor (Ancho Completo - 100%) -->
@@ -281,9 +313,15 @@
                     </h4>
 
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Área</label>
-                        <input type="text" name="detectado_area" value="{{ old('detectado_area') }}"
-                               class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold">
+                        <label class="block text-[11px] font-bold text-gray-600 uppercase mb-1">Área *</label>
+                        <select name="detectado_area" required class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-900 focus:ring-fenix focus:border-fenix">
+                            <option value="">-- Seleccionar Área --</option>
+                            <option value="Laminado" {{ old('detectado_area') == 'Laminado' ? 'selected' : '' }}>Laminado</option>
+                            <option value="Termoformado" {{ old('detectado_area') == 'Termoformado' ? 'selected' : '' }}>Termoformado</option>
+                            <option value="Inyección" {{ old('detectado_area', 'Inyección') == 'Inyección' ? 'selected' : '' }}>Inyección</option>
+                            <option value="Almacén" {{ old('detectado_area') == 'Almacén' ? 'selected' : '' }}>Almacén</option>
+                            <option value="Cliente" {{ old('detectado_area') == 'Cliente' ? 'selected' : '' }}>Cliente</option>
+                        </select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -524,4 +562,107 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pncCalculos', () => ({
+        products: @json($productos),
+        productoId: '{{ old('producto_id', $selectedProducto->id ?? '') }}',
+        cantidad: '{{ old('cantidad', $cantidadSugerida) }}',
+        unidadMedida: '{{ old('unidad_medida', 'Cajas') }}',
+        totalMillares: 0,
+        totalPesoKg: 0,
+        unidadesTotales: 0,
+        formulaUsada: '',
+
+        init() {
+            this.calcular();
+            this.$watch('productoId', () => this.calcular());
+            this.$watch('cantidad', () => this.calcular());
+            this.$watch('unidadMedida', () => this.calcular());
+        },
+
+        get currentProduct() {
+            if (!this.productoId) return null;
+            return this.products.find(p => p.id == this.productoId) || null;
+        },
+
+        get gramaje() {
+            if (!this.currentProduct) return 0;
+            if (this.currentProduct.parametro_preforma && this.currentProduct.parametro_preforma.peso_nominal) {
+                return parseFloat(this.currentProduct.parametro_preforma.peso_nominal);
+            }
+            return parseFloat(this.currentProduct.peso_unitario || 0);
+        },
+
+        get matrizCaja() {
+            if (!this.currentProduct || !this.currentProduct.matriz_empaques) return null;
+            return this.currentProduct.matriz_empaques.find(m => (m.presentacion || '').toUpperCase() === 'CAJA') || null;
+        },
+
+        get matrizSaco() {
+            if (!this.currentProduct || !this.currentProduct.matriz_empaques) return null;
+            return this.currentProduct.matriz_empaques.find(m => (m.presentacion || '').toUpperCase() === 'SACO') || null;
+        },
+
+        calcular() {
+            let qty = parseFloat(this.cantidad) || 0;
+            let unit = (this.unidadMedida || '').toUpperCase();
+            let g = this.gramaje;
+
+            if (qty <= 0) {
+                this.totalMillares = 0;
+                this.totalPesoKg = 0;
+                this.unidadesTotales = 0;
+                this.formulaUsada = 'Ingrese una cantidad para calcular equivalencias automáticamente.';
+                return;
+            }
+
+            if (unit.includes('CAJA') || unit.includes('BULTO')) {
+                let mCaja = this.matrizCaja;
+                if (mCaja && parseFloat(mCaja.factor_millares) > 0) {
+                    let fMil = parseFloat(mCaja.factor_millares);
+                    let fKg = parseFloat(mCaja.factor_peso_kg);
+                    this.totalMillares = qty * fMil;
+                    this.totalPesoKg = qty * fKg;
+                    this.formulaUsada = `${qty} Cajas × ${fMil} mil/caja (${fKg} kg/caja)`;
+                } else {
+                    let factorMillares = 1.55;
+                    this.totalMillares = qty * factorMillares;
+                    this.totalPesoKg = g > 0 ? ((this.totalMillares * 1000 * g) / 1000) : (qty * 19.22);
+                    this.formulaUsada = `${qty} Cajas × ${factorMillares} mil/caja (Estándar 12.4g)`;
+                }
+            } else if (unit.includes('SACO')) {
+                let mSaco = this.matrizSaco;
+                if (mSaco && parseFloat(mSaco.factor_millares) > 0) {
+                    let fMil = parseFloat(mSaco.factor_millares);
+                    let fKg = parseFloat(mSaco.factor_peso_kg);
+                    this.totalMillares = qty * fMil;
+                    this.totalPesoKg = qty * fKg;
+                    this.formulaUsada = `${qty} Sacos × ${fMil} mil/saco (${fKg} kg/saco)`;
+                } else {
+                    let factorMillares = 3.0;
+                    this.totalMillares = qty * factorMillares;
+                    this.totalPesoKg = g > 0 ? ((this.totalMillares * 1000 * g) / 1000) : (qty * 37.20);
+                    this.formulaUsada = `${qty} Sacos × ${factorMillares} mil/saco (Estándar de Conversión)`;
+                }
+            } else if (unit.includes('MILLAR')) {
+                this.totalMillares = qty;
+                this.totalPesoKg = g > 0 ? (qty * g) : 0;
+                this.formulaUsada = `${qty} Millares × ${g}g por unidad`;
+            } else if (unit.includes('KG') || unit.includes('KILO')) {
+                this.totalPesoKg = qty;
+                this.totalMillares = g > 0 ? (qty / g) : 0;
+                this.formulaUsada = `${qty} Kg ÷ (${g}g / 1000)`;
+            } else { // Unidades / Preformas
+                this.totalMillares = qty / 1000;
+                this.totalPesoKg = g > 0 ? ((qty * g) / 1000) : 0;
+                this.formulaUsada = `${qty} Unidades ÷ 1000 (${g}g/unidad)`;
+            }
+
+            this.unidadesTotales = Math.round(this.totalMillares * 1000);
+        }
+    }));
+});
+</script>
 @endsection

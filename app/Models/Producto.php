@@ -55,4 +55,15 @@ class Producto extends Model
     {
         return $this->hasMany(Lote::class);
     }
+
+    public function matrizEmpaques(): HasMany
+    {
+        return $this->hasMany(MatrizEmpaque::class, 'producto_id');
+    }
+
+    public function getMatrizEmpaque(string $presentacion): ?MatrizEmpaque
+    {
+        return $this->matrizEmpaques->firstWhere('presentacion', strtoupper($presentacion));
+    }
 }
+

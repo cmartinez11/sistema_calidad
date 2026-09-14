@@ -22,8 +22,8 @@ class Pnc extends Model
         'fecha',
         'cantidad',
         'unidad_medida',
-        'cantidad_2',
-        'unidad_medida_2',
+        'total_millares',
+        'total_peso_kg',
         'cliente_proveedor',
         'descripcion_nc',
         'detectado_area',
@@ -60,6 +60,8 @@ class Pnc extends Model
 
     protected $casts = [
         'fecha' => 'date',
+        'total_millares' => 'float',
+        'total_peso_kg' => 'float',
         'detectado_fecha' => 'date',
         'originado_fecha' => 'date',
         'tratamiento_fecha' => 'date',

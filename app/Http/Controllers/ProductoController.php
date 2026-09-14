@@ -310,16 +310,21 @@ class ProductoController extends Controller
      */
     public function getParametrosJson(Producto $producto)
     {
-        $producto->load(['parametroPreforma.molde', 'molde']);
+        $producto->load(['parametroPreforma.molde', 'molde', 'matrizEmpaques']);
         $param = $producto->parametroPreforma;
         $moldeId = $param->molde_id ?? $producto->molde_id ?? null;
 
+        $caja = $producto->getMatrizEmpaque('CAJA');
+        $saco = $producto->getMatrizEmpaque('SACO');
+
         return response()->json([
+            'id' => $producto->id,
             'codigo' => $producto->codigo,
             'nombre' => $producto->nombre,
             'molde_id' => $moldeId,
             'numero_cavidades' => $param->numero_cavidades ?? ($producto->molde->numero_cavidades ?? 1),
             'peso_nominal' => $param->peso_nominal ?? $producto->peso_unitario ?? 0,
+            'gramaje' => $param->peso_nominal ?? $producto->peso_unitario ?? 0,
             'peso_min' => $param->peso_min ?? 0,
             'peso_max' => $param->peso_max ?? 0,
             
@@ -330,6 +335,14 @@ class ProductoController extends Controller
             'espesor_fondo_max' => $param->esp_fondo_max ?? 0,
             'altura_min' => $param->altura_min ?? 0,
             'altura_max' => $param->altura_max ?? 0,
+
+            // Factores de Matriz de Empaque
+            'caja_factor_millares' => $caja ? (float)$caja->factor_millares : null,
+            'caja_factor_peso_kg' => $caja ? (float)$caja->factor_peso_kg : null,
+            'saco_factor_millares' => $saco ? (float)$saco->factor_millares : null,
+            'saco_factor_peso_kg' => $saco ? (float)$saco->factor_peso_kg : null,
+            'matriz_empaques' => $producto->matrizEmpaques,
         ]);
     }
 }
+

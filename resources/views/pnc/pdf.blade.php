@@ -133,25 +133,35 @@
                     <span class="field-value">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
                 </td>
             </tr>
-            <!-- Fila 2: Cantidad (1), Cantidad 2 / U.M. 2, Inspección Código -->
+            <!-- Fila 2: Cantidad Registrada, Total Millares, Peso Neto Total, Inspección Código -->
             <tr>
                 <td style="width: 25%; padding-top: 5px;">
-                    <span class="field-label">Cantidad Afectada (1)</span>
-                    <span class="field-value" style="color: #dc2626;">
+                    <span class="field-label">Cantidad Registrada</span>
+                    <span class="field-value" style="color: #dc2626; font-weight: bold;">
                         {{ number_format($pnc->cantidad, 2) }} {{ $pnc->unidad_medida }}
                     </span>
                 </td>
                 <td style="width: 25%; padding-top: 5px;">
-                    <span class="field-label">Cantidad 2 / U.M. 2</span>
-                    <span class="field-value">
-                        @if($pnc->cantidad_2 || $pnc->unidad_medida_2)
-                            {{ $pnc->cantidad_2 ? number_format($pnc->cantidad_2, 2) : '' }} {{ $pnc->unidad_medida_2 }}
+                    <span class="field-label">Total Millares (Matriz)</span>
+                    <span class="field-value" style="color: #059669; font-weight: bold;">
+                        @if($pnc->total_millares)
+                            {{ number_format($pnc->total_millares, 3) }} mil ({{ number_format($pnc->total_millares * 1000) }} u)
                         @else
                             -
                         @endif
                     </span>
                 </td>
-                <td style="width: 50%; padding-top: 5px;" colspan="2">
+                <td style="width: 25%; padding-top: 5px;">
+                    <span class="field-label">Peso Neto Total</span>
+                    <span class="field-value" style="color: #d97706; font-weight: bold;">
+                        @if($pnc->total_peso_kg)
+                            {{ number_format($pnc->total_peso_kg, 2) }} Kg
+                        @else
+                            -
+                        @endif
+                    </span>
+                </td>
+                <td style="width: 25%; padding-top: 5px;">
                     <span class="field-label">Inspección Código</span>
                     <span class="field-value">{{ $pnc->codigo_inspeccion ?: 'Manual / Sin Inspección' }}</span>
                 </td>

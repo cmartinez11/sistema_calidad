@@ -108,26 +108,37 @@
                     <span class="font-mono font-bold text-gray-900">{{ $pnc->fecha ? $pnc->fecha->format('d/m/Y') : '-' }}</span>
                 </div>
 
-                <!-- Fila 2: Cantidad (1), Cantidad 2 / U.M. 2, Código de Inspección -->
+                <!-- Fila 2: Cantidad Registrada, Total Millares, Peso Neto Total, Código de Inspección -->
                 <div>
-                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad (1)</span>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad Registrada</span>
                     <span class="font-mono font-bold text-red-700 text-sm">
                         {{ number_format($pnc->cantidad, 2) }} <span class="text-xs text-gray-700 font-sans font-semibold">{{ $pnc->unidad_medida }}</span>
                     </span>
                 </div>
 
                 <div>
-                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Cantidad 2 (Opcional)</span>
-                    <span class="font-mono font-bold text-gray-800 text-sm">
-                        @if($pnc->cantidad_2 || $pnc->unidad_medida_2)
-                            {{ $pnc->cantidad_2 ? number_format($pnc->cantidad_2, 2) : '' }} <span class="text-xs text-gray-700 font-sans font-semibold">{{ $pnc->unidad_medida_2 }}</span>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Total Millares (Matriz)</span>
+                    <span class="font-mono font-bold text-emerald-700 text-sm">
+                        @if($pnc->total_millares)
+                            {{ number_format($pnc->total_millares, 3) }} <span class="text-[11px] text-gray-600 font-sans">mil ({{ number_format($pnc->total_millares * 1000) }} u)</span>
                         @else
                             <span class="text-gray-400 font-normal">-</span>
                         @endif
                     </span>
                 </div>
 
-                <div class="col-span-2">
+                <div>
+                    <span class="text-gray-500 block text-[10px] uppercase font-bold">Peso Neto Total</span>
+                    <span class="font-mono font-bold text-amber-700 text-sm">
+                        @if($pnc->total_peso_kg)
+                            {{ number_format($pnc->total_peso_kg, 2) }} <span class="text-xs text-gray-700 font-sans font-semibold">Kg</span>
+                        @else
+                            <span class="text-gray-400 font-normal">-</span>
+                        @endif
+                    </span>
+                </div>
+
+                <div>
                     <span class="text-gray-500 block text-[10px] uppercase font-bold">Código de Inspección</span>
                     <span class="font-mono font-bold text-fenix-dark">{{ $pnc->codigo_inspeccion ?: 'Manual / Sin Inspección' }}</span>
                 </div>
