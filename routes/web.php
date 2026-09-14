@@ -25,9 +25,26 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
+    Route::get('/modulos', function () {
+        return view('modulos.index');
+    })->name('modulos.index');
+
+    Route::get('/termoformado', function () {
+        return view('en-desarrollo', [
+            'modulo' => 'Termoformado',
+            'descripcion' => 'Control de Calidad para líneas de termoformado, soplado, galga y empacado final.'
+        ]);
+    })->name('termoformado');
+
+    Route::get('/laminado', function () {
+        return view('en-desarrollo', [
+            'modulo' => 'Laminado',
+            'descripcion' => 'Monitoreo de procesos de extrusión, tensión de bobinas y laminación de lámina PET.'
+        ]);
+    })->name('laminado');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
