@@ -100,7 +100,7 @@ class InspeccionCavidadController extends Controller
                 ->whereExists(function ($sub) {
                     $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion')->where('estado_evaluacion', 'CONFORME');
                 });
-            } elseif ($estado === 'RETENIDO') {
+            } elseif ($estado === 'BORRADOR') {
                 $query->whereNotExists(function ($sub) {
                     $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
                 })

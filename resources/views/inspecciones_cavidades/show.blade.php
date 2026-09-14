@@ -361,7 +361,7 @@
                         <div>
                             <h4 class="text-base font-bold text-gray-900">Se detectaron preformas fuera de rango u observadas</h4>
                             <p class="text-xs text-gray-600 mt-0.5">
-                                <span class="text-red-700 font-bold">🔒 Inspección retenida preventivamente:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
+                                <span class="text-amber-800 font-bold">📝 Inspección en estado Borrador:</span> Selecciona el flujo de salida para registrar en el Resumen de Calidad.
                             </p>
                             <div class="mt-2 inline-flex items-center space-x-2 text-xs">
                                 <span class="px-2.5 py-0.5 font-bold rounded-full text-[11px] bg-amber-200 text-amber-900 border border-amber-300 animate-pulse">

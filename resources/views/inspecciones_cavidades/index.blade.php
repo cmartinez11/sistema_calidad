@@ -109,7 +109,7 @@
                         <option value="CONFORME" {{ $estado === 'CONFORME' ? 'selected' : '' }}>🟢 CONFORME</option>
                         <option value="OBSERVADO" {{ $estado === 'OBSERVADO' ? 'selected' : '' }}>🟠 OBSERVADO</option>
                         <option value="PNC" {{ $estado === 'PNC' ? 'selected' : '' }}>🔴 PNC</option>
-                        <option value="RETENIDO" {{ $estado === 'RETENIDO' ? 'selected' : '' }}>⏳ RETENIDO</option>
+                        <option value="BORRADOR" {{ $estado === 'BORRADOR' ? 'selected' : '' }}>📝 BORRADOR</option>
                     </select>
                 </div>
 
@@ -195,8 +195,8 @@
                                         <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> 🟠 OBSERVADO
                                     </span>
                                 @elseif(($insp->defectos_count ?? 0) > 0 && empty($insp->estado_evaluacion))
-                                    <span class="inline-flex items-center px-3 py-1 bg-amber-200 text-amber-900 text-xs font-bold rounded-full border border-amber-300" title="Inspección retenida preventivamente hasta definir su flujo de salida">
-                                        <span class="w-1.5 h-1.5 bg-amber-600 rounded-full mr-1.5 animate-ping"></span> ⏳ RETENIDO
+                                    <span class="inline-flex items-center px-3 py-1 bg-amber-200 text-amber-900 text-xs font-bold rounded-full border border-amber-300" title="Inspección en borrador preventivamente hasta definir su flujo de salida">
+                                        <span class="w-1.5 h-1.5 bg-amber-600 rounded-full mr-1.5 animate-ping"></span> 📝 BORRADOR
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full border border-green-200">
