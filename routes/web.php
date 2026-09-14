@@ -19,18 +19,13 @@ use App\Http\Controllers\PncController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AtcController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/dashboard', function () {
-    $serverTime = Carbon::now('America/Lima');
-    return view('dashboard',[
-        'serverTime' => $serverTime->toIso8601String(),
-        'formattedDate' => $serverTime->translatedFormat('l, d F Y'),
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
