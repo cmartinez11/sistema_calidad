@@ -18,6 +18,7 @@ use App\Http\Controllers\PncController;
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AtcController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -74,6 +75,13 @@ Route::middleware('auth')->group(function () {
     Route::get('pnc/{id}', [PncController::class, 'show'])->name('pnc.show')->whereNumber('id');
     Route::get('pnc/{id}/pdf', [PncController::class, 'exportPdf'])->name('pnc.pdf')->whereNumber('id');
     Route::post('pnc/{id}/procesar', [PncController::class, 'procesar'])->name('pnc.procesar')->whereNumber('id');
+
+    // Rutas para Módulo de Atención al Cliente (ATC - Reclamos y Devoluciones)
+    Route::get('atc', [AtcController::class, 'index'])->name('atc.index');
+    Route::get('atc/crear', [AtcController::class, 'create'])->name('atc.create');
+    Route::post('atc', [AtcController::class, 'store'])->name('atc.store');
+    Route::get('atc/{id}', [AtcController::class, 'show'])->name('atc.show')->whereNumber('id');
+    Route::get('atc/{id}/pdf', [AtcController::class, 'exportPdf'])->name('atc.pdf')->whereNumber('id');
 
     // Rutas para Resumen de Inspecciones de Calidad
     Route::get('inspecciones-calidad', [InspeccionCalidadController::class, 'index'])->name('inspecciones-calidad.index');
