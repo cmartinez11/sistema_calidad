@@ -192,8 +192,35 @@
     <div style="font-weight: bold; margin-top: 8px; margin-bottom: 4px; font-size: 10px;">Acción Correctiva:</div>
     <div class="box-content">{{ $atc->accion_correctiva ?: 'Sin acción correctiva registrada.' }}</div>
 
-    <div style="font-weight: bold; margin-top: 10px; margin-bottom: 4px; font-size: 10px;">Plan de Acción / Causa Raíz:</div>
-    <div class="box-content">{{ $atc->plan_accion ?: 'Sin plan de acción registrado.' }}</div>
+    <div style="font-weight: bold; margin-top: 10px; margin-bottom: 4px; font-size: 10px;">Plan de Acción (Medidas Correctivas y Preventivas):</div>
+    @php
+        $planData = json_decode($atc->plan_accion, true);
+    @endphp
+
+    @if(is_array($planData) && count($planData) > 0)
+        <table class="info-table" style="margin-top: 4px;">
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="width: 6%; text-align: center;">#</th>
+                    <th style="width: 54%;">Actividad / Tarea</th>
+                    <th style="width: 25%;">Responsable</th>
+                    <th style="width: 15%; text-align: center;">Fecha Límite</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($planData as $idx => $item)
+                    <tr>
+                        <td style="text-align: center; font-weight: bold;">{{ $idx + 1 }}</td>
+                        <td>{{ $item['actividad'] ?? '-' }}</td>
+                        <td>{{ $item['responsable'] ?? '-' }}</td>
+                        <td style="text-align: center;">{{ !empty($item['fecha']) ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '-' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <div class="box-content">{{ $atc->plan_accion ?: 'Sin plan de acción registrado.' }}</div>
+    @endif
 
     <br><br><br>
 

@@ -123,11 +123,42 @@
                     </div>
                 </div>
 
-                <div>
-                    <span class="block text-[11px] font-bold text-gray-500 mb-1">Plan de Acción / Causa Raíz</span>
-                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-xs font-medium text-gray-800 leading-relaxed whitespace-pre-line min-h-[100px]">
-                        {{ $atc->plan_accion ?: 'Sin plan de acción registrado.' }}
-                    </div>
+                <div class="md:col-span-2">
+                    <span class="block text-[11px] font-bold text-gray-500 mb-2">Plan de Acción (Medidas Correctivas y Preventivas)</span>
+                    @php
+                        $planData = json_decode($atc->plan_accion, true);
+                    @endphp
+
+                    @if(is_array($planData) && count($planData) > 0)
+                        <div class="overflow-x-auto border border-gray-100 rounded-xl bg-gray-50/50">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100/80 border-b border-gray-200 text-[11px] font-bold text-gray-600 uppercase">
+                                        <th class="py-2.5 px-3 text-center w-10">#</th>
+                                        <th class="py-2.5 px-3">Actividad / Tarea</th>
+                                        <th class="py-2.5 px-3">Responsable</th>
+                                        <th class="py-2.5 px-3 text-center w-32">Fecha Límite</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 text-xs">
+                                    @foreach($planData as $idx => $item)
+                                        <tr>
+                                            <td class="py-2.5 px-3 text-center font-bold text-gray-400">{{ $idx + 1 }}</td>
+                                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ $item['actividad'] ?? '-' }}</td>
+                                            <td class="py-2.5 px-3 text-gray-700">{{ $item['responsable'] ?? '-' }}</td>
+                                            <td class="py-2.5 px-3 text-center font-mono text-gray-600">
+                                                {{ !empty($item['fecha']) ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '-' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 text-xs font-medium text-gray-800 leading-relaxed whitespace-pre-line">
+                            {{ $atc->plan_accion ?: 'Sin plan de acción registrado.' }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

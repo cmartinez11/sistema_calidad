@@ -92,7 +92,7 @@
             <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-100 pb-3 flex items-center justify-between">
                 <span class="flex items-center">
                     <span class="w-2.5 h-2.5 rounded-full bg-fenix mr-2"></span>
-                    2. Cliente (Integración API SIF)
+                    2. Cliente
                 </span>
                 <span class="text-[10px] font-normal text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">SIF Conectado</span>
             </h2>
@@ -117,14 +117,14 @@
                 <!-- Cliente Nombre Manual / Autocompletado -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Nombre / Razón Social del Cliente <span class="text-rose-500">*</span></label>
-                    <input type="text" id="cliente_nombre" name="cliente_nombre" value="{{ old('cliente_nombre') }}" required placeholder="Ej: EMBOTELLADORA DEL SUR S.A."
+                    <input type="text" id="cliente_nombre" name="cliente_nombre" value="{{ old('cliente_nombre') }}" required
                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
                 </div>
 
                 <!-- Cliente RUC -->
                 <div class="md:col-span-2">
                     <label class="block text-xs font-bold text-gray-700 mb-1">RUC del Cliente</label>
-                    <input type="text" id="cliente_ruc" name="cliente_ruc" value="{{ old('cliente_ruc') }}" placeholder="Ej: 20123456789"
+                    <input type="text" id="cliente_ruc" name="cliente_ruc" value="{{ old('cliente_ruc') }}"
                            class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-medium text-gray-800 focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
                 </div>
             </div>
@@ -177,7 +177,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
             <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-100 pb-3 flex items-center">
                 <span class="w-2.5 h-2.5 rounded-full bg-fenix mr-2"></span>
-                4. Vinculación y Plan de Acción
+                4.Plan de Acción
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -195,17 +195,62 @@
                 </div>
 
                 <!-- Acción Correctiva -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Acción Correctiva Implemented / Vinculación</label>
-                    <textarea name="accion_correctiva" rows="4" placeholder="Detalle las acciones inmediatas o de contención acordadas..."
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Acción Correctiva</label>
+                    <textarea name="accion_correctiva" rows="3" placeholder="Detalle las acciones inmediatas o de contención acordadas..."
                               class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:ring-2 focus:ring-fenix focus:bg-white transition-all">{{ old('accion_correctiva') }}</textarea>
                 </div>
 
-                <!-- Plan de Acción -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Plan de Acción / Causa Raíz</label>
-                    <textarea name="plan_accion" rows="4" placeholder="Detalle el plan de acción correctivo y preventivo..."
-                              class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:ring-2 focus:ring-fenix focus:bg-white transition-all">{{ old('plan_accion') }}</textarea>
+                <!-- Plan de Acción (Tabla interactiva estilo PNC) -->
+                <div class="md:col-span-2 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-700">Plan de Acción / Medidas Correctivas y Preventivas</label>
+                        <button type="button" id="btn-add-plan-row"
+                                class="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition-all space-x-1 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            <span>+ Agregar Actividad</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-xl bg-white">
+                        <table class="w-full text-left border-collapse" id="tabla-plan-accion">
+                            <thead>
+                                <tr class="bg-gray-50 text-[11px] font-bold text-gray-600 uppercase border-b border-gray-200">
+                                    <th class="py-2.5 px-3 text-center w-10">#</th>
+                                    <th class="py-2.5 px-3">Actividad / Tarea</th>
+                                    <th class="py-2.5 px-3">Responsable</th>
+                                    <th class="py-2.5 px-3 w-40">Fecha Límite</th>
+                                    <th class="py-2.5 px-3 text-center w-12">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plan-accion-tbody" class="divide-y divide-gray-100 text-xs">
+                                <tr>
+                                    <td class="py-2 px-3 text-center font-bold text-gray-400 row-num">1</td>
+                                    <td class="py-2 px-3">
+                                        <input type="text" name="plan_accion[0][actividad]" placeholder="Describa la actividad a realizar..." 
+                                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                                    </td>
+                                    <td class="py-2 px-3">
+                                        <input type="text" name="plan_accion[0][responsable]" placeholder="Nombre del responsable..." 
+                                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                                    </td>
+                                    <td class="py-2 px-3">
+                                        <input type="date" name="plan_accion[0][fecha]" 
+                                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                                    </td>
+                                    <td class="py-2 px-3 text-center">
+                                        <button type="button" class="btn-remove-row text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,6 +288,59 @@
                     rucInput.value = ruc;
                 }
             });
+        }
+
+        // Lógica para agregar y remover filas dinámicamente en el Plan de Acción
+        let planRowIdx = 1;
+        const addBtn = document.getElementById('btn-add-plan-row');
+        const tbody = document.getElementById('plan-accion-tbody');
+
+        if (addBtn && tbody) {
+            addBtn.addEventListener('click', function () {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 px-3 text-center font-bold text-gray-400 row-num">${tbody.children.length + 1}</td>
+                    <td class="py-2 px-3">
+                        <input type="text" name="plan_accion[${planRowIdx}][actividad]" placeholder="Describa la actividad a realizar..." 
+                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="text" name="plan_accion[${planRowIdx}][responsable]" placeholder="Nombre del responsable..." 
+                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="date" name="plan_accion[${planRowIdx}][fecha]" 
+                               class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
+                    </td>
+                    <td class="py-2 px-3 text-center">
+                        <button type="button" class="btn-remove-row text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                planRowIdx++;
+                updateRowNumbers();
+            });
+
+            tbody.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-remove-row');
+                if (btn) {
+                    if (tbody.children.length > 1) {
+                        btn.closest('tr').remove();
+                        updateRowNumbers();
+                    }
+                }
+            });
+
+            function updateRowNumbers() {
+                Array.from(tbody.children).forEach((tr, i) => {
+                    const numCell = tr.querySelector('.row-num');
+                    if (numCell) numCell.textContent = i + 1;
+                });
+            }
         }
     });
 </script>

@@ -125,7 +125,7 @@ class AtcController extends Controller
             'descripcion' => 'required|string',
             'lote' => 'nullable|string|max:100',
             'accion_correctiva' => 'nullable|string',
-            'plan_accion' => 'nullable|string',
+            'plan_accion' => 'nullable',
             'pnc_id' => 'nullable|exists:pnc,id',
         ], [
             'cliente_nombre.required' => 'El nombre del cliente es obligatorio.',
@@ -159,6 +159,18 @@ class AtcController extends Controller
                 $correlativo = $prefix . str_pad($nextSeq, 3, '0', STR_PAD_LEFT);
             }
 
+            // Procesar plan_accion si se envía como arreglo o texto
+            $rawPlanAccion = $request->input('plan_accion');
+            $planAccionFormatted = null;
+
+            if (!empty($rawPlanAccion)) {
+                if (is_array($rawPlanAccion)) {
+                    $planAccionFormatted = json_encode($rawPlanAccion, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                } else {
+                    $planAccionFormatted = (string) $rawPlanAccion;
+                }
+            }
+
             $atc = Atc::create([
                 'correlativo' => $correlativo,
                 'fecha' => $fecha,
@@ -170,7 +182,7 @@ class AtcController extends Controller
                 'descripcion' => $validated['descripcion'],
                 'lote' => $validated['lote'] ?? null,
                 'accion_correctiva' => $validated['accion_correctiva'] ?? null,
-                'plan_accion' => $validated['plan_accion'] ?? null,
+                'plan_accion' => $planAccionFormatted,
                 'pnc_id' => $validated['pnc_id'] ?? null,
                 'user_id' => auth()->id(),
             ]);
