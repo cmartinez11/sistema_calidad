@@ -34,7 +34,7 @@ class InspeccionCavidadController extends Controller
     {
         $fechaInicio = $request->get('fecha_inicio');
         $fechaFin = $request->get('fecha_fin');
-        $productoId = $request->get('producto_id');
+        $producto = $request->get('producto', $request->get('producto_id'));
         $lote = $request->get('lote');
         $estado = $request->get('estado');
         $search = $request->get('search');
@@ -52,9 +52,16 @@ class InspeccionCavidadController extends Controller
             $query->whereDate('created_at', '<=', $fechaFin);
         }
 
-        // Filtro por Producto
-        if ($productoId) {
-            $query->where('producto_id', $productoId);
+        // Filtro por Producto (Texto libre o ID)
+        if ($producto) {
+            if (is_numeric($producto)) {
+                $query->where('producto_id', $producto);
+            } else {
+                $query->whereHas('producto', function ($q) use ($producto) {
+                    $q->where('codigo', 'ILIKE', "%{$producto}%")
+                      ->orWhere('nombre', 'ILIKE', "%{$producto}%");
+                });
+            }
         }
 
         // Filtro por Lote
@@ -134,7 +141,7 @@ class InspeccionCavidadController extends Controller
             'productos',
             'fechaInicio',
             'fechaFin',
-            'productoId',
+            'producto',
             'lote',
             'estado',
             'search'

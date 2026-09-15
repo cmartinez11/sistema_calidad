@@ -177,9 +177,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-gray-900">Cumplimiento del Plan de Inspecciones</h3>
-                    <p class="text-xs text-gray-400">Avance comparativo diario: Planificado vs. Ejecutado Real</p>
+                    <p class="text-xs text-gray-400">Avance comparativo diario de la semana actual en curso: Planificado vs. Ejecutado Real</p>
                 </div>
-                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200">En Rango</span>
+                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200">Semana Actual</span>
             </div>
             <div class="h-64 relative">
                 <canvas id="chartCumplimientoPlan"></canvas>
@@ -343,8 +343,23 @@ document.addEventListener('DOMContentLoaded', function () {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: { y: { beginAtZero: true } }
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, weight: 'bold' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
         }
     });
 

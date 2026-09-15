@@ -138,16 +138,94 @@
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Producto -->
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Producto <span class="text-rose-500">*</span></label>
-                    <input type="text" list="productos_list" name="producto" value="{{ old('producto') }}" required placeholder="Escriba o seleccione el producto..."
-                           class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:ring-2 focus:ring-fenix focus:bg-white transition-all">
-                    <datalist id="productos_list">
+                <!-- Producto con Buscador Filtrable en Tiempo Real (Alpine.js + Texto Libre) -->
+                <div x-data="{
+                    open: false,
+                    query: '{{ old('producto', '') }}',
+                    productos: [
                         @foreach($productos as $prod)
-                            <option value="{{ $prod->nombre }} ({{ $prod->codigo }})"></option>
+                            {
+                                id: '{{ $prod->id }}',
+                                codigo: '{{ addslashes($prod->codigo) }}',
+                                nombre: '{{ addslashes($prod->nombre) }}',
+                                fullText: '{{ addslashes($prod->codigo . ' - ' . $prod->nombre) }}',
+                                searchKey: '{{ strtolower(addslashes($prod->codigo . ' ' . $prod->nombre)) }}'
+                            },
                         @endforeach
-                    </datalist>
+                    ],
+                    get filteredProductos() {
+                        if (!this.query.trim()) return this.productos;
+                        const q = this.query.toLowerCase().trim();
+                        return this.productos.filter(p => p.searchKey.includes(q));
+                    },
+                    selectProducto(prod) {
+                        this.query = prod.fullText;
+                        this.open = false;
+                    }
+                }" class="relative">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">
+                        Producto <span class="text-rose-500">*</span>
+                    </label>
+
+                    <div class="relative">
+                        <input type="text" 
+                               name="producto" 
+                               x-model="query" 
+                               @focus="open = true" 
+                               @input="open = true"
+                               @keydown.escape="open = false"
+                               @click.away="open = false"
+                               required 
+                               placeholder="Escriba el nombre, código o busque en el listado..."
+                               autocomplete="off"
+                               class="w-full pl-9 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:ring-2 focus:ring-fenix focus:bg-white transition-all shadow-2xs">
+
+                        <!-- Icono Lupa -->
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+
+                        <!-- Botón Limpiar / Desplegar -->
+                        <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center space-x-1">
+                            <button type="button" x-show="query" @click="query = ''; open = true" class="text-gray-400 hover:text-gray-600 p-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <button type="button" @click="open = !open" class="text-gray-400 hover:text-gray-600 p-1">
+                                <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel Flotante Desplegable con Resultados -->
+                    <div x-show="open" 
+                         x-transition
+                         class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-y-auto divide-y divide-gray-100 text-xs">
+                        <template x-for="prod in filteredProductos" :key="prod.id">
+                            <div @click="selectProducto(prod)" 
+                                 class="px-3.5 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer transition-colors flex items-center justify-between group">
+                                <div>
+                                    <span class="font-bold text-gray-900 group-hover:text-emerald-900" x-text="prod.codigo"></span>
+                                    <span class="text-gray-600 group-hover:text-emerald-800 ml-1.5" x-text="'- ' + prod.nombre"></span>
+                                </div>
+                                <span class="text-[10px] bg-gray-100 group-hover:bg-emerald-200 group-hover:text-emerald-900 text-gray-600 font-bold px-2 py-0.5 rounded-full transition-colors">Seleccionar</span>
+                            </div>
+                        </template>
+
+                        <div x-show="query && filteredProductos.length === 0" class="p-3 text-amber-800 bg-amber-50 text-xs">
+                            <div class="font-bold flex items-center space-x-1">
+                                <span>✏️ Texto libre personalizado:</span>
+                            </div>
+                            <p class="text-[11px] text-amber-700 mt-0.5">
+                                El producto <strong x-text="'&quot;' + query + '&quot;'"></strong> no está en el catálogo. Se registrará como texto libre.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Cantidad -->

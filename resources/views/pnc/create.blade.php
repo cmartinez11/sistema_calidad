@@ -80,14 +80,74 @@
                             </div>
                             <input type="hidden" name="producto_id" value="{{ $selectedProducto->id }}">
                         @else
-                            <select name="producto_id" x-model="productoId" required class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold text-gray-900 focus:ring-fenix focus:border-fenix">
-                                <option value="">-- Seleccionar Producto --</option>
-                                @foreach($productos as $prod)
-                                    <option value="{{ $prod->id }}" {{ old('producto_id') == $prod->id ? 'selected' : '' }}>
-                                        {{ $prod->codigo }} - {{ $prod->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <!-- Buscador Filtrable de Producto en Tiempo Real con Alpine.js -->
+                            <div x-data="{
+                                open: false,
+                                search: '',
+                                productosList: [
+                                    @foreach($productos as $prod)
+                                        {
+                                            id: '{{ $prod->id }}',
+                                            codigo: '{{ addslashes($prod->codigo) }}',
+                                            nombre: '{{ addslashes($prod->nombre) }}',
+                                            fullText: '{{ addslashes($prod->codigo . ' - ' . $prod->nombre) }}',
+                                            searchKey: '{{ strtolower(addslashes($prod->codigo . ' ' . $prod->nombre)) }}'
+                                        },
+                                    @endforeach
+                                ],
+                                get filteredProductos() {
+                                    if (!this.search.trim()) return this.productosList;
+                                    const q = this.search.toLowerCase().trim();
+                                    return this.productosList.filter(p => p.searchKey.includes(q));
+                                },
+                                selectedText: '{{ old('producto_id') && $productos->firstWhere('id', old('producto_id')) ? addslashes($productos->firstWhere('id', old('producto_id'))->codigo . ' - ' . $productos->firstWhere('id', old('producto_id'))->nombre) : '' }}',
+                                selectProduct(prod) {
+                                    this.productoId = prod.id;
+                                    this.selectedText = prod.fullText;
+                                    this.open = false;
+                                    this.search = '';
+                                }
+                            }" class="relative">
+                                <input type="hidden" name="producto_id" x-model="productoId" required>
+
+                                <div @click="open = !open" 
+                                     class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-xs font-semibold bg-gray-50/50 cursor-pointer flex items-center justify-between focus:ring-1 focus:ring-fenix shadow-2xs">
+                                    <span x-text="selectedText || '-- Digite o busque producto por código o nombre --'" 
+                                          :class="selectedText ? 'text-gray-900 font-bold' : 'text-gray-400 font-normal'"></span>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </div>
+
+                                <div x-show="open" 
+                                     @click.away="open = false" 
+                                     x-transition
+                                     class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-hidden flex flex-col text-xs">
+                                    <div class="p-2 border-b border-gray-100 bg-gray-50">
+                                        <input type="text" 
+                                               x-model="search" 
+                                               placeholder="Escriba código o nombre para filtrar de inmediato..." 
+                                               class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-fenix font-medium">
+                                    </div>
+
+                                    <div class="overflow-y-auto max-h-48 divide-y divide-gray-50">
+                                        <template x-for="prod in filteredProductos" :key="prod.id">
+                                            <div @click="selectProduct(prod)" 
+                                                 class="px-3.5 py-2.5 hover:bg-fenix/10 hover:text-fenix cursor-pointer transition-colors font-medium flex items-center justify-between">
+                                                <div>
+                                                    <span class="font-bold text-gray-900" x-text="prod.codigo"></span>
+                                                    <span class="text-gray-600 ml-1.5" x-text="'- ' + prod.nombre"></span>
+                                                </div>
+                                                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Elegir</span>
+                                            </div>
+                                        </template>
+
+                                        <div x-show="search && filteredProductos.length === 0" class="p-3 text-amber-800 bg-amber-50 text-xs">
+                                            <span>No se encontraron productos coincidentes con &quot;<strong x-text="search"></strong>&quot;</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
                     </div>
 

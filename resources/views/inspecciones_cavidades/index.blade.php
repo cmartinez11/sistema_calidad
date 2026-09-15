@@ -42,21 +42,21 @@
     </div>
 
     <!-- PANEL DE FILTROS AVANZADOS -->
-    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100" x-data="{ expanded: {{ ($fechaInicio || $fechaFin || $productoId || $lote || $estado) ? 'true' : 'true' }} }">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100" x-data="{ expanded: {{ ($fechaInicio || $fechaFin || $producto || $lote || $estado) ? 'true' : 'true' }} }">
         <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
             <div class="flex items-center space-x-2">
                 <div class="w-8 h-8 rounded-lg bg-emerald-50 text-fenix flex items-center justify-center font-bold">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                 </div>
                 <h3 class="text-sm font-bold text-gray-800">Filtros Avanzados</h3>
-                @if($fechaInicio || $fechaFin || $productoId || $lote || $estado || $search)
+                @if($fechaInicio || $fechaFin || $producto || $lote || $estado || $search)
                     <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-300">
                         Filtros Activos
                     </span>
                 @endif
             </div>
 
-            @if($fechaInicio || $fechaFin || $productoId || $lote || $estado || $search)
+            @if($fechaInicio || $fechaFin || $producto || $lote || $estado || $search)
                 <a href="{{ route('inspecciones-cavidades.index') }}" 
                    class="text-xs text-red-600 hover:text-red-800 font-medium flex items-center space-x-1 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -81,17 +81,21 @@
                            class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
                 </div>
 
-                <!-- Filtro por Producto -->
+                <!-- Filtro por Producto (Texto Libre + Autocompletado con Datalist) -->
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Producto</label>
-                    <select name="producto_id" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium">
-                        <option value="">Todos los Productos</option>
+                    <input type="text" 
+                           name="producto" 
+                           list="productos_filter_list" 
+                           value="{{ $producto }}" 
+                           placeholder="Escriba código o nombre..." 
+                           autocomplete="off"
+                           class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-fenix focus:border-fenix text-gray-700 font-medium bg-white">
+                    <datalist id="productos_filter_list">
                         @foreach($productos as $prod)
-                            <option value="{{ $prod->id }}" {{ (string)$productoId === (string)$prod->id ? 'selected' : '' }}>
-                                {{ $prod->codigo }} - {{ $prod->nombre }}
-                            </option>
+                            <option value="{{ $prod->codigo }} - {{ $prod->nombre }}"></option>
                         @endforeach
-                    </select>
+                    </datalist>
                 </div>
 
                 <!-- Filtro por Lote -->

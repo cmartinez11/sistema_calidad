@@ -60,19 +60,39 @@ class DashboardController extends Controller
         $inspeccionesEjecutadas = InspeccionCalidad::whereBetween('created_at', [$start, $end])->count();
         $cumplimientoPorcentaje = min(100, round(($inspeccionesEjecutadas / $metaPlanificada) * 100, 1));
 
-        // Avance diario (Plan vs Real) para el periodo (últimos 7 días del rango o dentro del rango)
+        // Avance diario (Plan vs Real) para la semana actual en curso (Lunes a Domingo)
+        $inicioSemana = $now->copy()->startOfWeek();
+        $finSemana = $now->copy()->endOfWeek();
+
         $diasSemana = [];
         $planDiario = [];
         $realDiario = [];
-        
-        $iterStart = $end->copy()->subDays(6)->greaterThanOrEqualTo($start) ? $end->copy()->subDays(6) : $start->copy();
-        $currentDay = $iterStart->copy();
 
-        while ($currentDay->lessThanOrEqualTo($end) && count($diasSemana) < 7) {
-            $diasSemana[] = $currentDay->format('d/m');
+        // Consultar conteo de inspecciones de la semana actual agrupadas por día
+        $inspeccionesSemana = InspeccionCalidad::whereBetween('created_at', [
+                $inicioSemana->copy()->startOfDay(),
+                $finSemana->copy()->endOfDay()
+            ])
+            ->selectRaw('DATE(created_at) as fecha, COUNT(*) as total')
+            ->groupBy('fecha')
+            ->pluck('total', 'fecha');
+
+        $diaActualIter = $inicioSemana->copy();
+
+        while ($diaActualIter->lessThanOrEqualTo($finSemana)) {
+            $fechaKey = $diaActualIter->toDateString();
+            
+            // Generar etiqueta del día (ej. Lunes 14/09, Martes 15/09, etc.)
+            $nombreDia = ucfirst($diaActualIter->locale('es')->dayName);
+            $diasSemana[] = $nombreDia . ' ' . $diaActualIter->format('d/m');
+
+            // Meta planificada fija o calculada por día (ej. 5 inspecciones)
             $planDiario[] = 5;
-            $realDiario[] = InspeccionCalidad::whereDate('created_at', $currentDay->toDateString())->count();
-            $currentDay->addDay();
+
+            // Conteo de inspecciones ejecutadas reales en el día
+            $realDiario[] = (int) ($inspeccionesSemana[$fechaKey] ?? 0);
+
+            $diaActualIter->addDay();
         }
 
         // 2. Porcentaje Conforme vs No Conforme en el periodo
