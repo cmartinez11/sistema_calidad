@@ -5,15 +5,11 @@
 
     <!-- Header Principal -->
     <div class="text-center space-y-4 max-w-2xl mx-auto">
-        <div class="inline-flex items-center space-x-2 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold shadow-inner">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Módulos Operativos de Calidad</span>
-        </div>
         <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            Seleccione el Proceso de Producción
+            Seleccione el Proceso de Control de Calidad
         </h1>
         <p class="text-sm md:text-base text-gray-400 font-medium">
-            Elija el área que desea gestionar para acceder a los controles analíticos y auditorías de calidad.
+            Elija el área que desea gestionar para acceder a los controles analíticos y inspecciones de calidad.
         </p>
     </div>
 
@@ -27,9 +23,6 @@
             
             <div class="space-y-6 relative z-10">
                 <div class="flex items-center justify-between">
-                    <div class="w-16 h-16 bg-fenix text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-                        🧪
-                    </div>
                     <span class="px-3.5 py-1.5 bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider rounded-full border border-emerald-500/40">
                         Proceso Activo
                     </span>
@@ -40,7 +33,7 @@
                         Preformas
                     </h2>
                     <p class="text-xs text-gray-400 leading-relaxed font-medium">
-                        Gestión completa de auditorías por cavidad, peso, parámetros de inyección y reportes PNC.
+                        Gestión completa de inspecciones por cavidad, peso, parámetros de inyección y reportes PNC.
                     </p>
                 </div>
             </div>
@@ -62,9 +55,6 @@
             
             <div class="space-y-6 relative z-10">
                 <div class="flex items-center justify-between">
-                    <div class="w-16 h-16 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-                        📦
-                    </div>
                     <span class="px-3.5 py-1.5 bg-amber-500/20 text-amber-300 text-[11px] font-black uppercase tracking-wider rounded-full border border-amber-500/40">
                         Próximamente
                     </span>
@@ -75,7 +65,7 @@
                         Termoformado
                     </h2>
                     <p class="text-xs text-gray-400 leading-relaxed font-medium">
-                        Control de calidad para líneas de soplado, termoformado, espesores, galga y empaque final.
+                        Control de calidad para líneas de termoformado.
                     </p>
                 </div>
             </div>
@@ -97,9 +87,6 @@
             
             <div class="space-y-6 relative z-10">
                 <div class="flex items-center justify-between">
-                    <div class="w-16 h-16 bg-sky-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform">
-                        📜
-                    </div>
                     <span class="px-3.5 py-1.5 bg-sky-500/20 text-sky-300 text-[11px] font-black uppercase tracking-wider rounded-full border border-sky-500/40">
                         Próximamente
                     </span>
@@ -110,7 +97,7 @@
                         Laminado
                     </h2>
                     <p class="text-xs text-gray-400 leading-relaxed font-medium">
-                        Monitoreo de procesos de extrusión, tensión de bobinas y laminación continua de lámina PET.
+                        Control de calidad para líneas de laminado.
                     </p>
                 </div>
             </div>

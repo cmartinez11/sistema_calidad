@@ -38,7 +38,7 @@
         <!-- CABECERA DEL INFORME -->
         <div class="flex items-center justify-between border-b-2 border-gray-800 pb-4">
             <div class="flex items-center space-x-4">
-                <div class="bg-fenix text-white p-3 rounded-xl font-black text-xl shadow-sm">GF</div>
+                <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-10 w-auto object-contain">
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 tracking-tight uppercase">Grupo Fénix - Control de Calidad</h1>
                     <p class="text-xs text-gray-500 font-semibold uppercase">Reporte Inspección de Pesos por Cavidad</p>

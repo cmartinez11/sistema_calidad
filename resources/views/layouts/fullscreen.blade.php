@@ -13,7 +13,7 @@
     <header class="w-full bg-gray-900/80 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex items-center justify-between z-20">
         <!-- Logo / Marca -->
         <div class="flex items-center space-x-3">
-            <div class="bg-fenix text-white p-2 rounded-xl shadow-lg font-black text-sm">GF</div>
+            <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-10 w-auto object-contain">
             <div>
                 <span class="text-white font-black tracking-wider text-base block">GRUPO FÉNIX</span>
                 <span class="text-[10px] text-gray-400 uppercase font-mono block">Sistema de Gestión de Calidad</span>
@@ -53,7 +53,7 @@
 
     <!-- PIE DE PÁGINA FULL-SCREEN -->
     <footer class="w-full py-4 px-6 border-t border-gray-800/80 text-center text-xs text-gray-500 font-mono">
-        Grupo Fénix &copy; {{ date('Y') }} - Todos los derechos reservados | Control de Calidad Multiproceso v1.0
+        Grupo Fénix &copy; {{ date('Y') }} - Todos los derechos reservados | Control de Calidad v1.0
     </footer>
 
 </body>

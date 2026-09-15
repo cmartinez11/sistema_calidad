@@ -16,7 +16,7 @@
             <div>
                 <!-- Logo / Título -->
                 <div class="px-6 py-5 border-b border-gray-800 flex items-center space-x-3">
-                    <div class="bg-fenix text-white p-2 rounded-lg shadow-md font-bold">GF</div>
+                    <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-9 w-auto object-contain">
                     <span class="text-white font-bold tracking-wide">GRUPO FÉNIX</span>
                 </div>
 
