@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Producto extends Model
+{
+    use HasFactory, Auditable;
+
+    protected $fillable = [
+        'codigo',
+        'nombre',
+        'tipo_producto',
+        'unidad_medida',
+        'peso_unitario',
+        'molde_id',
+        'activo',
+    ];
+
+    /**
+     * Accesores de compatibilidad legacy
+     */
+    public function getPesoNominalAttribute(): ?float
+    {
+        return $this->peso_unitario ? (float) $this->peso_unitario : null;
+    }
+
+    public function getGramajeAttribute(): ?float
+    {
+        return $this->peso_unitario ? (float) $this->peso_unitario : null;
+    }
+
+    public function molde(): BelongsTo
+    {
+        return $this->belongsTo(Molde::class, 'molde_id');
+    }
+
+    public function parametroPreforma(): HasOne
+    {
+        return $this->hasOne(ParametroPreforma::class);
+    }
+
+    public function parametros(): HasMany
+    {
+        return $this->hasMany(ParametroPreforma::class);
+    }
+
+    public function lotes(): HasMany
+    {
+        return $this->hasMany(Lote::class);
+    }
+
+    public function matrizEmpaques(): HasMany
+    {
+        return $this->hasMany(MatrizEmpaque::class, 'producto_id');
+    }
+
+    public function getMatrizEmpaque(string $presentacion): ?MatrizEmpaque
+    {
+        return $this->matrizEmpaques->firstWhere('presentacion', strtoupper($presentacion));
+    }
+}
+

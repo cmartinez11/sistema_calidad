@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable, Auditable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'username',
+        'email',
+        'password',
+        'role_id',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function inspecciones(): HasMany
+    {
+        return $this->hasMany(InspeccionCalidad::class);
+    }
+
+    /**
+     * Determina si el usuario tiene rol de Administrador.
+     */
+    public function isAdmin(): bool
+    {
+        if (!$this->role_id) {
+            return true; // Si no se ha asignado rol (primer usuario), permitir acceso admin por defecto
+        }
+        return strtoupper($this->role?->nombre ?? '') === 'ADMINISTRADOR';
+    }
+
+    /**
+     * Determina si el usuario posee alguno de los roles especificados.
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        if (!$this->role_id) {
+            return true; // Acceso total si el usuario no tiene rol asignado
+        }
+
+        $userRole = strtoupper(trim($this->role?->nombre ?? ''));
+
+        if (is_string($roles)) {
+            $roles = explode('|', $roles);
+        }
+
+        $allowed = array_map(fn($r) => strtoupper(trim($r)), $roles);
+
+        return in_array($userRole, $allowed);
+    }
+
+    /**
+     * Determina si el usuario es Supervisor o Administrador.
+     */
+    public function isSupervisorOrAdmin(): bool
+    {
+        return $this->hasRole(['Administrador', 'Supervisor', 'Admin']);
+    }
+
+    /**
+     * Determina si el usuario tiene rol de Gerencia / Gerente.
+     */
+    public function isGerencia(): bool
+    {
+        return $this->hasRole(['Gerencia', 'Gerente']);
+    }
+
+    /**
+     * Determina si el usuario tiene permisos de escritura en el sistema.
+     * El rol de Gerencia solo tiene acceso de lectura (GET).
+     */
+    public function canWrite(): bool
+    {
+        return !$this->isGerencia();
+    }
+}

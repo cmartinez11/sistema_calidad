@@ -1,0 +1,366 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6">
+
+    <!-- BARRA SUPERIOR DE ACCIONES (OCULTA EN IMPRESIÓN) -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
+        <a href="{{ route('inspecciones-cavidades.index') }}" 
+           class="inline-flex items-center space-x-2 text-sm font-semibold text-gray-600 hover:text-fenix transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <span>Volver al Historial</span>
+        </a>
+
+        <div class="flex items-center space-x-3">
+            @canWrite
+                <a href="{{ route('inspecciones-cavidades.create', ['producto_id' => $producto->id]) }}" 
+                   class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Nueva Inspección</span>
+                </a>
+            @endcanWrite
+
+            <a href="{{ route('inspecciones-cavidades.pdf', ['codigo' => $codigo]) }}" target="_blank"
+               class="px-5 py-2 bg-fenix hover:bg-fenix-dark text-white rounded-xl text-sm font-semibold shadow-md transition-all flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Exportar PDF Profesional</span>
+            </a>
+
+            <button onclick="window.print()" 
+                    class="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Imprimir Pantalla</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- DOCUMENTO DE REPORTE METROLÓGICO (ESTILO HOJA TÉCNICA A4) -->
+    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 print:shadow-none print:border-none print:p-0 print:m-0 space-y-6">
+        
+        <!-- CABECERA DEL INFORME -->
+        <div class="flex items-center justify-between border-b-2 border-gray-800 pb-4">
+            <div class="flex items-center space-x-4">
+                <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-10 w-auto object-contain">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 tracking-tight uppercase">Grupo Fénix - Control de Calidad</h1>
+                    <p class="text-xs text-gray-500 font-semibold uppercase">Reporte Inspección de Pesos por Cavidad</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="bg-emerald-100 text-emerald-900 border border-emerald-300 font-mono font-bold text-sm px-3 py-1.5 rounded-lg inline-block">
+                    {{ $codigo }}
+                </span>
+                <p class="text-[11px] text-gray-400 font-mono mt-1">
+                    {{ \Carbon\Carbon::parse($header->created_at)->format('d/m/Y h:i:s A') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- DATOS DE CONTEXTO TÉCNICO -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs">
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Código Producto</span>
+                <span class="font-bold font-mono text-gray-900 text-sm">{{ $producto->codigo }}</span>
+            </div>
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Nombre Producto</span>
+                <span class="font-bold text-gray-900">{{ $producto->nombre }}</span>
+            </div>
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Máquina</span>
+                <span class="font-bold text-gray-900">{{ $header->maquina->codigo ?? 'N/A' }} {{ $header->maquina ? '('.$header->maquina->nombre.')' : '' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Resina</span>
+                <span class="font-bold text-gray-900">
+                    @if(isset($resinaObj) && $resinaObj)
+                        {{ $resinaObj->nombre ?? $resinaObj->codigo }}
+                    @elseif(isset($calidadResumen) && $calidadResumen->resina)
+                        {{ $calidadResumen->resina->nombre ?? $calidadResumen->resina->codigo }}
+                    @elseif(isset($header->resina) && $header->resina)
+                        {{ $header->resina->nombre ?? $header->resina->codigo }}
+                    @else
+                        N/A
+                    @endif
+                </span>
+            </div>
+            
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Operario</span>
+                <span class="font-bold text-gray-900">{{ $header->operario->nombre ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Encargado</span>
+                <span class="font-bold text-gray-900">{{ $header->user->name ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Molde</span>
+                <span class="font-bold text-gray-900">{{ $header->molde->nombre ?? 'N/A' }}</span>
+            </div>
+
+            <div>
+                <span class="text-gray-400 font-semibold uppercase block text-[10px]">Turno</span>
+                <span class="font-bold text-gray-900">{{ $header->turno->nombre ?? 'N/A' }}</span>
+            </div>
+        </div>
+
+        <!-- RESUMEN ESTADÍSTICO DE PESOS -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <span class="text-[10px] text-gray-500 font-semibold uppercase block">Tolerancia</span>
+                <span class="text-xs font-mono font-bold text-gray-800">
+                    {{ $param && $param->peso_min > 0 ? $param->peso_min.'g - '.$param->peso_max.'g' : 'Sin límites' }}
+                </span>
+                <span class="text-[10px] text-gray-400 block mt-0.5">Nominal: {{ $param->peso_nominal ?? $producto->peso_unitario ?? '-' }}g</span>
+            </div>
+
+            <div class="bg-green-50 p-3 rounded-xl border border-green-200">
+                <span class="text-[10px] text-green-700 font-semibold uppercase block">Conformes</span>
+                <span class="text-base font-mono font-bold text-green-800">{{ $conformesCount }} / {{ $totalCavidades }}</span>
+                <span class="text-[10px] text-green-600 block mt-0.5">{{ number_format(($conformesCount / max($totalCavidades,1))*100, 1) }}% cumplimiento</span>
+            </div>
+
+            <div class="bg-red-50 p-3 rounded-xl border border-red-200">
+                <span class="text-[10px] text-red-700 font-semibold uppercase block">Fuera de Rango</span>
+                <span class="text-base font-mono font-bold text-red-800">{{ $fueraDeRangoCount }}</span>
+                <span class="text-[10px] text-red-600 block mt-0.5">Defectos detectados</span>
+            </div> 
+
+            <div class="bg-orange-50 p-3 rounded-xl border border-orange-200">
+                <span class="text-[10px] text-orange-700 font-semibold uppercase block">Observados</span>
+                <span class="text-base font-mono font-bold text-orange-800">{{ $observadoCount }}</span>
+                <span class="text-[10px] text-orange-600 block mt-0.5">Observaciones</span>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                <span class="text-[10px] text-blue-700 font-semibold uppercase block">Peso Promedio</span>
+                <span class="text-base font-mono font-bold text-blue-900">{{ $promedioPeso }} g</span>
+                <span class="text-[10px] text-blue-600 block mt-0.5">Evaluación</span>
+            </div>
+        </div>
+
+        <!-- TABLA COMPLETA DE DETALLE CAVIDAD POR CAVIDAD -->
+        <div class="space-y-2">
+            <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Detalle Cavidad por Cavidad</h3>
+            
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-100 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
+                        <tr>
+                            <th class="px-3 py-2.5 text-center w-24">N° Cavidad</th>
+                            <th class="px-3 py-2.5 font-mono text-center w-28">Peso (g)</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Pared</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Fondo</th>
+                            <th class="px-3 py-2.5 text-center w-32">Altura</th>
+                            <th class="px-3 py-2.5 text-center w-32">Estado</th>
+                            <th class="px-3 py-2.5 w-44">Motivo de Scrap / Defecto</th>
+                            <th class="px-3 py-2.5">Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($cavidades as $cav)
+                            <tr class="{{ $cav->estado === 'ANULADO' ? 'bg-gray-100/90 text-gray-500 italic' : ($cav->estado === 'FUERA_DE_RANGO' ? 'bg-red-50 font-semibold text-red-900' : 'hover:bg-gray-50/50') }}">
+                                <td class="px-3 py-2 text-center font-mono font-bold text-gray-800">
+                                    C-{{ sprintf('%02d', $cav->cavidad_numero) }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono font-bold {{ $cav->estado === 'FUERA_DE_RANGO' ? 'text-red-700 text-sm' : ($cav->estado === 'ANULADO' ? 'text-gray-400' : 'text-gray-900') }}">
+                                    {{ $cav->estado === 'ANULADO' ? 0.00 : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $cav->espesor_pared !== null ? number_format($cav->espesor_pared, 2).' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $cav->espesor_fondo !== null ? number_format($cav->espesor_fondo, 2).' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $param && $param->altura_min > 0 ? $param->altura_min.' - '.$param->altura_max.' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center whitespace-nowrap">
+                                    @if($cav->estado === 'CONFORME')
+                                        <span class="px-2.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
+                                            🟢 Conforme
+                                        </span>
+                                    @elseif($cav->estado === 'OBSERVADO')
+                                        <span class="px-2.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-full border border-orange-200">
+                                            🟠 Observado
+                                        </span>
+                                    @elseif($cav->estado === 'ANULADO')
+                                        <span class="px-2.5 py-0.5 bg-gray-200 text-gray-700 text-[10px] font-bold rounded-full border border-gray-300">
+                                            ⚪ Anulado
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded-full border border-red-200">
+                                            🔴 Fuera de Rango
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2">
+                                    @if(in_array($cav->estado, ['FUERA_DE_RANGO', 'OBSERVADO']))
+                                        <span class="font-bold text-red-700 bg-red-100/70 px-2 py-0.5 rounded-md border border-red-200 inline-block text-[11px]">
+                                            {{ $cav->motivo_scrap ?? '-' }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 italic text-[11px]">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-gray-700 text-xs">
+                                    {{ $cav->observaciones ?: '-' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @php
+            $estadoActualCalidad = $calidadResumen->estado_evaluacion ?? 'OBSERVADO';
+        @endphp
+
+        <!-- PANEL INFORMATIVO DE CIERRE Y CONSOLIDACIÓN DE AUDITORÍA -->
+        <div class="mt-6 p-6 rounded-2xl shadow-sm border print:hidden transition-all
+            @if($estadoActualCalidad === 'CONFORME')
+                bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 border-emerald-200
+            @elseif($estadoActualCalidad === 'OBSERVADO')
+                bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border-amber-200
+            @elseif($estadoActualCalidad === 'PNC')
+                bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 border-red-200
+            @else
+                bg-gray-50 border-gray-200
+            @endif">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4
+                @if($estadoActualCalidad === 'CONFORME') border-emerald-200/80
+                @elseif($estadoActualCalidad === 'OBSERVADO') border-amber-200/80
+                @elseif($estadoActualCalidad === 'PNC') border-red-200/80
+                @else border-gray-200 @endif">
+                
+                <div class="flex items-center space-x-3">
+                    <div class="p-3 rounded-xl shadow-md text-white
+                        @if($estadoActualCalidad === 'CONFORME') bg-emerald-600
+                        @elseif($estadoActualCalidad === 'OBSERVADO') bg-amber-600
+                        @elseif($estadoActualCalidad === 'PNC') bg-red-600
+                        @else bg-gray-600 @endif">
+                        @if($estadoActualCalidad === 'CONFORME')
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        @elseif($estadoActualCalidad === 'OBSERVADO')
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        @elseif($estadoActualCalidad === 'PNC')
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        @endif
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h4 class="text-base font-extrabold text-gray-900">Inspección Procesada y Consolidada Automáticamente</h4>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold shadow-sm
+                                @if($estadoActualCalidad === 'CONFORME') bg-green-100 text-green-800 border border-green-300
+                                @elseif($estadoActualCalidad === 'OBSERVADO') bg-amber-100 text-amber-900 border border-amber-300
+                                @elseif($estadoActualCalidad === 'PNC') bg-red-600 text-white
+                                @else bg-gray-200 text-gray-800 @endif">
+                                @if($estadoActualCalidad === 'CONFORME') 🟢 CONFORME
+                                @elseif($estadoActualCalidad === 'OBSERVADO') 🟠 OBSERVADO
+                                @elseif($estadoActualCalidad === 'PNC') 🔴 PNC
+                                @else {{ $estadoActualCalidad }} @endif
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-0.5">
+                            Esta inspección ya cuenta con una resolución definitiva registrada en el Resumen de Calidad.
+                        </p>
+                    </div>
+                </div>
+
+                @if(!$pnc && $estadoActualCalidad === 'OBSERVADO')
+                    @canWrite
+                        <a href="{{ route('pnc.create', ['codigo_inspeccion' => $codigo]) }}" 
+                           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 self-start md:self-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span>Derivar a PNC (Opcional)</span>
+                        </a>
+                    @endcanWrite
+                @endif
+
+                @if($pnc)
+                    <a href="{{ route('pnc.show', $pnc->id) }}" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 self-start md:self-auto">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        <span>Ver Reporte PNC ({{ $pnc->codigo_pnc }})</span>
+                    </a>
+                @endif
+            </div>
+
+            <!-- DETALLES DE RESOLUCIÓN Y VALIDACIÓN -->
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">📅 Fecha y Hora de Registro</span>
+                    <p class="font-mono font-bold text-gray-900 text-xs">
+                        {{ \Carbon\Carbon::parse($header->created_at)->format('d/m/Y h:i:s A') }}
+                    </p>
+                </div>
+
+                <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">👤 Registrado Por:</span>
+                    <p class="font-bold text-gray-900 text-xs">
+                        @if($calidadResumen && $calidadResumen->user)
+                            {{ $calidadResumen->user->name }}
+                        @elseif($header && $header->user)
+                            {{ $header->user->name }}
+                        @else
+                            Sistema Grupo Fénix
+                        @endif
+                    </p>
+                </div>
+
+                <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-xl border border-gray-200/80 shadow-2xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">📋 Motivo / Defectos Detectados</span>
+                    <div class="text-xs text-gray-800">
+                        @if($estadoActualCalidad === 'CONFORME')
+                            <span class="text-emerald-700 font-bold">100% Conforme:</span> Todas las cavidades cumplen especificaciones.
+                        @elseif($estadoActualCalidad === 'OBSERVADO')
+                            <span class="text-amber-800 font-bold">{{ $calidadResumen->motivo_scrap ?? 'Cavidades observadas registradas en línea' }}</span>
+                        @elseif($estadoActualCalidad === 'PNC')
+                            @if($pnc)
+                                <strong class="text-red-700">PNC {{ $pnc->codigo_pnc }}:</strong> <span class="text-gray-700">{{ Str::limit($pnc->descripcion_nc, 60) }}</span>
+                            @else
+                                <span class="text-red-700 font-bold">Derivado al Módulo PNC</span>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FIRMAS DE CONFORMIDAD (SOLO IMPRESIÓN) -->
+        <div class="pt-12 grid grid-cols-2 gap-8 text-center text-xs text-gray-500 hidden print:grid">
+            <div class="border-t border-gray-400 pt-2">
+                <p class="font-bold text-gray-800">{{ $header->operario->nombre ?? 'Operador de Planta' }}</p>
+                <p class="text-[10px] text-gray-400">Operario</p>
+            </div>
+            <div class="border-t border-gray-400 pt-2">
+                <p class="font-bold text-gray-800">Jefatura de Control de Calidad</p>
+                <p class="text-[10px] text-gray-400">Firma y Sello de Validación</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ESTILOS ESPECÍFICOS DE IMPRESIÓN -->
+<style>
+@media print {
+    body {
+        background-color: white !important;
+        font-size: 11px !important;
+    }
+    aside, header, nav, .print\:hidden {
+        display: none !important;
+    }
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}
+</style>
+@endsection
