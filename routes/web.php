@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 use Carbon\Carbon;
 
 use App\Http\Controllers\PncController;
-
+use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AtcController;
@@ -109,6 +109,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('moldes', MoldeController::class)->whereNumber('molde');
     Route::resource('resinas', ResinaController::class)->whereNumber('resina');
     Route::resource('operarios', OperarioController::class)->whereNumber('operario');
+
+    Route::get('/produccion', [ProduccionController::class, 'index'])->name('produccion.index');
+    Route::resource('produccion', ProduccionController::class);
 });
 
 require __DIR__.'/auth.php';

@@ -23,198 +23,110 @@
              style="display: none;">
         </div>
 
-        <!-- SIDEBAR MÓVIL (Off-canvas flotante con x-show, solo visible en móviles cuando sidebarOpen es true) -->
-        <div x-show="sidebarOpen"
-             x-cloak
-             x-transition:enter="transition transform duration-300 ease-out"
-             x-transition:enter-start="-translate-x-full"
-             x-transition:enter-end="translate-x-0"
-             x-transition:leave="transition transform duration-300 ease-in"
-             x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="-translate-x-full"
-             class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-gray-300 flex flex-col shadow-2xl md:hidden shrink-0"
-             style="display: none;">
-            <!-- Logo / Título -->
-            <div class="px-6 py-5 border-b border-gray-800 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-3">
-                    <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-9 w-auto object-contain">
-                    <span class="text-white font-bold tracking-wide">GRUPO FÉNIX</span>
-                </div>
-                <!-- Botón para cerrar menú en móviles -->
-                <button @click="sidebarOpen = false" 
-                        type="button" 
-                        class="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none cursor-pointer"
-                        aria-label="Cerrar menú">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Enlaces del Menú Móvil (Scrollable con flex-1 y overflow-y-auto) -->
-            <nav class="mt-4 px-4 space-y-2 overflow-y-auto flex-1 pb-6">
-                <a href="{{ route('modulos.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('modulos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Selector de Procesos
-                </a>
-                <a href="{{ route('dashboard') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('dashboard') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                    Dashboard Preformas
-                </a>
-                <a href="{{ route('productos.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('productos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    Productos
-                </a>
-                <a href="{{ route('maquinas.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('maquinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Máquinas
-                </a>
-                <a href="{{ route('moldes.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('moldes.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    Moldes
-                </a>
-                <a href="{{ route('resinas.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('resinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.605 15.12a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                    Resinas
-                </a>
-                <a href="{{ route('operarios.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('operarios.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    Operarios
-                </a>
-                <a href="{{ route('inspecciones-cavidades.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-cavidades.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    Inspecciones por Cavidad
-                </a>
-                <a href="{{ route('inspecciones-calidad.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-calidad.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Resumen de Calidad
-                </a>
-                <a href="{{ route('pnc.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('pnc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Producto No Conforme (PNC)
-                </a>
-                @if(Auth::check() && Auth::user()->isAdmin())
-                    <a href="{{ route('users.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('users.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        Gestión de Usuarios
-                    </a>
-                    <a href="{{ route('audit-logs.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('audit-logs.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                        Historial de Inspección
-                    </a>
-                @endif
-                <a href="{{ route('atc.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('atc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    Atención al Cliente (ATC)
-                </a>
-                <a href="{{ route('clientes.sif') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('clientes.sif') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    Clientes SIF
-                </a>
-            </nav>
+        <!-- ESTRUCTURA ÚNICA Y RESPONSIVA DEL SIDEBAR -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+               class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-gray-300 flex flex-col justify-between shadow-2xl transform transition-transform duration-300 ease-in-out md:static md:shadow-xl shrink-0 h-full">
             
-            <!-- Pie del Sidebar Móvil -->
-            <div class="p-4 border-t border-gray-800 space-y-3 shrink-0">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800/80 hover:bg-red-600/90 text-gray-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-gray-700/50 hover:border-red-500 cursor-pointer shadow-sm group">
-                        <svg class="w-4 h-4 mr-2 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            <div class="flex flex-col h-full min-h-0">
+                <!-- Cabecera del Sidebar: Logo y Botón Cerrar Móvil -->
+                <div class="px-6 py-5 border-b border-gray-800 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-3">
+                        <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-9 w-auto object-contain">
+                        <span class="text-white font-bold tracking-wide">GRUPO FÉNIX</span>
+                    </div>
+                    <!-- Botón para cerrar menú (Solo en móviles) -->
+                    <button @click="sidebarOpen = false" 
+                            type="button" 
+                            class="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none cursor-pointer"
+                            aria-label="Cerrar menú">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
-                        <span>Cerrar Sesión</span>
                     </button>
-                </form>
-                <div class="text-[10px] text-center text-gray-500 font-mono">
-                    Sistema de Calidad v1.0
                 </div>
-            </div>
-        </div>
 
-        <!-- SIDEBAR ESCRITORIO (Estático y rígido en el flujo flexible, solo en PC) -->
-        <aside class="hidden md:flex flex-col w-64 bg-gray-900 text-gray-300 shadow-xl shrink-0 h-full">
-            <!-- Logo / Título -->
-            <div class="px-6 py-5 border-b border-gray-800 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-3">
-                    <img src="{{ asset('logo2.png') }}" alt="Logo Grupo Fénix" class="h-9 w-auto object-contain">
-                    <span class="text-white font-bold tracking-wide">GRUPO FÉNIX</span>
-                </div>
-            </div>
-
-            <!-- Enlaces del Menú Escritorio (Scrollable con flex-1 y overflow-y-auto) -->
-            <nav class="mt-4 px-4 space-y-2 overflow-y-auto flex-1 pb-6">
-                <a href="{{ route('modulos.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('modulos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Selector de Procesos
-                </a>
-                <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('dashboard') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                    Dashboard Preformas
-                </a>
-                <a href="{{ route('productos.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('productos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    Productos
-                </a>
-                <a href="{{ route('maquinas.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('maquinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    Máquinas
-                </a>
-                <a href="{{ route('moldes.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('moldes.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    Moldes
-                </a>
-                <a href="{{ route('resinas.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('resinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.605 15.12a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                    Resinas
-                </a>
-                <a href="{{ route('operarios.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('operarios.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    Operarios
-                </a>
-                <a href="{{ route('inspecciones-cavidades.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-cavidades.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                    Inspecciones por Cavidad
-                </a>
-                <a href="{{ route('inspecciones-calidad.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-calidad.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Resumen de Calidad
-                </a>
-                <a href="{{ route('pnc.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('pnc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Producto No Conforme (PNC)
-                </a>
-                @if(Auth::check() && Auth::user()->isAdmin())
-                    <a href="{{ route('users.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('users.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                <!-- Enlaces del Menú (Scrollable con flex-1 y overflow-y-auto) -->
+                <nav class="mt-4 px-4 space-y-2 overflow-y-auto flex-1 pb-6">
+                    <a href="{{ route('modulos.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('modulos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Selector de Procesos
+                    </a>
+                    <a href="{{ route('dashboard') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('dashboard') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard Preformas
+                    </a>
+                    <a href="{{ route('productos.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('productos.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Productos
+                    </a>
+                    <a href="{{ route('maquinas.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('maquinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Máquinas
+                    </a>
+                    <a href="{{ route('moldes.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('moldes.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        Moldes
+                    </a>
+                    <a href="{{ route('resinas.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('resinas.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.605 15.12a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        Resinas
+                    </a>
+                    <a href="{{ route('operarios.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('operarios.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        Gestión de Usuarios
+                        Operarios
                     </a>
-                    <a href="{{ route('audit-logs.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('audit-logs.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-                        Historial de Inspección
+                    <a href="{{ route('inspecciones-cavidades.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-cavidades.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Inspecciones por Cavidad
                     </a>
-                @endif
-                <a href="{{ route('atc.index') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('atc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    Atención al Cliente (ATC)
-                </a>
-                <a href="{{ route('clientes.sif') }}" class="flex items-center px-4 py-3 {{ request()->routeIs('clientes.sif') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    Clientes SIF
-                </a>
-            </nav>
-            
-            <!-- Pie del Sidebar Escritorio -->
-            <div class="p-4 border-t border-gray-800 space-y-3 shrink-0">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800/80 hover:bg-red-600/90 text-gray-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-gray-700/50 hover:border-red-500 cursor-pointer shadow-sm group">
-                        <svg class="w-4 h-4 mr-2 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    <a href="{{ route('inspecciones-calidad.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('inspecciones-calidad.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Resumen de Calidad
+                    </a>
+                    <a href="{{ route('pnc.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('pnc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        Producto No Conforme (PNC)
+                    </a>
+                    <a href="{{ route('produccion.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('pnc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
-                        <span>Cerrar Sesión</span>
-                    </button>
-                </form>
-                <div class="text-[10px] text-center text-gray-500 font-mono">
-                    Sistema de Calidad v1.0
+                        Producción
+                    </a>
+                    @if(Auth::check() && Auth::user()->isAdmin())
+                        <a href="{{ route('users.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('users.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                            Gestión de Usuarios
+                        </a>
+                        <a href="{{ route('audit-logs.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('audit-logs.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                            Historial de Inspección
+                        </a>
+                    @endif
+                    <a href="{{ route('atc.index') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('atc.*') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636l3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        Atención al Cliente (ATC)
+                    </a>
+                    <a href="{{ route('clientes.sif') }}" @click="sidebarOpen = false" class="flex items-center px-4 py-3 {{ request()->routeIs('clientes.sif') ? 'text-white bg-fenix rounded-xl shadow-lg' : 'hover:bg-gray-800 rounded-xl' }} transition-all">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Clientes SIF
+                    </a>
+                </nav>
+
+                <!-- Pie del Sidebar -->
+                <div class="p-4 border-t border-gray-800 space-y-3 shrink-0">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center px-4 py-2.5 bg-gray-800/80 hover:bg-red-600/90 text-gray-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-gray-700/50 hover:border-red-500 cursor-pointer shadow-sm group">
+                            <svg class="w-4 h-4 mr-2 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </form>
+                    <div class="text-[10px] text-center text-gray-500 font-mono">
+                        Sistema de Calidad v1.0
+                    </div>
                 </div>
             </div>
         </aside>
@@ -224,10 +136,11 @@
             <!-- Barra Superior -->
             <header class="bg-white shadow-sm h-16 shrink-0 flex items-center justify-between px-4 md:px-8 z-10">
                 <div class="flex items-center space-x-3">
-                    <!-- Botón Hamburguesa Móvil -->
+                    <!-- Botón Hamburguesa Móvil (Oculto en computadoras de escritorio con md:hidden) -->
                     <button @click="sidebarOpen = !sidebarOpen" 
                             type="button" 
-                            class="md:hidden text-gray-600 hover:text-gray-900 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                            class="md:hidden text-gray-600 hover:text-gray-900 focus:outline-none p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            aria-label="Abrir menú de navegación">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
@@ -298,5 +211,6 @@
         setInterval(updateServerClock, 1000);
         updateServerClock();
     </script>
+
 </body>
 </html>
