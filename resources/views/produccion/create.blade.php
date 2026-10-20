@@ -33,11 +33,11 @@
                 <div class="flex items-center space-x-4 mt-2">
                     <label class="flex items-center space-x-2 cursor-pointer bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
                         <input type="checkbox" name="turnos_activos[]" value="DIA" x-model="activoDia" class="text-amber-600 focus:ring-amber-500 rounded">
-                        <span class="text-xs font-bold text-amber-900">DIA ({{ $nroDia }})</span>
+                        <span class="text-xs font-bold text-amber-900"> DIA ({{ $nroDia }})</span>
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-200">
                         <input type="checkbox" name="turnos_activos[]" value="NOCHE" x-model="activoNoche" class="text-indigo-600 focus:ring-indigo-500 rounded">
-                        <span class="text-xs font-bold text-indigo-900">NOCHE ({{ $nroNoche }})</span>
+                        <span class="text-xs font-bold text-indigo-900"> NOCHE ({{ $nroNoche }})</span>
                     </label>
                 </div>
             </div>
@@ -50,7 +50,7 @@
             <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-amber-300 space-y-6">
                 <div class="flex items-center justify-between border-b border-amber-100 pb-3">
                     <h2 class="text-base font-bold text-amber-900 flex items-center space-x-2">
-                        <span>Formulario - Turno DIA</span>
+                        <span>☀️ Formulario - Turno DIA</span>
                         <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-mono">{{ $nroDia }}</span>
                     </h2>
                 </div>
@@ -66,7 +66,7 @@
             <div class="bg-white p-8 rounded-2xl shadow-sm border-2 border-indigo-300 space-y-6">
                 <div class="flex items-center justify-between border-b border-indigo-100 pb-3">
                     <h2 class="text-base font-bold text-indigo-900 flex items-center space-x-2">
-                        <span>Formulario - Turno NOCHE</span>
+                        <span>🌙 Formulario - Turno NOCHE</span>
                         <span class="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded-full font-mono">{{ $nroNoche }}</span>
                     </h2>
                 </div>

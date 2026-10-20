@@ -226,9 +226,13 @@
                 <span class="meta-label">Inyectora / Máquina</span>
                 <span class="meta-value">{{ $header->maquina->codigo ?? 'N/A' }} {{ $header->maquina ? '('.$header->maquina->nombre.')' : '' }}</span>
             </td>
-            <td style="width: 20%;">
+            <td style="width: 10%;">
                 <span class="meta-label">Resina</span>
                 <span class="meta-value">{{ $resinaObj->nombre ?? ($calidadResumen->resina->nombre ?? ($resinaObj->codigo ?? ($calidadResumen->resina->codigo ?? 'N/A'))) }}</span>
+            </td>
+            <td style="width: 10%;">
+                <span class="meta-label">Turno</span>
+                <span class="meta-value">{{ $header->turno->nombre }}</span>
             </td>
             <td style="width: 20%;">
                 <span class="meta-label">Operario</span>
@@ -275,9 +279,12 @@
     <table class="detail-table">
         <thead>
             <tr>
-                <th style="width: 15%; text-align: center;">N° Cavidad</th>
-                <th style="width: 20%; text-align: center;">Peso Medido (g)</th>
-                <th style="width: 20%; text-align: center;">Rango Tolerancia</th>
+                <th style="width: 5%; text-align: center;">N° Cavidad</th>
+                <th style="width: 10%; text-align: center;">Peso(g)</th>
+                <th style="width: 10%; text-align: center;">Esp. Pared (min)</th>
+                <th style="width: 10%; text-align: center;">Esp. Pared (max)</th>
+                <th style="width: 10%; text-align: center;">Esp. Fondo</th>
+                <th style="width: 10%; text-align: center;">Altura (max)</th>
                 <th style="width: 20%; text-align: center;">Estado</th>
                 <th style="width: 25%; text-align: left;">Motivo de Scrap / Defecto</th>
             </tr>
@@ -286,13 +293,22 @@
             @foreach($cavidades as $index => $cav)
                 <tr class="{{ $cav->estado === 'ANULADO' ? 'row-anulado' : ($cav->estado === 'FUERA_DE_RANGO' ? 'row-scrap' : ($index % 2 === 1 ? 'row-even' : '')) }}">
                     <td style="text-align: center; font-family: monospace; font-weight: bold;">
-                        Cavidad {{ sprintf('%02d', $cav->cavidad_numero) }}
+                        Cav. {{ sprintf('%02d', $cav->cavidad_numero) }}
                     </td>
                     <td style="text-align: center; font-family: monospace; font-weight: bold;">
                         {{ $cav->estado === 'ANULADO' ? 'N/A' : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
                     </td>
                     <td style="text-align: center; font-family: monospace; color: #6b7280;">
-                        {{ $param && $param->peso_min > 0 ? $param->peso_min.' - '.$param->peso_max.' g' : '-' }}
+                        {{ $cav->espesor_pared_min }} mm
+                    </td>
+                    <td style="text-align: center; font-family: monospace; color: #6b7280;">
+                        {{ $cav->espesor_pared_max }} mm
+                    </td>
+                    <td style="text-align: center; font-family: monospace; color: #6b7280;">
+                        {{ $cav->espesor_fondo }} mm
+                    </td>
+                    <td style="text-align: center; font-family: monospace; color: #6b7280;">
+                        {{ $cav->altura}} mm
                     </td>
                     <td style="text-align: center;">
                         @if($cav->estado === 'CONFORME')

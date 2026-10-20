@@ -211,6 +211,5 @@
         setInterval(updateServerClock, 1000);
         updateServerClock();
     </script>
-
 </body>
 </html>

@@ -104,7 +104,7 @@ class InspeccionCavidadController extends Controller
                 });
             } elseif ($estado === 'BORRADOR') {
                 $query->whereNotExists(function ($sub) {
-                    $sub->select(DB::raw(1))->from('inspecciones_calidad')->whereColumn('inspecciones_calidad.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
+                    $sub->select(DB::raw(1))->from('pnc')->whereColumn('pnc.codigo_inspeccion', 'inspecciones_cavidades.codigo_inspeccion');
                 })
                 ->whereIn('estado', ['FUERA_DE_RANGO', 'OBSERVADO', 'ANULADO']);
             }
@@ -182,7 +182,7 @@ class InspeccionCavidadController extends Controller
     }
 
     /**
-     * Descarga la plantilla oficial en formato nativo de Excel (.xlsx) con columnas separadas (Columna A a G).
+     * Descarga la plantilla oficial en formato nativo de Excel (.xlsx).
      */
     public function downloadPlantillaExcel(): StreamedResponse
     {
@@ -193,7 +193,8 @@ class InspeccionCavidadController extends Controller
         $headers = [
             'CAVIDAD',
             'PESO (G)',
-            'ESP. PARED',
+            'ESP. PARED MIN',
+            'ESP. PARED MAX',
             'ESP. FONDO',
             'ALTURA',
             'TIENE DEFECTO',
@@ -218,7 +219,7 @@ class InspeccionCavidadController extends Controller
             ],
         ];
 
-        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
         $sheet->getRowDimension(1)->setRowHeight(25);
 
         $sampleData = [];
@@ -226,7 +227,8 @@ class InspeccionCavidadController extends Controller
             $sampleData[] = [
                 'C-' . str_pad($i, 2, '0', STR_PAD_LEFT),
                 28.00,
-                2.500,
+                2.450,
+                2.550,
                 3.100,
                 150.00,
                 0,
@@ -236,7 +238,7 @@ class InspeccionCavidadController extends Controller
 
         $sheet->fromArray($sampleData, null, 'A2');
 
-        foreach (range('A', 'G') as $col) {
+        foreach (range('A', 'H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -327,7 +329,8 @@ class InspeccionCavidadController extends Controller
 
             $colCavidad = $findCol(['cavidad', 'cav', 'c', 'num_cavidad']);
             $colPeso = $findCol(['peso_g', 'peso', 'peso_medido', 'pesog']);
-            $colPared = $findCol(['esp_pared', 'espesor_pared', 'pared']);
+            $colParedMin = $findCol(['esp_pared_min', 'espesor_pared_min', 'pared_min']);
+            $colParedMax = $findCol(['esp_pared_max', 'espesor_pared_max', 'pared_max']);
             $colFondo = $findCol(['esp_fondo', 'espesor_fondo', 'fondo']);
             $colAltura = $findCol(['altura', 'alt']);
             $colDefecto = $findCol(['tiene_defecto', 'defecto', 'falla']);
@@ -335,11 +338,12 @@ class InspeccionCavidadController extends Controller
 
             if ($colCavidad === false) $colCavidad = 0;
             if ($colPeso === false) $colPeso = 1;
-            if ($colPared === false) $colPared = 2;
-            if ($colFondo === false) $colFondo = 3;
-            if ($colAltura === false) $colAltura = 4;
-            if ($colDefecto === false) $colDefecto = 5;
-            if ($colObs === false) $colObs = 6;
+            if ($colParedMin === false) $colParedMin = 2;
+            if ($colParedMax === false) $colParedMax = 3;
+            if ($colFondo === false) $colFondo = 4;
+            if ($colAltura === false) $colAltura = 5;
+            if ($colDefecto === false) $colDefecto = 6;
+            if ($colObs === false) $colObs = 7;
 
             $cavidadesImportadas = [];
             $rowCounter = 1;
@@ -352,7 +356,8 @@ class InspeccionCavidadController extends Controller
                 }
 
                 $pesoVal = (isset($row[$colPeso]) && $row[$colPeso] !== '') ? (float)str_replace(',', '.', $row[$colPeso]) : '';
-                $paredVal = (isset($row[$colPared]) && $row[$colPared] !== '') ? (float)str_replace(',', '.', $row[$colPared]) : '';
+                $paredMinVal = (isset($row[$colParedMin]) && $row[$colParedMin] !== '') ? (float)str_replace(',', '.', $row[$colParedMin]) : '';
+                $paredMaxVal = (isset($row[$colParedMax]) && $row[$colParedMax] !== '') ? (float)str_replace(',', '.', $row[$colParedMax]) : '';
                 $fondoVal = (isset($row[$colFondo]) && $row[$colFondo] !== '') ? (float)str_replace(',', '.', $row[$colFondo]) : '';
                 $alturaVal = (isset($row[$colAltura]) && $row[$colAltura] !== '') ? (float)str_replace(',', '.', $row[$colAltura]) : '';
 
@@ -364,7 +369,8 @@ class InspeccionCavidadController extends Controller
                 $cavidadesImportadas[] = [
                     'cavidad_numero' => $cavNum,
                     'peso_medido' => $pesoVal !== '' ? $pesoVal : '',
-                    'espesor_pared' => $paredVal !== '' ? $paredVal : '',
+                    'espesor_pared_min' => $paredMinVal !== '' ? $paredMinVal : '',
+                    'espesor_pared_max' => $paredMaxVal !== '' ? $paredMaxVal : '',
                     'espesor_fondo' => $fondoVal !== '' ? $fondoVal : '',
                     'altura' => $alturaVal !== '' ? $alturaVal : '',
                     'tiene_defecto' => $tieneDefecto,
@@ -401,7 +407,8 @@ class InspeccionCavidadController extends Controller
             'cavidades' => 'required|array|min:1',
             'cavidades.*.cavidad_numero' => 'required|integer|min:1',
             'cavidades.*.peso_medido' => 'required_unless:cavidades.*.estado,ANULADO|nullable|numeric|min:0',
-            'cavidades.*.espesor_pared' => 'nullable|numeric|min:0',
+            'cavidades.*.espesor_pared_min' => 'nullable|numeric|min:0',
+            'cavidades.*.espesor_pared_max' => 'nullable|numeric|min:0',
             'cavidades.*.espesor_fondo' => 'nullable|numeric|min:0',
             'cavidades.*.altura' => 'nullable|numeric|min:0',
             'cavidades.*.estado' => 'required|string|in:CONFORME,FUERA_DE_RANGO,OBSERVADO,ANULADO',
@@ -431,7 +438,8 @@ class InspeccionCavidadController extends Controller
             $codigoInspeccion = $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
             $pesos = []; 
-            $paredes = [];
+            $paredesMin = [];
+            $paredesMax = [];
             $fondos = []; 
             $alturas = [];
             $motivosScrap = []; 
@@ -463,17 +471,20 @@ class InspeccionCavidadController extends Controller
 
                 if ($isAnulado) {
                     $pesoMedido = (isset($cavData['peso_medido']) && $cavData['peso_medido'] !== '') ? (float)$cavData['peso_medido'] : 0.00;
-                    $espesorPared = (isset($cavData['espesor_pared']) && $cavData['espesor_pared'] !== '') ? (float)$cavData['espesor_pared'] : 0.00;
+                    $espesorParedMin = 0.00;
+                    $espesorParedMax = 0.00;
                     $espesorFondo = (isset($cavData['espesor_fondo']) && $cavData['espesor_fondo'] !== '') ? (float)$cavData['espesor_fondo'] : 0.00;
                     $altura = (isset($cavData['altura']) && $cavData['altura'] !== '') ? (float)$cavData['altura'] : 0.00;
                 } else {
                     $pesoMedido = (isset($cavData['peso_medido']) && $cavData['peso_medido'] !== '') ? (float)$cavData['peso_medido'] : null;
-                    $espesorPared = (isset($cavData['espesor_pared']) && $cavData['espesor_pared'] !== '') ? (float)$cavData['espesor_pared'] : null;
+                    $espesorParedMin = (isset($cavData['espesor_pared_min']) && $cavData['espesor_pared_min'] !== '') ? (float)$cavData['espesor_pared_min'] : null;
+                    $espesorParedMax = (isset($cavData['espesor_pared_max']) && $cavData['espesor_pared_max'] !== '') ? (float)$cavData['espesor_pared_max'] : null;
                     $espesorFondo = (isset($cavData['espesor_fondo']) && $cavData['espesor_fondo'] !== '') ? (float)$cavData['espesor_fondo'] : null;
                     $altura = (isset($cavData['altura']) && $cavData['altura'] !== '') ? (float)$cavData['altura'] : null;
 
                     if ($pesoMedido !== null) $pesos[] = $pesoMedido;
-                    if ($espesorPared !== null) $paredes[] = $espesorPared;
+                    if ($espesorParedMin !== null) $paredesMin[] = $espesorParedMin;
+                    if ($espesorParedMax !== null) $paredesMax[] = $espesorParedMax;
                     if ($espesorFondo !== null) $fondos[] = $espesorFondo;
                     if ($altura !== null) $alturas[] = $altura;
                 }
@@ -489,7 +500,8 @@ class InspeccionCavidadController extends Controller
                     'user_id' => $userId,
                     'cavidad_numero' => $cavData['cavidad_numero'],
                     'peso_medido' => $pesoMedido,
-                    'espesor_pared' => $espesorPared,
+                    'espesor_pared_min' => $espesorParedMin,
+                    'espesor_pared_max' => $espesorParedMax,
                     'espesor_fondo' => $espesorFondo,
                     'altura' => $altura,
                     'estado' => $estadoClean,
@@ -502,8 +514,8 @@ class InspeccionCavidadController extends Controller
             $pesoMin = count($pesos) > 0 ? min($pesos) : null;
             $pesoMax = count($pesos) > 0 ? max($pesos) : null;
 
-            $espParedMin = count($paredes) > 0 ? min($paredes) : null;
-            $espParedMax = count($paredes) > 0 ? max($paredes) : null;
+            $espParedMin = count($paredesMin) > 0 ? min($paredesMin) : null;
+            $espParedMax = count($paredesMax) > 0 ? max($paredesMax) : null;
 
             $espFondoMin = count($fondos) > 0 ? min($fondos) : null;
             $espFondoMax = count($fondos) > 0 ? max($fondos) : null;
@@ -552,7 +564,6 @@ class InspeccionCavidadController extends Controller
             $strMotivos = count($motivosScrap) > 0 ? implode(', ', $motivosScrap) : null;
             $strObs = count($observaciones) > 0 ? implode('; ', $observaciones) : null;
 
-            // ESTADO GLOBAL AUTOMÁTICO: Si hay defectos reales es OBSERVADO, de lo contrario CONFORME
             $estadoEvaluacionGlobal = $tieneDefectosReales ? 'OBSERVADO' : 'CONFORME';
 
             InspeccionCalidad::create([
@@ -738,7 +749,8 @@ class InspeccionCavidadController extends Controller
 
             $header = $cavidades->first();
             $pesos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('peso_medido')->filter()->toArray();
-            $paredes = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_pared')->filter()->toArray();
+            $paredesMin = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_pared_min')->filter()->toArray();
+            $paredesMax = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_pared_max')->filter()->toArray();
             $fondos = $cavidades->where('estado', '!=', 'ANULADO')->pluck('espesor_fondo')->filter()->toArray();
             $alturas = $cavidades->where('estado', '!=', 'ANULADO')->pluck('altura')->filter()->toArray();
             $motivosScrap = $cavidades->pluck('motivo_scrap')->filter()->unique()->toArray();
@@ -769,8 +781,8 @@ class InspeccionCavidadController extends Controller
 
                 'peso_min' => count($pesos) > 0 ? min($pesos) : null,
                 'peso_max' => count($pesos) > 0 ? max($pesos) : null,
-                'esp_pared_min' => count($paredes) > 0 ? min($paredes) : null,
-                'esp_pared_max' => count($paredes) > 0 ? max($paredes) : null,
+                'esp_pared_min' => count($paredesMin) > 0 ? min($paredesMin) : null,
+                'esp_pared_max' => count($paredesMax) > 0 ? max($paredesMax) : null,
                 'esp_fondo_min' => count($fondos) > 0 ? min($fondos) : null,
                 'esp_fondo_max' => count($fondos) > 0 ? max($fondos) : null,
                 'altura_min' => count($alturas) > 0 ? min($alturas) : null,

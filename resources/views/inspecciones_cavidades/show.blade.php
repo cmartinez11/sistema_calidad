@@ -152,7 +152,8 @@
                         <tr>
                             <th class="px-3 py-2.5 text-center w-24">N° Cavidad</th>
                             <th class="px-3 py-2.5 font-mono text-center w-28">Peso (g)</th>
-                            <th class="px-3 py-2.5 text-center w-32">Espesor de Pared</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Pared Min</th>
+                            <th class="px-3 py-2.5 text-center w-32">Espesor de Pared Max</th>
                             <th class="px-3 py-2.5 text-center w-32">Espesor de Fondo</th>
                             <th class="px-3 py-2.5 text-center w-32">Altura</th>
                             <th class="px-3 py-2.5 text-center w-32">Estado</th>
@@ -170,7 +171,10 @@
                                     {{ $cav->estado === 'ANULADO' ? 0.00 : ($cav->peso_medido !== null ? number_format($cav->peso_medido, 2).' g' : '-') }}
                                 </td>
                                 <td class="px-3 py-2 text-center font-mono text-gray-500">
-                                    {{ $cav->espesor_pared !== null ? number_format($cav->espesor_pared, 2).' g' : '-' }}
+                                    {{ $cav->espesor_pared_min !== null ? number_format($cav->espesor_pared_min, 2).' g' : '-' }}
+                                </td>
+                                <td class="px-3 py-2 text-center font-mono text-gray-500">
+                                    {{ $cav->espesor_pared_max !== null ? number_format($cav->espesor_pared_max, 2).' g' : '-' }}
                                 </td>
                                 <td class="px-3 py-2 text-center font-mono text-gray-500">
                                     {{ $cav->espesor_fondo !== null ? number_format($cav->espesor_fondo, 2).' g' : '-' }}

@@ -24,7 +24,7 @@
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Operario / Encargado *</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Operario*</label>
             <select name="{{ $prefix }}[operario_id]" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-fenix focus:outline-none bg-white">
                 <option value="">-- Seleccionar Operario --</option>
                 @foreach($operarios as $op)
@@ -34,7 +34,7 @@
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Máquina / Inyectora *</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Máquina*</label>
             <select name="{{ $prefix }}[maquina_id]" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-fenix focus:outline-none bg-white">
                 <option value="">-- Seleccionar Máquina --</option>
                 @foreach($maquinas as $maq)
@@ -69,12 +69,12 @@
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Total Kilos (Calculado)</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Total Kilos</label>
             <input type="number" step="0.01" name="{{ $prefix }}[total_kg]" x-model.number="totalKg" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-fenix">
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Total Millares (Calculado)</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Total Millares</label>
             <input type="number" step="0.0001" name="{{ $prefix }}[total_millares]" x-model.number="totalMillares" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700">
         </div>
 
@@ -94,7 +94,7 @@
         </div>
 
         <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Cavidades (Matriz)</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Cavidades Totales</label>
             <input type="number" name="{{ $prefix }}[cavidades]" x-model.number="cavidades" readonly class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700">
         </div>
 

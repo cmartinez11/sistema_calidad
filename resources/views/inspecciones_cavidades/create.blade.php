@@ -168,7 +168,8 @@
                         newCavidades.push({
                             cavidad_numero: i,
                             peso_medido: '',
-                            espesor_pared: '',
+                            espesor_pared_min: '',
+                            espesor_pared_max: '',
                             espesor_fondo: '',
                             altura: '',
                             tiene_defecto: false,
@@ -202,7 +203,8 @@
                 newCavidades.push({
                     cavidad_numero: i,
                     peso_medido: '',
-                    espesor_pared: '',
+                    espesor_pared_min: '',
+                    espesor_pared_max: '',
                     espesor_fondo: '',
                     altura: '',
                     tiene_defecto: false,
@@ -231,12 +233,14 @@
         }
         
         let peso = parseFloat(cav.peso_medido);
-        let pared = parseFloat(cav.espesor_pared);
+        let paredMin = parseFloat(cav.espesor_pared_min);
+        let paredMax = parseFloat(cav.espesor_pared_max);
         let fondo = parseFloat(cav.espesor_fondo);
         let alt = parseFloat(cav.altura);
         
         let vacio = (isNaN(peso) || cav.peso_medido === '') && 
-                    (isNaN(pared) || cav.espesor_pared === '') && 
+                    (isNaN(paredMin) || cav.espesor_pared_min === '') && 
+                    (isNaN(paredMax) || cav.espesor_pared_max === '') && 
                     (isNaN(fondo) || cav.espesor_fondo === '') && 
                     (isNaN(alt) || cav.altura === '');
 
@@ -247,11 +251,12 @@
         }
 
         let fueraPeso = (this.pesoMin > 0 && this.pesoMax > 0 && !isNaN(peso) && cav.peso_medido !== '' && (peso < this.pesoMin || peso > this.pesoMax));
-        let fueraPared = (this.espesorParedMin > 0 && this.espesorParedMax > 0 && !isNaN(pared) && cav.espesor_pared !== '' && (pared < this.espesorParedMin || pared > this.espesorParedMax));
+        let fueraParedMin = (this.espesorParedMin > 0 && !isNaN(paredMin) && cav.espesor_pared_min !== '' && paredMin < this.espesorParedMin);
+        let fueraParedMax = (this.espesorParedMax > 0 && !isNaN(paredMax) && cav.espesor_pared_max !== '' && paredMax > this.espesorParedMax);
         let fueraFondo = (this.espesorFondoMin > 0 && this.espesorFondoMax > 0 && !isNaN(fondo) && cav.espesor_fondo !== '' && (fondo < this.espesorFondoMin || fondo > this.espesorFondoMax));
         let fueraAltura = (this.alturaMin > 0 && this.alturaMax > 0 && !isNaN(alt) && cav.altura !== '' && (alt < this.alturaMin || alt > this.alturaMax));
 
-        if (fueraPeso || fueraPared || fueraFondo || fueraAltura) {
+        if (fueraPeso || fueraParedMin || fueraParedMax || fueraFondo || fueraAltura) {
             cav.estado = 'FUERA_DE_RANGO';
         } else {
             cav.estado = 'CONFORME';
@@ -293,7 +298,8 @@
                     newCavidades.push({
                         cavidad_numero: i,
                         peso_medido: '',
-                        espesor_pared: '',
+                        espesor_pared_min: '',
+                        espesor_pared_max: '',
                         espesor_fondo: '',
                         altura: '',
                         tiene_defecto: false,
@@ -311,7 +317,8 @@
                 if (targetIndex !== -1) {
                     let cav = this.cavidades[targetIndex];
                     if (item.peso_medido !== '') cav.peso_medido = item.peso_medido;
-                    if (item.espesor_pared !== '') cav.espesor_pared = item.espesor_pared;
+                    if (item.espesor_pared_min !== '') cav.espesor_pared_min = item.espesor_pared_min;
+                    if (item.espesor_pared_max !== '') cav.espesor_pared_max = item.espesor_pared_max;
                     if (item.espesor_fondo !== '') cav.espesor_fondo = item.espesor_fondo;
                     if (item.altura !== '') cav.altura = item.altura;
                     if (item.tiene_defecto) cav.tiene_defecto = true;
@@ -603,7 +610,8 @@
                                 <tr>
                                     <th class="px-3 py-3 text-center w-20">N° Cavidad</th>
                                     <th class="px-3 py-3 w-28">Peso (g) *</th>
-                                    <th class="px-3 py-3 w-28">Esp. Pared (mm)</th>
+                                    <th class="px-3 py-3 w-28">Pared Min (mm)</th>
+                                    <th class="px-3 py-3 w-28">Pared Max (mm)</th>
                                     <th class="px-3 py-3 w-28">Esp. Fondo (mm)</th>
                                     <th class="px-3 py-3 w-28">Altura (mm)</th>
                                     <th class="px-3 py-3 text-center w-28">¿Tiene Defecto?</th>
@@ -635,15 +643,26 @@
                                                    class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-900 disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
-                                        <!-- Espesor de Pared -->
+                                        <!-- Espesor de Pared Mínimo -->
                                         <td class="px-3 py-3">
                                             <input type="number" step="0.001" 
-                                                   :name="'cavidades[' + index + '][espesor_pared]'" 
-                                                   x-model="cav.espesor_pared" 
-                                                   @input="evaluarCavidad(cav)"
-                                                   placeholder="Ej. 2.50"
-                                                   :disabled="cav.anulada"
-                                                   class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
+                                                :name="'cavidades[' + index + '][espesor_pared_min]'" 
+                                                x-model="cav.espesor_pared_min" 
+                                                @input="evaluarCavidad(cav)"
+                                                placeholder="Mín"
+                                                :disabled="cav.anulada"
+                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
+                                        </td>
+
+                                        <!-- Espesor de Pared Máximo -->
+                                        <td class="px-3 py-3">
+                                            <input type="number" step="0.001" 
+                                                :name="'cavidades[' + index + '][espesor_pared_max]'" 
+                                                x-model="cav.espesor_pared_max" 
+                                                @input="evaluarCavidad(cav)"
+                                                placeholder="Máx"
+                                                :disabled="cav.anulada"
+                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-xl text-xs font-mono disabled:bg-gray-200 disabled:cursor-not-allowed">
                                         </td>
 
                                         <!-- Espesor de Fondo -->

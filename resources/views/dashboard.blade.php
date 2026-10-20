@@ -366,7 +366,7 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto w-full">
+        <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead class="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider text-center">
                     <tr>
