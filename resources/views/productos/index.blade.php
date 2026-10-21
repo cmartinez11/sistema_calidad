@@ -31,6 +31,8 @@
         esp_fondo_max: '',
         altura_min: '',
         altura_max: '',
+        ciclo_min: '',
+        ciclo_max: '',
         caja_factor_millares: '',
         caja_factor_peso_kg: '',
         saco_factor_millares: '',
@@ -214,6 +216,8 @@
                                                     esp_fondo_max: @js($producto->parametroPreforma->esp_fondo_max ?? ''),
                                                     altura_min: @js($producto->parametroPreforma->altura_min ?? ''),
                                                     altura_max: @js($producto->parametroPreforma->altura_max ?? ''),
+                                                    ciclo_min: @js($producto->parametroPreforma->ciclo_min ?? ''),
+                                                    ciclo_max: @js($producto->parametroPreforma->ciclo_max ?? ''),
                                                     caja_factor_millares: @js($cajaMat->factor_millares ?? ''),
                                                     caja_factor_peso_kg: @js($cajaMat->factor_peso_kg ?? ''),
                                                     saco_factor_millares: @js($sacoMat->factor_millares ?? ''),
@@ -596,6 +600,25 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-gray-600">Altura Máxima</label>
                                 <input type="number" step="0.01" name="altura_max" x-model="paramProduct.altura_max" placeholder="Ej. 112.50"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ciclo-->
+                    <div class="bg-gray-50 p-3 sm:p-4 rounded-xl border border-gray-200 space-y-2">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center space-x-1">
+                            <span>⏰</span> <span>Ciclo (seg)</span>
+                        </h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Ciclo Mínimo</label>
+                                <input type="number" step="0.01" name="ciclo_min" x-model="paramProduct.ciclo_min" placeholder="Ej. 5"
+                                       class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-gray-600">Ciclo Máximo</label>
+                                <input type="number" step="0.01" name="ciclo_max" x-model="paramProduct.ciclo_max" placeholder="Ej. 7"
                                        class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:border-emerald-600">
                             </div>
                         </div>

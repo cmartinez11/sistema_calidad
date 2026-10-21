@@ -26,6 +26,8 @@ class ParametroPreforma extends Model
         'esp_fondo_max',
         'altura_min',
         'altura_max',
+        'ciclo_min',
+        'ciclo_max',
         'activo',
     ];
 

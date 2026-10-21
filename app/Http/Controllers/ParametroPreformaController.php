@@ -27,6 +27,8 @@ class ParametroPreformaController extends Controller
             'esp_fondo_max' => 'nullable|numeric|min:0',
             'altura_min' => 'nullable|numeric|min:0',
             'altura_max' => 'nullable|numeric|min:0',
+            'ciclo_min' => 'nullable|numeric|min:0',
+            'ciclo_max' => 'nullable|numeric|min:0',
             'activo' => 'nullable|boolean',
 
             // Matriz de empaque opcional
